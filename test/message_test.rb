@@ -53,16 +53,21 @@ module ProtoBuff
           offset += 1
         end
 
-        # Map the field number to a method we need to call
-        field_name = ::Test1.descriptor.to_a[field_number - 1].name
-
-        # send the method
-        obj.send("#{field_name}=", value)
+        set_value_for_field_number(obj, field_number - 1, value)
       else
         raise "unknown wire type #{wire_type}"
       end
       # decode buff
       obj
+    end
+
+    def self.set_value_for_field_number(recv, idx, value)
+      # FIXME: we should generate an optimized version of this method
+      # Map the field number to a method we need to call
+      field_name = recv.class.descriptor.to_a[idx].name
+
+      # send the method
+      recv.send("#{field_name}=", value)
     end
   end
 end
