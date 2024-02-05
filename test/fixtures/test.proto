@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message Test1 {
+  optional int32 a = 1;
+}
+
+message TestMessage {
+  string id = 1;
+  uint64 shop_id = 2;
+  bool boolean = 3;
+}
