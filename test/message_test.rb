@@ -1,6 +1,7 @@
 require "minitest/autorun"
 require "minitest/color"
 require "proto/test/fixtures/test_pb"
+require "protobuff/decoder"
 
 module ProtoBuff
   class TestMessage
@@ -15,142 +16,74 @@ module ProtoBuff
     def self.decode(buff)
       obj = ::Test1.new
 
+      decoder = ProtoBuff::Decoder.new buff
+
       # https://protobuf.dev/programming-guides/encoding/#structure
-      #
-      # The “tag” of a record is encoded as a varint formed from the field
-      # number and the wire type via the formula (field_number << 3) |
-      # wire_type. In other words, after decoding the varint representing a
-      # field, the low 3 bits tell us the wire type, and the rest of the
-      # integer tells us the field number.
 
-      buff_idx = 0
-
-      tag = buff.getbyte buff_idx
-
-      buff_idx += 1
+      tag = decoder.pull_tag
 
       # You take the last three bits to get the wire type (0)
-      wire_type = tag & 0x7
+      # wire_type = tag & 0x7
 
       # and then right-shift by three to get the field number (1).
       field_number = tag >> 3
 
       value = nil
 
-      if wire_type == 0 # VARINT
-        value = 0
-        offset = 0
-        while true
-          byte = buff.getbyte buff_idx
-          part = byte & 0x7F # remove continuation bit
+      if field_number == 1
+        # We know to pull an int32 because Test1 declared field 1 to be an int32
+        # See `test/fixtures/test.proto`
+        value = decoder.pull_int32
 
-          # We need to convert to big endian, so we'll "prepend"
-          value |= part << (7 * offset)
-
-          buff_idx += 1
-          offset += 1
-
-          # Break if this byte doesn't have a continuation bit
-          break if byte < 0x80
-        end
-
-        set_value_for_field_number(obj, field_number - 1, value)
+        # We know to set `a` because the .proto file declared field 1 to be "a"
+        # See `test/fixtures/test.proto`
+        obj.a = value
       else
-        raise "unknown wire type #{wire_type}"
+        raise "unknown field type #{field_number}"
       end
       # decode buff
       obj
     end
-
-    def self.set_value_for_field_number(recv, idx, value)
-      # FIXME: we should generate an optimized version of this method
-      # Map the field number to a method we need to call
-      field_name = recv.class.descriptor.to_a[idx].name
-
-      # send the method
-      recv.send("#{field_name}=", value)
-    end
   end
-
-
-
-
-
-
 
   class TestSigned
     def self.decode(buff)
       obj = ::TestSigned.new
+      decoder = ProtoBuff::Decoder.new buff
 
-      buff_idx = 0
-
-      tag = buff.getbyte buff_idx
-
-      buff_idx += 1
+      tag = decoder.pull_tag
 
       # You take the last three bits to get the wire type (0)
-      wire_type = tag & 0x7
+      # wire_type = tag & 0x7
 
       # and then right-shift by three to get the field number (1).
       field_number = tag >> 3
 
       value = nil
 
-      if wire_type == 0 # VARINT
-        value = 0
-        offset = 0
-        while true
-          byte = buff.getbyte buff_idx
-          part = byte & 0x7F # remove continuation bit
+      if field_number == 1 # VARINT
+        # We know to pull an sint32 because the proto file declared field 1 to be an sint32
+        # See `test/fixtures/test.proto`
+        value = decoder.pull_sint32
 
-          # We need to convert to big endian, so we'll "prepend"
-          value |= part << (7 * offset)
-
-          buff_idx += 1
-          offset += 1
-
-          # Break if this byte doesn't have a continuation bit
-          break if byte < 0x80
-        end
-
-        # If value is even, then it's positive
-        if value % 2 == 0
-          value = (value >> 1)
-        else
-          value = -((value + 1) >> 1)
-        end
-
-        set_value_for_field_number(obj, field_number - 1, value)
+        # We know to set `a` because the .proto file declared field 1 to be "a"
+        # See `test/fixtures/test.proto`
+        obj.a = value
       else
-        raise "unknown wire type #{wire_type}"
+        raise "unknown field type #{field_number}"
       end
       # decode buff
       obj
     end
-
-    def self.set_value_for_field_number(recv, idx, value)
-      # FIXME: we should generate an optimized version of this method
-      # Map the field number to a method we need to call
-      field_name = recv.class.descriptor.to_a[idx].name
-
-      # send the method
-      recv.send("#{field_name}=", value)
-    end
   end
-
-
-
-
 
   class TestString
     def self.decode(buff)
       obj = ::TestString.new
 
-      buff_idx = 0
+      decoder = ProtoBuff::Decoder.new buff
 
-      tag = buff.getbyte buff_idx
-
-      buff_idx += 1
+      tag = decoder.pull_tag
 
       # You take the last three bits to get the wire type (0)
       wire_type = tag & 0x7
@@ -158,53 +91,24 @@ module ProtoBuff
       # and then right-shift by three to get the field number (1).
       field_number = tag >> 3
 
-      value = nil
+      if field_number == 1 # LEN
+        # We know to pull a string because the proto file declared field 1 to be a string
+        # See `test/fixtures/test.proto`
+        value = decoder.pull_string
 
-      if wire_type == 2 # LEN
-        len = 0
-        offset = 0
-        while true
-          byte = buff.getbyte buff_idx
-          part = byte & 0x7F # remove continuation bit
-
-          # We need to convert to big endian, so we'll "prepend"
-          len |= part << (7 * offset)
-
-          buff_idx += 1
-          offset += 1
-
-          # Break if this byte doesn't have a continuation bit
-          break if byte < 0x80
-        end
-
-        bytes = buff.byteslice(buff_idx, len)
-        bytes.force_encoding('UTF-8')
-
-        set_value_for_field_number(obj, field_number - 1, bytes)
+        # We know to set `a` because the .proto file declared field 1 to be "a"
+        # See `test/fixtures/test.proto`
+        obj.a = value
       else
-        raise "unknown wire type #{wire_type}"
+        raise "unknown field type #{field_number}"
       end
       # decode buff
       obj
     end
-
-    def self.set_value_for_field_number(recv, idx, value)
-      # FIXME: we should generate an optimized version of this method
-      # Map the field number to a method we need to call
-      field_name = recv.class.descriptor.to_a[idx].name
-
-      # send the method
-      recv.send("#{field_name}=", value)
-    end
   end
-
-
-
-
-
 end
 
- class MessageTest < Minitest::Test
+class MessageTest < Minitest::Test
   def test_decode_test1
     data = "\b\x96\x01".b
     obj = ProtoBuff::Test1.decode data
@@ -214,7 +118,7 @@ end
   def test_decode_testsigned
     data = ::TestSigned.encode(TestSigned.new.tap { |x| x.a = -123 })
     obj = ProtoBuff::TestSigned.decode data
-    assert_equal -123, obj.a
+    assert_equal(-123, obj.a)
 
     data = ::TestSigned.encode(TestSigned.new.tap { |x| x.a = 4004 })
     obj = ProtoBuff::TestSigned.decode data
@@ -226,6 +130,4 @@ end
     obj = ProtoBuff::TestString.decode data
     assert_equal "foo", obj.a
   end
-
-
 end
