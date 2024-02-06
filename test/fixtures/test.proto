@@ -4,6 +4,14 @@ message Test1 {
   optional int32 a = 1;
 }
 
+message TestSigned {
+  optional sint32 a = 1;
+}
+
+message TestString {
+  optional string a = 1;
+}
+
 message TestMessage {
   string id = 1;
   uint64 shop_id = 2;
