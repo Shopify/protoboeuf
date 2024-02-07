@@ -1,7 +1,4 @@
-require "minitest/autorun"
-require "minitest/color"
-require "proto/test/fixtures/test_pb"
-require "protobuff/decoder"
+require "helper"
 
 module ProtoBuff
   class TestRepeatedField
@@ -269,7 +266,7 @@ module ProtoBuff
   end
 end
 
-class MessageTest < Minitest::Test
+class MessageTest < ProtoBuff::Test
   def test_decode_repeated
     data = ::TestRepeatedField.encode(::TestRepeatedField.new.tap { |x|
       x.e[0] = 1
