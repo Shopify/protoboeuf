@@ -5,12 +5,18 @@ require "protobuff/decoder"
 
 module ProtoBuff
   class TestRepeatedField
+    attr_accessor :e
+
+    def initialize
+      @e = []
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestRepeatedField.new
+      obj = TestRepeatedField.new
 
       while true
         break if decoder.index >= len
@@ -35,12 +41,20 @@ module ProtoBuff
   end
 
   class TestEmbedder
+    attr_accessor :id, :value, :message
+
+    def initialize
+      @id = 0
+      @value = nil
+      @message = ""
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestEmbedder.new
+      obj = TestEmbedder.new
 
       while true
         break if decoder.index >= len
@@ -65,12 +79,18 @@ module ProtoBuff
   end
 
   class TestEmbeddee
+    attr_accessor :value
+
+    def initialize
+      @value = 0
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestEmbeddee.new
+      obj = TestEmbeddee.new
 
       while true
         break if decoder.index >= len
@@ -91,12 +111,20 @@ module ProtoBuff
   end
 
   class TestMessage
+    attr_accessor :id, :shop_id, :boolean
+
+    def initialize
+      @id = ""
+      @shop_id = 0
+      @boolean = false
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestMessage.new
+      obj = TestMessage.new
 
       while true
         break if decoder.index >= len
@@ -121,12 +149,18 @@ module ProtoBuff
   end
 
   class Test1
+    attr_accessor :a
+
+    def initialize
+      @a = 0
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::Test1.new
+      obj = Test1.new
 
       while true
         break if decoder.index >= len
@@ -153,12 +187,18 @@ module ProtoBuff
   end
 
   class TestSigned
+    attr_accessor :a
+
+    def initialize
+      @a = 0
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestSigned.new
+      obj = TestSigned.new
 
       while true
         break if decoder.index >= len
@@ -189,12 +229,18 @@ module ProtoBuff
   end
 
   class TestString
+    attr_accessor :a
+
+    def initialize
+      @a = ""
+    end
+
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
     end
 
     def self.decode_from(decoder, len)
-      obj = ::TestString.new
+      obj = TestString.new
 
       while true
         break if decoder.index >= len
@@ -303,5 +349,57 @@ class MessageTest < Minitest::Test
     data = ::TestString.encode(TestString.new.tap { |x| x.a = "foo" })
     obj = ProtoBuff::TestString.decode data
     assert_equal "foo", obj.a
+  end
+
+  def test_default_values_repeated_field
+    expected = ::TestRepeatedField.new
+    actual = ProtoBuff::TestRepeatedField.new
+
+    assert_equal expected.e.length, actual.e.length
+  end
+
+  def test_default_values_test_embedder
+    expected = ::TestEmbedder.new
+    actual = ProtoBuff::TestEmbedder.new
+
+    assert_equal expected.id, actual.id
+    assert_nil expected.value
+    assert_nil actual.value
+    assert_equal expected.message, actual.message
+
+    expected = ::TestEmbeddee.new
+    actual = ProtoBuff::TestEmbeddee.new
+
+    assert_equal expected.value, actual.value
+  end
+
+  def test_default_values_message
+    expected = ::TestMessage.new
+    actual = ProtoBuff::TestMessage.new
+
+    assert_equal expected.id, actual.id
+    assert_equal expected.shop_id, actual.shop_id
+    assert_equal expected.boolean, actual.boolean
+  end
+
+  def test_default_values_test1
+    expected = ::Test1.new
+    actual = ProtoBuff::Test1.new
+
+    assert_equal expected.a, actual.a
+  end
+
+  def test_default_signed
+    expected = ::TestSigned.new
+    actual = ProtoBuff::TestSigned.new
+
+    assert_equal expected.a, actual.a
+  end
+
+  def test_default_string
+    expected = ::TestString.new
+    actual = ProtoBuff::TestString.new
+
+    assert_equal expected.a, actual.a
   end
 end
