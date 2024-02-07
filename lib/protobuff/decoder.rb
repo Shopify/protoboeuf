@@ -66,6 +66,8 @@ module ProtoBuff
       value
     end
 
+    alias :pull_uint32 :pull_uint64
+
     def pull_boolean
       byte = @buff.getbyte @index
       @index += 1

@@ -28,6 +28,6 @@ message TestEmbedder {
   string message = 3;
 }
 
-message TestMap {
-  map<string, uint32> g = 7;
+message TestRepeatedField {
+  repeated uint32 e = 1;
 }

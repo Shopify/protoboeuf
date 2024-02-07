@@ -4,6 +4,36 @@ require "proto/test/fixtures/test_pb"
 require "protobuff/decoder"
 
 module ProtoBuff
+  class TestRepeatedField
+    def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
+      obj = ::TestRepeatedField.new
+
+      while true
+        break if decoder.index >= len
+
+        tag = decoder.pull_tag
+
+        if tag == (0x2 | (1 << 3))
+          idx = 0
+          goal = decoder.index + decoder.pull_uint64
+          while true
+            break if decoder.index >= goal
+            obj.e[idx] = decoder.pull_uint32
+            idx += 1
+          end
+        else
+          raise NotImplementedError
+        end
+      end
+
+      obj
+    end
+  end
+
   class TestEmbedder
     def self.decode(buff)
       decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
@@ -194,6 +224,22 @@ module ProtoBuff
 end
 
 class MessageTest < Minitest::Test
+  def test_decode_repeated
+    data = ::TestRepeatedField.encode(::TestRepeatedField.new.tap { |x|
+      x.e[0] = 1
+      x.e[1] = 2
+      x.e[2] = 3
+      x.e[3] = 0xFF
+    })
+
+    obj = ProtoBuff::TestRepeatedField.decode data
+    3.times do |i|
+      assert_equal i + 1, obj.e[i]
+    end
+
+    assert_equal 0xFF, obj.e[3]
+  end
+
   def test_decode_embedded
     data = ::TestEmbedder.encode(::TestEmbedder.new.tap { |x|
       x.id = 1234
