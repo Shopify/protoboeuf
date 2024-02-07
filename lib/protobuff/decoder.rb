@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 module ProtoBuff
   class Decoder
     attr_reader :index
 
     def initialize(buff)
       @buff = buff
-      @len = buff.bytesize
       @index = 0
     end
 
@@ -64,6 +65,8 @@ module ProtoBuff
 
       value
     end
+
+    alias :pull_uint32 :pull_uint64
 
     def pull_boolean
       byte = @buff.getbyte @index
