@@ -93,7 +93,7 @@ module ProtoBuff
       end
 
       # If value is even, then it's positive
-      if value % 2 == 0
+      if value & 0x1 == 0
         value >> 1
       else
         -((value + 1) >> 1)
