@@ -7,7 +7,28 @@ module ProtoBuff
   class TestMessage
     def self.decode(buff)
       obj = ::TestMessage.new
-      # decode buff
+
+      decoder = ProtoBuff::Decoder.new buff
+      len = buff.bytesize
+
+      while true
+        break if decoder.index >= len
+
+        tag = decoder.pull_tag
+
+        field_number = tag >> 3
+
+        if field_number == 1
+          obj.id = decoder.pull_string
+        elsif field_number == 2
+          obj.shop_id = decoder.pull_uint64
+        elsif field_number == 3
+          obj.boolean = decoder.pull_boolean
+        else
+          raise "Unknown field number #{field_number}"
+        end
+      end
+
       obj
     end
   end
@@ -109,10 +130,29 @@ module ProtoBuff
 end
 
 class MessageTest < Minitest::Test
+  def test_decode_test_message
+    data = ::TestMessage.encode(TestMessage.new.tap { |x|
+      x.id = "hello world"
+      x.shop_id = 1234
+      x.boolean = false
+    })
+
+    obj = ProtoBuff::TestMessage.decode data
+    assert_equal 1234, obj.shop_id
+    assert_equal "hello world", obj.id
+    assert_equal false, obj.boolean
+  end
+
   def test_decode_test1
     data = "\b\x96\x01".b
     obj = ProtoBuff::Test1.decode data
     assert_equal 150, obj.a
+  end
+
+  def test_decode_negative_int32
+    data = ::Test1.encode(Test1.new.tap { |x| x.a = -123 })
+    obj = ProtoBuff::Test1.decode data
+    assert_equal(-123, obj.a)
   end
 
   def test_decode_testsigned

@@ -1,7 +1,10 @@
 module ProtoBuff
   class Decoder
+    attr_reader :index
+
     def initialize(buff)
       @buff = buff
+      @len = buff.bytesize
       @index = 0
     end
 
@@ -25,6 +28,12 @@ module ProtoBuff
         value |= part << (7 * offset)
 
         offset += 1
+
+        # handle 2's complement negative numbers
+        # If the top bit is 1, then it must be negative.
+        if offset == 10 && part == 1
+          value = -(((~value) & 0xFFFF_FFFF) + 1)
+        end
 
         # Break if this byte doesn't have a continuation bit
         break if byte < 0x80
