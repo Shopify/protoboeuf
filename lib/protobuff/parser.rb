@@ -44,14 +44,22 @@ class Input
 
   # Check if the input matches a given string/keyword
   # If there is a match, consume the string
-  def match(str)
-    eat_ws
+  # Does not read whitespace first
+  def match_exact(str)
     if start_with?(str)
       @cur_idx += str.size
       true
     else
       false
     end
+  end
+
+  # Check if the input matches a given string/keyword
+  # If there is a match, consume the string
+  # Reads whitespace first
+  def match(str)
+    eat_ws
+    match_exact(str)
   end
 
   # Raise an exception if we can't match a specific string
@@ -78,6 +86,19 @@ class Input
     loop do
       if eof?
         break
+      end
+
+      # Single-line comment
+      if match_exact('//')
+        loop do
+          if eof?
+            return
+          end
+          ch = eat_ch
+          if ch == '\n'
+            break
+          end
+        end
       end
 
       ch = peek_ch
@@ -205,7 +226,7 @@ def parse_unit(input)
 
     # Message definition
     if ident == "message"
-      parse_message(input)
+      messages << parse_message(input)
     end
   end
 
@@ -225,7 +246,7 @@ def parse_message(input)
   fields = []
 
   input.eat_ws
-  name = input.read_ident
+  message_name = input.read_ident
   input.expect '{'
 
   loop do
@@ -257,16 +278,17 @@ def parse_message(input)
 
   # TODO: determine if an empty message with no fields is valid protobuf
 
-  Message.new(name, fields)
+  Message.new(message_name, fields)
 end
 
 parse_string('')
 parse_string('syntax "proto3";')
 parse_string('syntax "proto3"; message Foo {}')
+parse_string('syntax "proto3"; // This is a comment!\nmessage Foo {}')
 parse_string('message Test1 { optional int32 a = 1; }')
 parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
 
-
+p parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
 
 
 
