@@ -4,12 +4,69 @@ require "proto/test/fixtures/test_pb"
 require "protobuff/decoder"
 
 module ProtoBuff
+  class TestEmbedder
+    def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
+      obj = ::TestEmbedder.new
+
+      while true
+        break if decoder.index >= len
+
+        tag = decoder.pull_tag
+
+        field_number = tag >> 3
+
+        if field_number == 1
+          obj.id = decoder.pull_uint64
+        elsif field_number == 2
+          obj.value = TestEmbeddee.decode_from(decoder, decoder.index + decoder.pull_uint64)
+        elsif field_number == 3
+          obj.message = decoder.pull_string
+        else
+          raise "Unknown field number #{field_number}"
+        end
+      end
+
+      obj
+    end
+  end
+
+  class TestEmbeddee
+    def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
+      obj = ::TestEmbeddee.new
+
+      while true
+        break if decoder.index >= len
+
+        tag = decoder.pull_tag
+
+        field_number = tag >> 3
+
+        if field_number == 1
+          obj.value = decoder.pull_uint64
+        else
+          raise "Unknown field number #{field_number}"
+        end
+      end
+
+      obj
+    end
+  end
+
   class TestMessage
     def self.decode(buff)
-      obj = ::TestMessage.new
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
 
-      decoder = ProtoBuff::Decoder.new buff
-      len = buff.bytesize
+    def self.decode_from(decoder, len)
+      obj = ::TestMessage.new
 
       while true
         break if decoder.index >= len
@@ -35,101 +92,121 @@ module ProtoBuff
 
   class Test1
     def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
       obj = ::Test1.new
 
-      decoder = ProtoBuff::Decoder.new buff
+      while true
+        break if decoder.index >= len
 
-      # https://protobuf.dev/programming-guides/encoding/#structure
+        tag = decoder.pull_tag
 
-      tag = decoder.pull_tag
+        field_number = tag >> 3
 
-      # You take the last three bits to get the wire type (0)
-      # wire_type = tag & 0x7
+        if field_number == 1
+          # We know to pull an int32 because Test1 declared field 1 to be an int32
+          # See `test/fixtures/test.proto`
+          value = decoder.pull_int32
 
-      # and then right-shift by three to get the field number (1).
-      field_number = tag >> 3
-
-      value = nil
-
-      if field_number == 1
-        # We know to pull an int32 because Test1 declared field 1 to be an int32
-        # See `test/fixtures/test.proto`
-        value = decoder.pull_int32
-
-        # We know to set `a` because the .proto file declared field 1 to be "a"
-        # See `test/fixtures/test.proto`
-        obj.a = value
-      else
-        raise "unknown field type #{field_number}"
+          # We know to set `a` because the .proto file declared field 1 to be "a"
+          # See `test/fixtures/test.proto`
+          obj.a = value
+        else
+          raise "unknown field type #{field_number}"
+        end
       end
-      # decode buff
+
       obj
     end
   end
 
   class TestSigned
     def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
       obj = ::TestSigned.new
-      decoder = ProtoBuff::Decoder.new buff
 
-      tag = decoder.pull_tag
+      while true
+        break if decoder.index >= len
+        tag = decoder.pull_tag
 
-      # You take the last three bits to get the wire type (0)
-      # wire_type = tag & 0x7
+        # You take the last three bits to get the wire type (0)
+        # wire_type = tag & 0x7
 
-      # and then right-shift by three to get the field number (1).
-      field_number = tag >> 3
+        # and then right-shift by three to get the field number (1).
+        field_number = tag >> 3
 
-      value = nil
+        value = nil
 
-      if field_number == 1 # VARINT
-        # We know to pull an sint32 because the proto file declared field 1 to be an sint32
-        # See `test/fixtures/test.proto`
-        value = decoder.pull_sint32
+        if field_number == 1 # VARINT
+          # We know to pull an sint32 because the proto file declared field 1 to be an sint32
+          # See `test/fixtures/test.proto`
+          value = decoder.pull_sint32
 
-        # We know to set `a` because the .proto file declared field 1 to be "a"
-        # See `test/fixtures/test.proto`
-        obj.a = value
-      else
-        raise "unknown field type #{field_number}"
+          # We know to set `a` because the .proto file declared field 1 to be "a"
+          # See `test/fixtures/test.proto`
+          obj.a = value
+        else
+          raise "unknown field type #{field_number}"
+        end
       end
-      # decode buff
       obj
     end
   end
 
   class TestString
     def self.decode(buff)
+      decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
+    end
+
+    def self.decode_from(decoder, len)
       obj = ::TestString.new
 
-      decoder = ProtoBuff::Decoder.new buff
+      while true
+        break if decoder.index >= len
+        tag = decoder.pull_tag
 
-      tag = decoder.pull_tag
+        # You take the last three bits to get the wire type (0)
+        wire_type = tag & 0x7
 
-      # You take the last three bits to get the wire type (0)
-      wire_type = tag & 0x7
+        # and then right-shift by three to get the field number (1).
+        field_number = tag >> 3
 
-      # and then right-shift by three to get the field number (1).
-      field_number = tag >> 3
+        if field_number == 1 # LEN
+          # We know to pull a string because the proto file declared field 1 to be a string
+          # See `test/fixtures/test.proto`
+          value = decoder.pull_string
 
-      if field_number == 1 # LEN
-        # We know to pull a string because the proto file declared field 1 to be a string
-        # See `test/fixtures/test.proto`
-        value = decoder.pull_string
-
-        # We know to set `a` because the .proto file declared field 1 to be "a"
-        # See `test/fixtures/test.proto`
-        obj.a = value
-      else
-        raise "unknown field type #{field_number}"
+          # We know to set `a` because the .proto file declared field 1 to be "a"
+          # See `test/fixtures/test.proto`
+          obj.a = value
+        else
+          raise "unknown field type #{field_number}"
+        end
       end
-      # decode buff
       obj
     end
   end
 end
 
 class MessageTest < Minitest::Test
+  def test_decode_embedded
+    data = ::TestEmbedder.encode(::TestEmbedder.new.tap { |x|
+      x.id = 1234
+      x.value = ::TestEmbeddee.new(value: 5678)
+      x.message = "hello world"
+    })
+
+    obj = ProtoBuff::TestEmbedder.decode data
+    assert_equal 1234, obj.id
+    assert_equal 5678, obj.value.value
+    assert_equal "hello world", obj.message
+  end
+
   def test_decode_test_message
     data = ::TestMessage.encode(TestMessage.new.tap { |x|
       x.id = "hello world"

@@ -17,3 +17,17 @@ message TestMessage {
   uint64 shop_id = 2;
   bool boolean = 3;
 }
+
+message TestEmbeddee {
+  uint64 value = 1;
+}
+
+message TestEmbedder {
+  uint64 id = 1;
+  TestEmbeddee value = 2;
+  string message = 3;
+}
+
+message TestMap {
+  map<string, uint32> g = 7;
+}

@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 module ProtoBuff
   class Decoder
     attr_reader :index
 
     def initialize(buff)
       @buff = buff
-      @len = buff.bytesize
       @index = 0
     end
 
