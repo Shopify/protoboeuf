@@ -29,6 +29,7 @@ module ProtoBuff
 
         offset += 1
 
+        # Negative 32 bit integers are still encoded with 10 bytes
         # handle 2's complement negative numbers
         # If the top bit is 1, then it must be negative.
         if offset == 10 && part == 1
@@ -40,6 +41,34 @@ module ProtoBuff
       end
 
       value
+    end
+
+    def pull_uint64
+      value = 0
+      offset = 0
+
+      while true
+        byte = @buff.getbyte @index
+        @index += 1
+
+        part = byte & 0x7F # remove continuation bit
+
+        # We need to convert to big endian, so we'll "prepend"
+        value |= part << (7 * offset)
+
+        offset += 1
+
+        # Break if this byte doesn't have a continuation bit
+        break if byte < 0x80
+      end
+
+      value
+    end
+
+    def pull_boolean
+      byte = @buff.getbyte @index
+      @index += 1
+      byte == 1
     end
 
     def pull_sint32

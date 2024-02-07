@@ -141,6 +141,17 @@ class MessageTest < Minitest::Test
     assert_equal 1234, obj.shop_id
     assert_equal "hello world", obj.id
     assert_equal false, obj.boolean
+
+    data = ::TestMessage.encode(TestMessage.new.tap { |x|
+      x.id = "hello world2"
+      x.shop_id = 555
+      x.boolean = true
+    })
+
+    obj = ProtoBuff::TestMessage.decode data
+    assert_equal 555, obj.shop_id
+    assert_equal "hello world2", obj.id
+    assert_equal true, obj.boolean
   end
 
   def test_decode_test1
