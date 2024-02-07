@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+// Single-line comment
+// Another comment
 message Test1 {
   optional int32 a = 1;
 }
@@ -14,7 +16,7 @@ message TestString {
 
 message TestMessage {
   string id = 1;
-  uint64 shop_id = 2;
+  uint64 shop_id = 2; // Comment after field
   bool boolean = 3;
 }
 

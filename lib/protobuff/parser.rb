@@ -1,5 +1,8 @@
 # Parser for the protobuf (proto3) language:
 # https://protobuf.dev/programming-guides/proto3/
+#
+# Grammar definition:
+# https://protobuf.dev/reference/protobuf/proto3-spec/
 
 # Note: Google has a unittest.proto test file
 # We should aim to be able to parse it
@@ -24,282 +27,274 @@
 # - You can import definitions
 #   import "myproject/other_protos.proto";
 
-# Represents an input string/file
-# Works as a tokenizer
-class Input
-  def initialize(src)
-    @src = src
-    @cur_idx = 0
-  end
+module ProtoBuff
+  # Position in a source file
+  # Numbers start from 1
+  SrcPos = Struct.new(:line_no, :col_no)
 
-  # Check if we're at the end of the input
-  def eof?
-    return @cur_idx >= @src.size
-  end
+  # Whole unit of input (e.g. one source file)
+  Unit = Struct.new(:messages)
 
-  # Check if the input start with a given string
-  def start_with?(str)
-    return @src[@cur_idx...(@cur_idx + str.size)] == str
-  end
+  Message = Struct.new(:name, :fields)
 
-  # Check if the input matches a given string/keyword
-  # If there is a match, consume the string
-  # Does not read whitespace first
-  def match_exact(str)
-    if start_with?(str)
-      @cur_idx += str.size
-      true
-    else
-      false
-    end
-  end
+  # TODO: repeated fields
+  # Qualifier is :optional, :required or :repeated
+  Field = Struct.new(:qualifier, :type, :name, :number)
 
-  # Check if the input matches a given string/keyword
-  # If there is a match, consume the string
-  # Reads whitespace first
-  def match(str)
-    eat_ws
-    match_exact(str)
-  end
+  # Parse an entire source unit (e.g. input file)
+  def self.parse_unit(input)
+    messages = []
 
-  # Raise an exception if we can't match a specific string
-  def expect(str)
-    if !match(str)
-      raise "expected \"#{str}\""
-    end
-  end
-
-  # Peek at the next input character
-  def peek_ch()
-    @src[@cur_idx]
-  end
-
-  # Consume one character from the input
-  def eat_ch()
-    ch = @src[@cur_idx]
-    @cur_idx += 1
-    ch
-  end
-
-  # Consume whitespace
-  def eat_ws()
     loop do
-      if eof?
+      input.eat_ws
+
+      if input.eof?
         break
       end
 
-      # Single-line comment
-      if match_exact('//')
-        loop do
-          if eof?
-            return
-          end
-          ch = eat_ch
-          if ch == '\n'
-            break
-          end
+      ident = input.read_ident
+
+      # Syntax mode
+      if ident == "syntax"
+        input.expect '='
+        input.eat_ws
+        mode = input.read_string
+        input.expect ';'
+        if mode != "proto3"
+          raise "syntax mode must be proto3"
         end
       end
 
-      ch = peek_ch
-
-      if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
-        eat_ch
-      else
-        break
+      # Message definition
+      if ident == "message"
+        messages << parse_message(input)
       end
     end
+
+    Unit.new(messages)
   end
 
-  # Read an identifier/name, eg:
-  # foo
-  # bar_bif
-  # foo123
-  def read_ident
-    name = ''
-
-    loop do
-      if eof?
-        break
-      end
-
-      ch = peek_ch
-
-      if !ch.match(/[A-Za-z0-9_]/)
-        break
-      end
-
-      name << eat_ch
-    end
-
-    if name.size == 0
-      raise "expected variable name"
-    end
-
-    return name
+  def self.parse_string(str)
+    parse_unit(Input.new(str))
   end
 
-  # Read a string constant, eg:
-  # 'foobar'
-  def read_string
-    str = ''
-
-    # The string must start with an opening quote
-    expect '"'
-
-    loop do
-      if eof?
-        raise "unexpected end of input"
-      end
-
-      # End of string
-      if match("\"")
-        break
-      end
-
-      # TODO: more complete support for string escaping
-      if match("\\'")
-        str << "\'"
-        continue
-      end
-
-      str << eat_ch
-    end
-
-    return str
+  # Parse a source file
+  def self.parse_file(name)
+    str = File.read(name)
+    parse_unit(Input.new(str))
   end
 
-  # Read an integer constant
-  def read_int
-    value = 0
+  # Parse a message definition
+  def self.parse_message(input)
+    fields = []
 
-    loop do
-      if eof?
-        raise "unexpected end of input"
-      end
-
-      ch = peek_ch
-
-      if ch < '0' || ch > '9'
-        break
-      end
-
-      # Decimal digit value
-      digit = ch.getbyte(0) - 0x30
-      value = 10 * value + digit
-      eat_ch
-    end
-
-    value
-  end
-end
-
-Unit = Struct.new(:messages)
-
-Message = Struct.new(:name, :fields)
-
-# TODO: repeated fields
-Field = Struct.new(:optional, :name, :number)
-
-# Parse an entire source unit (e.g. input file)
-def parse_unit(input)
-  messages = []
-
-  loop do
     input.eat_ws
+    message_name = input.read_ident
+    input.expect '{'
 
-    if input.eof?
-      break
-    end
+    loop do
+      if input.match '}'
+        break
+      end
 
-    ident = input.read_ident
+      qualifier = :optional
+      if input.match 'optional'
+        # This is the default
+      elsif input.match 'required'
+        qualifier = :required
+      elsif input.match 'repeated'
+        qualifier = :repeated
+      end
 
-    # Syntax mode
-    if ident == "syntax"
+      # Field type and name
       input.eat_ws
-      mode = input.read_string
+      type = input.read_ident
+      input.eat_ws
+      name = input.read_ident
+      input.expect '='
+      input.eat_ws
+      number = input.read_int
       input.expect ';'
-      if mode != "proto3"
-        raise "syntax mode must be proto3"
+
+      if number < 0 || number > 0xFF_FF_FF_FF
+        raise "field number should be in uint32 range"
+      end
+
+      fields << Field.new(qualifier, type, name, number)
+    end
+
+    Message.new(message_name, fields)
+  end
+
+  # Represents an input string/file
+  # Works as a tokenizer
+  class Input
+    def initialize(src)
+      @src = src
+      @cur_idx = 0
+    end
+
+    # Check if we're at the end of the input
+    def eof?
+      return @cur_idx >= @src.size
+    end
+
+    # Check if the input start with a given string
+    def start_with?(str)
+      return @src[@cur_idx...(@cur_idx + str.size)] == str
+    end
+
+    # Check if the input matches a given string/keyword
+    # If there is a match, consume the string
+    # Does not read whitespace first
+    def match_exact(str)
+      if start_with?(str)
+        @cur_idx += str.size
+        true
+      else
+        false
       end
     end
 
-    # Message definition
-    if ident == "message"
-      messages << parse_message(input)
+    # Check if the input matches a given string/keyword
+    # If there is a match, consume the string
+    # Reads whitespace first
+    def match(str)
+      eat_ws
+      match_exact(str)
+    end
+
+    # Raise an exception if we can't match a specific string
+    def expect(str)
+      if !match(str)
+        raise "expected \"#{str}\""
+      end
+    end
+
+    # Peek at the next input character
+    def peek_ch()
+      @src[@cur_idx]
+    end
+
+    # Consume one character from the input
+    def eat_ch()
+      ch = @src[@cur_idx]
+      @cur_idx += 1
+      ch
+    end
+
+    # Consume whitespace
+    def eat_ws()
+      loop do
+        if eof?
+          break
+        end
+
+        # Single-line comment
+        if match_exact("//")
+          loop do
+            if eof?
+              return
+            end
+            ch = eat_ch
+            if ch == "\n"
+              break
+            end
+          end
+          next
+        end
+
+        ch = peek_ch
+
+        if ch == " " || ch == "\t" || ch == "\n" || ch == "\r"
+          eat_ch
+        else
+          break
+        end
+      end
+    end
+
+    # Read an identifier/name, eg:
+    # foo
+    # bar_bif
+    # foo123
+    def read_ident
+      name = ''
+
+      loop do
+        if eof?
+          break
+        end
+
+        ch = peek_ch
+
+        if !ch.match(/[A-Za-z0-9_]/)
+          break
+        end
+
+        name << eat_ch
+      end
+
+      if name.size == 0
+        raise "expected identifier, cur_idx=#{@cur_idx}, ch='#{@src[@cur_idx]}' #{@src[@cur_idx].getbyte 0}"
+        #raise "expected identifier"
+      end
+
+      return name
+    end
+
+    # Read a string constant, eg:
+    # 'foobar'
+    def read_string
+      str = ''
+
+      # The string must start with an opening quote
+      expect '"'
+
+      loop do
+        if eof?
+          raise "unexpected end of input"
+        end
+
+        # End of string
+        if match("\"")
+          break
+        end
+
+        # TODO: more complete support for string escaping
+        if match("\\'")
+          str << "\'"
+          continue
+        end
+
+        str << eat_ch
+      end
+
+      return str
+    end
+
+    # Read an integer constant
+    def read_int
+      value = 0
+
+      loop do
+        if eof?
+          raise "unexpected end of input"
+        end
+
+        ch = peek_ch
+
+        if ch < '0' || ch > '9'
+          break
+        end
+
+        # Decimal digit value
+        digit = ch.getbyte(0) - 0x30
+        value = 10 * value + digit
+        eat_ch
+      end
+
+      value
     end
   end
-
-  Unit.new(messages)
 end
-
-def parse_string(str)
-  parse_unit(Input.new(str))
-end
-
-def parse_file(name)
-  raise "TODO"
-end
-
-# Parse a message definition
-def parse_message(input)
-  fields = []
-
-  input.eat_ws
-  message_name = input.read_ident
-  input.expect '{'
-
-  loop do
-    if input.match '}'
-      break
-    end
-
-    optional = false
-    if input.match 'optional'
-      optional = true
-    end
-
-    # Field type and name
-    input.eat_ws
-    type = input.read_ident
-    input.eat_ws
-    name = input.read_ident
-    input.expect '='
-    input.eat_ws
-    number = input.read_int
-    input.expect ';'
-
-    if number < 0 || number > 0xFF_FF_FF_FF
-      raise "field number should be in uint32 range"
-    end
-
-    fields << Field.new(optional, name, number)
-  end
-
-  # TODO: determine if an empty message with no fields is valid protobuf
-
-  Message.new(message_name, fields)
-end
-
-parse_string('')
-parse_string('syntax "proto3";')
-parse_string('syntax "proto3"; message Foo {}')
-parse_string('syntax "proto3"; // This is a comment!\nmessage Foo {}')
-parse_string('message Test1 { optional int32 a = 1; }')
-parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
-
-p parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
-
-
-
-
-# TODO: write some tests, try to parse:
-# ./test/fixtures/test.proto
-
-
-
-
-
-
-
-
