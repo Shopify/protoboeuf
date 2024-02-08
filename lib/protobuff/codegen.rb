@@ -68,7 +68,7 @@ ruby
         case field.type
         when "string"
           '""'
-        when "uint64", "int32", "sint32", "uint32", "int64"
+        when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
           0
         when "bool"
           false
@@ -103,7 +103,7 @@ ruby
         case field.type
         when "string"
           LEN
-        when "int64", "int32", "uint64", "bool", "sint32", "uint32"
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
           LEN
@@ -131,6 +131,8 @@ ruby
         "decoder.pull_uint32"
       when "sint32"
         "decoder.pull_sint32"
+      when "sint64"
+        "decoder.pull_sint64"
       when "bool"
         "decoder.pull_boolean"
       when /[A-Z]+\w+/ # FIXME: this doesn't seem right...

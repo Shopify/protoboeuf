@@ -55,3 +55,7 @@ message TestRepeatedField {
 message TestInt64 {
   int64 int_64 = 1;
 }
+
+message TestSint64 {
+  sint64 sint_64 = 1;
+}

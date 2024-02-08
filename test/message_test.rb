@@ -7,6 +7,29 @@ class MessageTest < ProtoBuff::Test
 
   class_eval gen.to_ruby
 
+  def test_sint64
+    data = ::TestSint64.encode(::TestSint64.new.tap { |x|
+      x.sint_64 = 12345
+    })
+
+    obj = TestSint64.decode data
+    assert_equal 12345, obj.sint_64
+
+    data = ::TestSint64.encode(::TestSint64.new.tap { |x|
+      x.sint_64 = -2
+    })
+
+    obj = TestSint64.decode data
+    assert_equal(-2, obj.sint_64)
+
+    data = ::TestSint64.encode(::TestSint64.new.tap { |x|
+      x.sint_64 = -0xFFFF_FFFF_FFFF
+    })
+
+    obj = TestSint64.decode data
+    assert_equal(-0xFFFF_FFFF_FFFF, obj.sint_64)
+  end
+
   def test_int64
     data = ::TestInt64.encode(::TestInt64.new.tap { |x|
       x.int_64 = 12345

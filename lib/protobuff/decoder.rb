@@ -129,6 +129,8 @@ module ProtoBuff
       end
     end
 
+    alias :pull_sint64 :pull_sint32
+
     def pull_string
       len = 0
       offset = 0
