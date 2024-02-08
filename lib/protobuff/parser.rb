@@ -45,21 +45,21 @@ module ProtoBuff
   end
 
   # Whole unit of input (e.g. one source file)
-  Unit = Struct.new(:messages)
+  Unit = Struct.new(:messages, :enums)
 
   Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
   Field = Struct.new(:qualifier, :type, :name, :number)
 
-  Enum = Struct.new(:name, :variants)
-
-
-
+  # Enum and enum constants
+  Enum = Struct.new(:name, :constants, :pos)
+  Constant = Struct.new(:name, :number)
 
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
     messages = []
+    enums = []
 
     loop do
       input.eat_ws
@@ -86,9 +86,14 @@ module ProtoBuff
       if ident == "message"
         messages << parse_message(input, pos)
       end
+
+      # Enum definition
+      if ident == "enum"
+        enums << parse_enum(input, pos)
+      end
     end
 
-    Unit.new(messages)
+    Unit.new(messages, enums)
   end
 
   def self.parse_string(str)
@@ -141,6 +146,45 @@ module ProtoBuff
     end
 
     Message.new(message_name, fields, pos)
+  end
+
+  # Parse an enum definition
+  def self.parse_enum(input, pos)
+    constants = []
+
+    input.eat_ws
+    enum_name = input.read_ident
+    input.expect '{'
+
+    loop do
+      if input.match '}'
+        break
+      end
+
+      # Constant name and number
+      input.eat_ws
+      name = input.read_ident
+      input.expect '='
+      input.eat_ws
+      number = input.read_int
+      input.expect ';'
+
+      if name != name.upcase
+        raise "enum constants should be uppercase identifiers"
+      end
+
+      if constants.size == 0 && number != 0
+        raise "the first enum constant should always have value 0"
+      end
+
+      if number < 0 || number > 0xFF_FF_FF_FF
+        raise "enum constants should be in uint32 range"
+      end
+
+      constants << Constant.new(name, number)
+    end
+
+    Enum.new(enum_name, constants, pos)
   end
 
   # Represents an input string/file

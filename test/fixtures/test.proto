@@ -20,6 +20,14 @@ message TestMessage {
   bool boolean = 3;
 }
 
+enum VehicleType {
+  BIKE = 0;
+  SKATEBOARD = 1;
+  CAR = 2;
+  BIG_AMERICAN_SUV = 3;
+  PICKUP_TRUCK = 4;
+}
+
 message TestEmbeddee {
   uint64 value = 1;
 }

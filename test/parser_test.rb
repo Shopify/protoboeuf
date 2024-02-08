@@ -37,12 +37,18 @@ class ParserTest < ProtoBuff::Test
     assert_equal :optional, unit.messages[0].fields[0].qualifier
   end
 
+  def test_enum
+    unit = ProtoBuff.parse_string('enum Foo { CONST1 = 0; }')
+    assert_equal 'Foo', unit.enums[0].name
+  end
+
+  def test_enum_two_fields
+    unit = ProtoBuff.parse_string('enum Foo { CONST0 = 0; CONST2 = 1; }')
+    assert_equal 'Foo', unit.enums[0].name
+    assert_equal 2, unit.enums[0].constants.size
+  end
+
   def test_test_proto_file
     ProtoBuff.parse_file('./test/fixtures/test.proto')
   end
-
-
-
-
-
 end
