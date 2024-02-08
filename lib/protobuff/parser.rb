@@ -45,7 +45,7 @@ module ProtoBuff
   end
 
   # Whole unit of input (e.g. one source file)
-  Unit = Struct.new(:options, :imports, :messages, :enums)
+  Unit = Struct.new(:package, :options, :imports, :messages, :enums)
 
   Option = Struct.new(:name, :value, :pos)
 
@@ -71,6 +71,7 @@ module ProtoBuff
 
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
+    package = nil
     options = []
     imports = []
     messages = []
@@ -97,6 +98,13 @@ module ProtoBuff
         end
       end
 
+      if ident == "package"
+        if package != nil
+          raise "only one package name can be specified"
+        end
+        package = parse_package(input, pos)
+      end
+
       # Option
       if ident == "option"
         options << parse_option(input, pos)
@@ -121,7 +129,32 @@ module ProtoBuff
       end
     end
 
-    Unit.new(options, imports, messages, enums)
+    Unit.new(package, options, imports, messages, enums)
+  end
+
+  # Parse the package name
+  def self.parse_package(input, pos)
+    input.eat_ws
+
+    name = ""
+
+    if input.match '.'
+      name += '.' + input.read_ident
+    else
+      name += input.read_ident
+    end
+
+    loop do
+      if input.match '.'
+        name += '.' + input.read_ident
+      end
+
+      break
+    end
+
+    input.expect ';'
+
+    name
   end
 
   # Parse a configuration option

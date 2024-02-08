@@ -61,6 +61,17 @@ class ParserTest < ProtoBuff::Test
      assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 1; }') }
   end
 
+  def package_name
+    unit = ProtoBuff.parse_string('package foo;')
+    assert_equal 'foo', unit.package
+
+    unit = ProtoBuff.parse_string('package foo.bar;')
+    assert_equal 'foo.bar', unit.package
+
+    unit = ProtoBuff.parse_string('package .foo.bar; message Test1 { int32 a = 1; }')
+    assert_equal '.foo.bar', unit.package
+  end
+
   def test_test_proto_file
     ProtoBuff.parse_file('./test/fixtures/test.proto')
   end
