@@ -45,7 +45,7 @@ module ProtoBuff
   end
 
   # Whole unit of input (e.g. one source file)
-  Unit = Struct.new(:messages, :enums)
+  Unit = Struct.new(:options, :imports, :messages, :enums)
 
   Message = Struct.new(:name, :fields, :pos)
 
@@ -58,6 +58,8 @@ module ProtoBuff
 
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
+    options = []
+    imports = []
     messages = []
     enums = []
 
@@ -82,6 +84,14 @@ module ProtoBuff
         end
       end
 
+      # Import
+      if ident == "import"
+        input.eat_ws
+        import_path = input.read_string
+        input.expect ';'
+        imports << import_path
+      end
+
       # Message definition
       if ident == "message"
         messages << parse_message(input, pos)
@@ -93,7 +103,7 @@ module ProtoBuff
       end
     end
 
-    Unit.new(messages, enums)
+    Unit.new(options, imports, messages, enums)
   end
 
   def self.parse_string(str)
