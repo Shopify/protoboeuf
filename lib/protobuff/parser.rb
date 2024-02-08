@@ -47,6 +47,8 @@ module ProtoBuff
   # Whole unit of input (e.g. one source file)
   Unit = Struct.new(:options, :imports, :messages, :enums)
 
+  Option = Struct.new(:name, :value, :pos)
+
   Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
@@ -55,6 +57,17 @@ module ProtoBuff
   # Enum and enum constants
   Enum = Struct.new(:name, :constants, :pos)
   Constant = Struct.new(:name, :number)
+
+  # Parse a source string
+  def self.parse_string(str)
+    parse_unit(Input.new(str))
+  end
+
+  # Parse a source file (i.e. some_file.proto)
+  def self.parse_file(name)
+    str = File.read(name)
+    parse_unit(Input.new(str))
+  end
 
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
@@ -84,6 +97,11 @@ module ProtoBuff
         end
       end
 
+      # Option
+      if ident == "option"
+        options << parse_option(input, pos)
+      end
+
       # Import
       if ident == "import"
         input.eat_ws
@@ -106,14 +124,29 @@ module ProtoBuff
     Unit.new(options, imports, messages, enums)
   end
 
-  def self.parse_string(str)
-    parse_unit(Input.new(str))
-  end
+  # Parse a configuration option
+  def self.parse_option(input, pos)
+    input.eat_ws
+    option_name = input.read_ident
+    input.expect '='
 
-  # Parse a source file
-  def self.parse_file(name)
-    str = File.read(name)
-    parse_unit(Input.new(str))
+    input.eat_ws
+    ch = input.peek_ch
+
+    if ch == '"'
+      value = input.read_string
+    elsif ch >= '0' && ch <= '9'
+      value = input.read_int
+    elsif input.match "true"
+      value = true
+    elsif input.match "false"
+      value = false
+    else
+      raise "unknown option value type"
+    end
+
+    input.expect ';'
+    Option.new(option_name, value, pos)
   end
 
   # Parse a message definition
