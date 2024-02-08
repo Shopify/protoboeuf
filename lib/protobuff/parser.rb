@@ -30,16 +30,32 @@
 module ProtoBuff
   # Position in a source file
   # Numbers start from 1
-  SrcPos = Struct.new(:line_no, :col_no)
+  class SrcPos
+    attr_reader :line_no
+    attr_reader :col_no
+
+    def initialize(line_no, col_no)
+      @line_no = line_no
+      @col_no = col_no
+    end
+
+    def to_s
+      @line_no.to_s + ":" + @col_no.to_s
+    end
+  end
 
   # Whole unit of input (e.g. one source file)
   Unit = Struct.new(:messages)
 
-  Message = Struct.new(:name, :fields)
+  Message = Struct.new(:name, :fields, :pos)
 
-  # TODO: repeated fields
   # Qualifier is :optional, :required or :repeated
   Field = Struct.new(:qualifier, :type, :name, :number)
+
+  Enum = Struct.new(:name, :variants)
+
+
+
 
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
@@ -52,6 +68,7 @@ module ProtoBuff
         break
       end
 
+      pos = input.pos
       ident = input.read_ident
 
       # Syntax mode
@@ -67,7 +84,7 @@ module ProtoBuff
 
       # Message definition
       if ident == "message"
-        messages << parse_message(input)
+        messages << parse_message(input, pos)
       end
     end
 
@@ -85,7 +102,7 @@ module ProtoBuff
   end
 
   # Parse a message definition
-  def self.parse_message(input)
+  def self.parse_message(input, pos)
     fields = []
 
     input.eat_ws
@@ -123,7 +140,7 @@ module ProtoBuff
       fields << Field.new(qualifier, type, name, number)
     end
 
-    Message.new(message_name, fields)
+    Message.new(message_name, fields, pos)
   end
 
   # Represents an input string/file
@@ -132,6 +149,13 @@ module ProtoBuff
     def initialize(src)
       @src = src
       @cur_idx = 0
+      @line_no = 1
+      @col_no = 1
+    end
+
+    # Get the current source position
+    def pos
+      SrcPos.new(@line_no, @col_no)
     end
 
     # Check if we're at the end of the input
@@ -149,7 +173,10 @@ module ProtoBuff
     # Does not read whitespace first
     def match_exact(str)
       if start_with?(str)
-        @cur_idx += str.size
+        # Use eat_ch to maintain source position tracking
+        str.size.times do
+          eat_ch
+        end
         true
       else
         false
@@ -180,6 +207,17 @@ module ProtoBuff
     def eat_ch()
       ch = @src[@cur_idx]
       @cur_idx += 1
+
+      # Keep track of the line and column number
+      if ch == '\n'
+        if ch != '\r'
+          @col_no += 1
+        end
+      else
+        @line_no += 1
+        @col_no = 1
+      end
+
       ch
     end
 
@@ -236,8 +274,7 @@ module ProtoBuff
       end
 
       if name.size == 0
-        raise "expected identifier, cur_idx=#{@cur_idx}, ch='#{@src[@cur_idx]}' #{@src[@cur_idx].getbyte 0}"
-        #raise "expected identifier"
+        raise "expected identifier at #{pos}"
       end
 
       return name
@@ -253,7 +290,7 @@ module ProtoBuff
 
       loop do
         if eof?
-          raise "unexpected end of input"
+          raise "unexpected end of input inside string constant"
         end
 
         # End of string
@@ -276,10 +313,11 @@ module ProtoBuff
     # Read an integer constant
     def read_int
       value = 0
+      num_digits = 0
 
       loop do
         if eof?
-          raise "unexpected end of input"
+          break
         end
 
         ch = peek_ch
@@ -291,7 +329,12 @@ module ProtoBuff
         # Decimal digit value
         digit = ch.getbyte(0) - 0x30
         value = 10 * value + digit
+        num_digits += 1
         eat_ch
+      end
+
+      if num_digits == 0
+        raise "expected integer"
       end
 
       value

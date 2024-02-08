@@ -26,6 +26,7 @@ message TestEmbeddee {
 
 message TestEmbedder {
   uint64 id = 1;
+  // Comment between fields
   TestEmbeddee value = 2;
   string message = 3;
 }
