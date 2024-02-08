@@ -5,8 +5,6 @@ module ProtoBuff
     CLASS_TEMPLATE = ERB.new(<<-ruby, trim_mode: '-')
 class <%= message.name %>
   <%- if message.fields.length > 0 -%>
-  attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
-
   def self.decode(buff)
     decode_from(ProtoBuff::Decoder.new(buff), buff.bytesize)
   end
@@ -29,6 +27,8 @@ class <%= message.name %>
 
     obj
   end
+
+  attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
 
   def initialize(<%= initialize_signature(message) %>)
   <%- for field in message.fields -%>
