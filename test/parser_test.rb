@@ -1,9 +1,6 @@
-require "minitest/autorun"
-require "minitest/color"
-require "proto/test/fixtures/test_pb"
-require "protobuff/parser"
+require "helper"
 
-class MessageTest < Minitest::Test
+class ParserTest < ProtoBuff::Test
   def test_parse_empty_unit
     ProtoBuff.parse_string('')
   end
