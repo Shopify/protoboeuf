@@ -14,6 +14,10 @@ class ParserTest < ProtoBuff::Test
     assert_equal 'Foo', unit.messages[0].name
   end
 
+  def test_msg_eos
+    assert_raises { ProtoBuff.parse_string('message Foo {') }
+  end
+
   def test_regress_newline
     ProtoBuff.parse_string("syntax = \"proto3\";\nmessage Foo {}")
   end
@@ -28,6 +32,10 @@ class ParserTest < ProtoBuff::Test
     assert_equal 'Test1', unit.messages[0].name
     assert_equal 'a', unit.messages[0].fields[0].name
     assert_equal :optional, unit.messages[0].fields[0].qualifier
+  end
+
+  def test_negative_field_num
+    assert_raises { ProtoBuff.parse_string('message Test1 { optional int32 a = -1; }') }
   end
 
   def test_msg_multiple_fields
@@ -48,7 +56,7 @@ class ParserTest < ProtoBuff::Test
     assert_equal 2, unit.enums[0].constants.size
   end
 
-  def test_enum_two_fields
+  def test_enum_no_zero_const
     # Should always have an enum constant with value 0
      assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 1; }') }
   end
