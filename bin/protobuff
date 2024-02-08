@@ -1,0 +1,19 @@
+#!/bin/env ruby
+
+require "protobuff/codegen"
+require "protobuff/parser"
+require "optparse"
+
+op = OptionParser.new { |opts|
+  opts.banner = "Usage: protobuff file.proto"
+}
+op.parse!
+
+if ARGV[0] && File.exist?(ARGV[0])
+  unit = ProtoBuff.parse_file ARGV[0]
+  gen = ProtoBuff::CodeGen.new unit
+  puts gen.to_ruby
+else
+  $stderr.puts op
+  exit 1
+end
