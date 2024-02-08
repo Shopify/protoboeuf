@@ -52,11 +52,11 @@ module ProtoBuff
   Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
-  Field = Struct.new(:qualifier, :type, :name, :number)
+  Field = Struct.new(:qualifier, :type, :name, :number, :pos)
 
   # Enum and enum constants
   Enum = Struct.new(:name, :constants, :pos)
-  Constant = Struct.new(:name, :number)
+  Constant = Struct.new(:name, :number, :pos)
 
   # Parse a source string
   def self.parse_string(str)
@@ -173,6 +173,7 @@ module ProtoBuff
 
       # Field type and name
       input.eat_ws
+      field_pos = input.pos
       type = input.read_ident
       input.eat_ws
       name = input.read_ident
@@ -185,7 +186,7 @@ module ProtoBuff
         raise "field number should be in uint32 range"
       end
 
-      fields << Field.new(qualifier, type, name, number)
+      fields << Field.new(qualifier, type, name, number, field_pos)
     end
 
     Message.new(message_name, fields, pos)
@@ -206,6 +207,7 @@ module ProtoBuff
 
       # Constant name and number
       input.eat_ws
+      const_pos = input.pos
       name = input.read_ident
       input.expect '='
       input.eat_ws
@@ -224,7 +226,7 @@ module ProtoBuff
         raise "enum constants should be in uint32 range"
       end
 
-      constants << Constant.new(name, number)
+      constants << Constant.new(name, number, const_pos)
     end
 
     Enum.new(enum_name, constants, pos)
