@@ -7,6 +7,29 @@ class MessageTest < ProtoBuff::Test
 
   class_eval gen.to_ruby
 
+  def test_int64
+    data = ::TestInt64.encode(::TestInt64.new.tap { |x|
+      x.int_64 = 12345
+    })
+
+    obj = TestInt64.decode data
+    assert_equal 12345, obj.int_64
+
+    data = ::TestInt64.encode(::TestInt64.new.tap { |x|
+      x.int_64 = -2
+    })
+
+    obj = TestInt64.decode data
+    assert_equal(-2, obj.int_64)
+
+    data = ::TestInt64.encode(::TestInt64.new.tap { |x|
+      x.int_64 = -0xFFFF_FFFF_FFFF
+    })
+
+    obj = TestInt64.decode data
+    assert_equal(-0xFFFF_FFFF_FFFF, obj.int_64)
+  end
+
   def test_decode_repeated
     data = ::TestRepeatedField.encode(::TestRepeatedField.new.tap { |x|
       x.e[0] = 1

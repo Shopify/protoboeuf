@@ -51,3 +51,7 @@ message TestEmbedder {
 message TestRepeatedField {
   repeated uint32 e = 1;
 }
+
+message TestInt64 {
+  int64 int_64 = 1;
+}
