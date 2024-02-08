@@ -48,6 +48,11 @@ class ParserTest < ProtoBuff::Test
     assert_equal 2, unit.enums[0].constants.size
   end
 
+  def test_enum_two_fields
+    # Should always have an enum constant with value 0
+     assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 1; }') }
+  end
+
   def test_test_proto_file
     ProtoBuff.parse_file('./test/fixtures/test.proto')
   end
