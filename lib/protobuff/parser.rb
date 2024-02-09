@@ -64,7 +64,7 @@ module ProtoBuff
   Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
-  Field = Struct.new(:qualifier, :type, :name, :number, :pos)
+  Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
 
   # Enum and enum constants
   Enum = Struct.new(:name, :constants, :pos)
@@ -169,29 +169,56 @@ module ProtoBuff
     name
   end
 
+  def self.parse_option_value(input)
+    input.eat_ws
+    ch = input.peek_ch
+
+    if ch == '"'
+      return input.read_string
+    elsif ch >= '0' && ch <= '9'
+      return input.read_int
+    elsif input.match "true"
+      return true
+    elsif input.match "false"
+      return false
+    end
+
+    raise ParseError.new("unknown option value type", input.pos)
+  end
+
   # Parse a configuration option
   def self.parse_option(input, pos)
     input.eat_ws
     option_name = input.read_ident
     input.expect '='
-
-    input.eat_ws
-    ch = input.peek_ch
-
-    if ch == '"'
-      value = input.read_string
-    elsif ch >= '0' && ch <= '9'
-      value = input.read_int
-    elsif input.match "true"
-      value = true
-    elsif input.match "false"
-      value = false
-    else
-      raise ParseError.new("unknown option value type", pos)
-    end
-
+    value = parse_option_value(input)
     input.expect ';'
     Option.new(option_name, value, pos)
+  end
+
+  def self.parse_field_options(input)
+    options = {}
+
+    # If there are no options, stop
+    if !input.match '['
+      return options
+    end
+
+    loop do
+      input.eat_ws
+      opt_name = input.read_ident
+      input.expect '='
+      opt_value = parse_option_value(input)
+      options[opt_name.to_sym] = opt_value
+
+      if input.match ']'
+        break
+      end
+
+      input.expect ','
+    end
+
+    options
   end
 
   # Parse a message definition
@@ -225,13 +252,14 @@ module ProtoBuff
       input.expect '='
       input.eat_ws
       number = input.read_int
+      options = parse_field_options(input)
       input.expect ';'
 
       if number < 0 || number > 0xFF_FF_FF_FF
         raise ParseError.new("field number should be in uint32 range", field_pos)
       end
 
-      fields << Field.new(qualifier, type, name, number, field_pos)
+      fields << Field.new(qualifier, type, name, number, options, field_pos)
     end
 
     Message.new(message_name, fields, pos)
