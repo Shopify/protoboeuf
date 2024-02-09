@@ -8,24 +8,7 @@
 # We should aim to be able to parse it
 # https://github.com/protocolbuffers/protoscope/blob/main/testdata/unittest.proto
 
-# Notes about protobuf language (these will be removed later):
-# - There are // style single-line comments
-# - Messages have a list of fields
-#   - Fields have field numbers
-#   - Fields can be optional, repeated, map (key/value pairs)
-#   - Fields can have a default value
-# - There are enums, which are integer types
-#   - Enum variants have integer values (is this optional?)
-#   - There must be a zero value (the default value)
-#   - Multiple different enums can share the same value if you set "option allow_alias = true;"
-#   - Enumerator constants must be in the range of a 32-bit integer.
-#   enum Foo {
-#     reserved 2, 15, 9 to 11, 40 to max;
-#     reserved "FOO", "BAR";
-#   }
-# - There's also oneof, which is a kind of union/enum
-# - You can import definitions
-#   import "myproject/other_protos.proto";
+require 'set'
 
 module ProtoBuff
   # Position in a source file
@@ -44,6 +27,18 @@ module ProtoBuff
     end
   end
 
+  class ParseError < StandardError
+    attr_reader :pos
+    def initialize(msg, pos)
+      @pos = pos
+      super(msg)
+    end
+
+    def to_s
+      @msg.to_s + "@" + @pos.to_s
+    end
+  end
+
   # Whole unit of input (e.g. one source file)
   Unit = Struct.new(:package, :options, :imports, :messages, :enums)
 
@@ -52,10 +47,10 @@ module ProtoBuff
   Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
-  Field = Struct.new(:qualifier, :type, :name, :number, :pos)
+  Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
 
   # Enum and enum constants
-  Enum = Struct.new(:name, :constants, :pos)
+  Enum = Struct.new(:name, :constants, :options, :pos)
   Constant = Struct.new(:name, :number, :pos)
 
   # Parse a source string
@@ -94,13 +89,13 @@ module ProtoBuff
         mode = input.read_string
         input.expect ';'
         if mode != "proto3"
-          raise "syntax mode must be proto3"
+          raise ParseError.new("syntax mode must be proto3", pos)
         end
       end
 
       if ident == "package"
         if package != nil
-          raise "only one package name can be specified"
+          raise ParseError.new("only one package name can be specified", pos)
         end
         package = parse_package(input, pos)
       end
@@ -157,29 +152,56 @@ module ProtoBuff
     name
   end
 
+  def self.parse_option_value(input)
+    input.eat_ws
+    ch = input.peek_ch
+
+    if ch == '"'
+      return input.read_string
+    elsif ch >= '0' && ch <= '9'
+      return input.read_int
+    elsif input.match "true"
+      return true
+    elsif input.match "false"
+      return false
+    end
+
+    raise ParseError.new("unknown option value type", input.pos)
+  end
+
   # Parse a configuration option
   def self.parse_option(input, pos)
     input.eat_ws
     option_name = input.read_ident
     input.expect '='
-
-    input.eat_ws
-    ch = input.peek_ch
-
-    if ch == '"'
-      value = input.read_string
-    elsif ch >= '0' && ch <= '9'
-      value = input.read_int
-    elsif input.match "true"
-      value = true
-    elsif input.match "false"
-      value = false
-    else
-      raise "unknown option value type"
-    end
-
+    value = parse_option_value(input)
     input.expect ';'
     Option.new(option_name, value, pos)
+  end
+
+  def self.parse_field_options(input)
+    options = {}
+
+    # If there are no options, stop
+    if !input.match '['
+      return options
+    end
+
+    loop do
+      input.eat_ws
+      opt_name = input.read_ident
+      input.expect '='
+      opt_value = parse_option_value(input)
+      options[opt_name.to_sym] = opt_value
+
+      if input.match ']'
+        break
+      end
+
+      input.expect ','
+    end
+
+    options
   end
 
   # Parse a message definition
@@ -213,13 +235,14 @@ module ProtoBuff
       input.expect '='
       input.eat_ws
       number = input.read_int
+      options = parse_field_options(input)
       input.expect ';'
 
       if number < 0 || number > 0xFF_FF_FF_FF
-        raise "field number should be in uint32 range"
+        raise ParseError.new("field number should be in uint32 range", field_pos)
       end
 
-      fields << Field.new(qualifier, type, name, number, field_pos)
+      fields << Field.new(qualifier, type, name, number, options, field_pos)
     end
 
     Message.new(message_name, fields, pos)
@@ -228,6 +251,7 @@ module ProtoBuff
   # Parse an enum definition
   def self.parse_enum(input, pos)
     constants = []
+    options = {}
 
     input.eat_ws
     enum_name = input.read_ident
@@ -236,6 +260,16 @@ module ProtoBuff
     loop do
       if input.match '}'
         break
+      end
+
+      if input.match 'option'
+        input.eat_ws
+        option_name = input.read_ident
+        input.expect '='
+        value = parse_option_value(input)
+        input.expect ';'
+        options[option_name.to_sym] = value
+        next
       end
 
       # Constant name and number
@@ -248,21 +282,31 @@ module ProtoBuff
       input.expect ';'
 
       if name != name.upcase
-        raise "enum constants should be uppercase identifiers"
+        raise ParseError.new("enum constants should be uppercase identifiers", const_pos)
       end
 
       if constants.size == 0 && number != 0
-        raise "the first enum constant should always have value 0"
+        raise ParseError.new("the first enum constant should always have value 0", const_pos)
       end
 
       if number < 0 || number > 0xFF_FF_FF_FF
-        raise "enum constants should be in uint32 range"
+        raise ParseError.new("enum constants should be in uint32 range", const_pos)
       end
 
       constants << Constant.new(name, number, const_pos)
     end
 
-    Enum.new(enum_name, constants, pos)
+    # Check that we don't have duplicate constant numbers
+    allow_alias = options.fetch(:allow_alias, false)
+    numbers_taken = Set.new
+    constants.each do |constant|
+      if (numbers_taken.include? constant.number) && !allow_alias
+        raise ParseError.new("two constants use the number #{constant.number}", constant.pos)
+      end
+      numbers_taken.add(constant.number)
+    end
+
+    Enum.new(enum_name, constants, options, pos)
   end
 
   # Represents an input string/file
@@ -316,7 +360,7 @@ module ProtoBuff
     # Raise an exception if we can't match a specific string
     def expect(str)
       if !match(str)
-        raise "expected \"#{str}\""
+        raise ParseError.new("expected \"#{str}\"", pos)
       end
     end
 
@@ -396,7 +440,7 @@ module ProtoBuff
       end
 
       if name.size == 0
-        raise "expected identifier at #{pos}"
+        raise ParseError.new("expected identifier", pos)
       end
 
       return name
@@ -412,7 +456,7 @@ module ProtoBuff
 
       loop do
         if eof?
-          raise "unexpected end of input inside string constant"
+          raise ParseError.new("unexpected end of input inside string constant", pos)
         end
 
         # End of string
@@ -456,7 +500,7 @@ module ProtoBuff
       end
 
       if num_digits == 0
-        raise "expected integer"
+        raise ParseError.new("expected integer", pos)
       end
 
       value

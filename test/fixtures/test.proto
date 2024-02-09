@@ -29,6 +29,14 @@ message TestMessage {
   bool boolean = 3;
 }
 
+message TestMessage2 {
+  string id = 1;
+  uint64 shop_id = 2; // Comment after field
+  bool boolean = 3;
+  repeated uint32 packed_field = 4 [packed = true, deprecated = true];
+  uint32 deprecated_field = 5 [deprecated = true];
+}
+
 enum VehicleType {
   BIKE = 0;
   SKATEBOARD = 1;
