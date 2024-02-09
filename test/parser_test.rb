@@ -52,7 +52,7 @@ class ParserTest < ProtoBuff::Test
   end
 
   def test_enum_two_fields
-    unit = ProtoBuff.parse_string('enum Foo { CONST0 = 0; CONST2 = 1; }')
+    unit = ProtoBuff.parse_string('enum Foo { CONST0 = 0; CONST1 = 1; }')
     assert_equal 'Foo', unit.enums[0].name
     assert_equal 2, unit.enums[0].constants.size
   end
@@ -60,6 +60,16 @@ class ParserTest < ProtoBuff::Test
   def test_enum_no_zero_const
     # Should always have an enum constant with value 0
      assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 1; }') }
+  end
+
+  def test_enum_duplicate
+    assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 0; CONST1 = 0; }') }
+  end
+
+  def test_enum_alias
+    unit = ProtoBuff.parse_string('enum Foo { option allow_alias = true; CONST0 = 0; CONST1 = 1; CONST2 = 1; }')
+    assert_equal 'Foo', unit.enums[0].name
+    assert_equal 3, unit.enums[0].constants.size
   end
 
   def package_name

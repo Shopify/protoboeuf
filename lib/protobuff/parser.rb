@@ -8,24 +8,7 @@
 # We should aim to be able to parse it
 # https://github.com/protocolbuffers/protoscope/blob/main/testdata/unittest.proto
 
-# Notes about protobuf language (these will be removed later):
-# - There are // style single-line comments
-# - Messages have a list of fields
-#   - Fields have field numbers
-#   - Fields can be optional, repeated, map (key/value pairs)
-#   - Fields can have a default value
-# - There are enums, which are integer types
-#   - Enum variants have integer values (is this optional?)
-#   - There must be a zero value (the default value)
-#   - Multiple different enums can share the same value if you set "option allow_alias = true;"
-#   - Enumerator constants must be in the range of a 32-bit integer.
-#   enum Foo {
-#     reserved 2, 15, 9 to 11, 40 to max;
-#     reserved "FOO", "BAR";
-#   }
-# - There's also oneof, which is a kind of union/enum
-# - You can import definitions
-#   import "myproject/other_protos.proto";
+require 'set'
 
 module ProtoBuff
   # Position in a source file
@@ -67,7 +50,7 @@ module ProtoBuff
   Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
 
   # Enum and enum constants
-  Enum = Struct.new(:name, :constants, :pos)
+  Enum = Struct.new(:name, :constants, :options, :pos)
   Constant = Struct.new(:name, :number, :pos)
 
   # Parse a source string
@@ -268,6 +251,7 @@ module ProtoBuff
   # Parse an enum definition
   def self.parse_enum(input, pos)
     constants = []
+    options = {}
 
     input.eat_ws
     enum_name = input.read_ident
@@ -276,6 +260,16 @@ module ProtoBuff
     loop do
       if input.match '}'
         break
+      end
+
+      if input.match 'option'
+        input.eat_ws
+        option_name = input.read_ident
+        input.expect '='
+        value = parse_option_value(input)
+        input.expect ';'
+        options[option_name.to_sym] = value
+        next
       end
 
       # Constant name and number
@@ -302,7 +296,17 @@ module ProtoBuff
       constants << Constant.new(name, number, const_pos)
     end
 
-    Enum.new(enum_name, constants, pos)
+    # Check that we don't have duplicate constant numbers
+    allow_alias = options.fetch(:allow_alias, false)
+    numbers_taken = Set.new
+    constants.each do |constant|
+      if (numbers_taken.include? constant.number) && !allow_alias
+        raise ParseError.new("two constants use the number #{constant.number}", constant.pos)
+      end
+      numbers_taken.add(constant.number)
+    end
+
+    Enum.new(enum_name, constants, options, pos)
   end
 
   # Represents an input string/file
