@@ -32,6 +32,35 @@ module ProtoBuff
       value = byte == 1
     ruby
 
+    PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
+      ## PULL_INT64
+      value = 0
+      offset = 0
+
+      while true
+        byte = buff.getbyte index
+        index += 1
+
+        part = byte & 0x7F # remove continuation bit
+
+        # We need to convert to big endian, so we'll "prepend"
+        value |= part << (7 * offset)
+
+        offset += 1
+
+        # Negative 32 bit integers are still encoded with 10 bytes
+        # handle 2's complement negative numbers
+        # If the top bit is 1, then it must be negative.
+        if offset == 10 && part == 1
+          value = -(((~value) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
+        end
+
+        # Break if this byte doesn't have a continuation bit
+        break if byte < 0x80
+      end
+      ## END PULL_INT64
+    ruby
+
     PULL_UINT64 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_UINT64
       value = 0
@@ -185,9 +214,21 @@ ruby
     end
 
     def to_ruby
-      @ast.messages.map { |message|
+      head = if @ast.package
+        "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
+      else
+        ""
+      end
+
+      tail = if @ast.package
+        "end"
+      else
+        ""
+      end
+
+      head + @ast.messages.map { |message|
         CLASS_TEMPLATE.result(binding)
-      }.join
+      }.join + tail
     end
 
     private
@@ -210,7 +251,7 @@ ruby
         case field.type
         when "string"
           '""'
-        when "uint64", "int32", "sint32", "uint32"
+        when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
           0
         when "bool"
           false
@@ -245,7 +286,7 @@ ruby
         case field.type
         when "string"
           LEN
-        when "int32", "uint64", "bool", "sint32", "uint32"
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
           LEN
@@ -263,9 +304,11 @@ ruby
       case field.type
       when "string" then pull_string
       when "uint64" then pull_uint64
+      when "int64" then pull_int64
       when "int32" then pull_int32
       when "uint32" then pull_uint32
       when "sint32" then pull_sint32
+      when "sint64" then pull_sint64
       when "bool" then pull_boolean
       when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
         pull_message(field)
@@ -278,6 +321,10 @@ ruby
       PULL_MESSAGE.result(binding)
     end
 
+    def pull_int64
+      PULL_INT64.result
+    end
+
     def pull_int32
       PULL_INT32.result
     end
@@ -285,6 +332,8 @@ ruby
     def pull_sint32
       PULL_SINT32.result
     end
+
+    alias :pull_sint64 :pull_sint32
 
     def pull_string
       PULL_STRING.result

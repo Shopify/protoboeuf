@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package upstream;
+
+message ShortMessage {
+  uint64 value = 1;
+}
+
+message MessageWithManyTypes {
+  uint64 unsigned_64 = 1;
+  uint32 unsigned_32 = 2;
+  int64 signed_64 = 3;
+  int32 signed_32 = 4;
+  sint64 zigzag_64 = 5;
+  sint32 zigzag_32 = 6;
+  string a_string = 7;
+}
+
+message RedBlackNode {
+  uint64 key = 1;
+  MessageWithManyTypes value = 2;
+  string color = 3;
+  bool leaf = 4;
+  RedBlackNode left = 5;
+  RedBlackNode right = 6;
+}
