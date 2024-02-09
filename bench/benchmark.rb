@@ -42,17 +42,22 @@ def walk(node)
   walk(node.left) + walk(node.right) + node.value.unsigned_64
 end
 
-Benchmark.ips do |x|
+Benchmark.ips { |x|
   x.report("decode upstream (#{tree_1000_nodes.bytesize} bytes)") {
     Upstream::RedBlackNode.decode tree_1000_nodes
   }
   x.report("decode protobuff (#{tree_1000_nodes.bytesize} bytes)") {
     Protobuff::RedBlackNode.decode tree_1000_nodes
   }
+  x.compare!
+}
+
+Benchmark.ips { |x|
   x.report("decode and read upstream (#{tree_1000_nodes.bytesize} bytes)") {
     walk Upstream::RedBlackNode.decode tree_1000_nodes
   }
   x.report("decode and read protobuff (#{tree_1000_nodes.bytesize} bytes)") {
     walk Protobuff::RedBlackNode.decode tree_1000_nodes
   }
-end
+  x.compare!
+}
