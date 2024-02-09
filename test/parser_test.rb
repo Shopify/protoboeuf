@@ -7,6 +7,7 @@ class ParserTest < ProtoBuff::Test
 
   def test_syntax_mode
     ProtoBuff.parse_string('syntax = "proto3";')
+    assert_raises { ProtoBuff.parse_string('syntax = "proto0";') }
   end
 
   def test_empty_msg

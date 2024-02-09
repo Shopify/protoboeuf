@@ -44,6 +44,18 @@ module ProtoBuff
     end
   end
 
+  class ParseError < StandardError
+    attr_reader :pos
+    def initialize(msg, pos)
+      @pos = pos
+      super(msg)
+    end
+
+    def to_s
+      @msg.to_s + "@" + @pos.to_s
+    end
+  end
+
   # Whole unit of input (e.g. one source file)
   Unit = Struct.new(:package, :options, :imports, :messages, :enums)
 
@@ -94,13 +106,13 @@ module ProtoBuff
         mode = input.read_string
         input.expect ';'
         if mode != "proto3"
-          raise "syntax mode must be proto3"
+          raise ParseError.new("syntax mode must be proto3", pos)
         end
       end
 
       if ident == "package"
         if package != nil
-          raise "only one package name can be specified"
+          raise ParseError.new("only one package name can be specified", pos)
         end
         package = parse_package(input, pos)
       end
@@ -175,7 +187,7 @@ module ProtoBuff
     elsif input.match "false"
       value = false
     else
-      raise "unknown option value type"
+      raise ParseError.new("unknown option value type", pos)
     end
 
     input.expect ';'
@@ -216,7 +228,7 @@ module ProtoBuff
       input.expect ';'
 
       if number < 0 || number > 0xFF_FF_FF_FF
-        raise "field number should be in uint32 range"
+        raise ParseError.new("field number should be in uint32 range", field_pos)
       end
 
       fields << Field.new(qualifier, type, name, number, field_pos)
@@ -248,15 +260,15 @@ module ProtoBuff
       input.expect ';'
 
       if name != name.upcase
-        raise "enum constants should be uppercase identifiers"
+        raise ParseError.new("enum constants should be uppercase identifiers", const_pos)
       end
 
       if constants.size == 0 && number != 0
-        raise "the first enum constant should always have value 0"
+        raise ParseError.new("the first enum constant should always have value 0", const_pos)
       end
 
       if number < 0 || number > 0xFF_FF_FF_FF
-        raise "enum constants should be in uint32 range"
+        raise ParseError.new("enum constants should be in uint32 range", const_pos)
       end
 
       constants << Constant.new(name, number, const_pos)
@@ -316,7 +328,7 @@ module ProtoBuff
     # Raise an exception if we can't match a specific string
     def expect(str)
       if !match(str)
-        raise "expected \"#{str}\""
+        raise ParseError.new("expected \"#{str}\"", pos)
       end
     end
 
@@ -396,7 +408,7 @@ module ProtoBuff
       end
 
       if name.size == 0
-        raise "expected identifier at #{pos}"
+        raise ParseError.new("expected identifier", pos)
       end
 
       return name
@@ -412,7 +424,7 @@ module ProtoBuff
 
       loop do
         if eof?
-          raise "unexpected end of input inside string constant"
+          raise ParseError.new("unexpected end of input inside string constant", pos)
         end
 
         # End of string
@@ -456,7 +468,7 @@ module ProtoBuff
       end
 
       if num_digits == 0
-        raise "expected integer"
+        raise ParseError.new("expected integer", pos)
       end
 
       value
