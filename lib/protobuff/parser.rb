@@ -61,7 +61,7 @@ module ProtoBuff
 
   Option = Struct.new(:name, :value, :pos)
 
-  Message = Struct.new(:name, :fields, :options, :pos)
+  Message = Struct.new(:name, :fields, :pos)
 
   # Qualifier is :optional, :required or :repeated
   Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
@@ -224,14 +224,10 @@ module ProtoBuff
   # Parse a message definition
   def self.parse_message(input, pos)
     fields = []
-    options = {}
 
     input.eat_ws
     message_name = input.read_ident
     input.expect '{'
-
-    # TODO: parse message options
-
 
     loop do
       if input.match '}'
@@ -266,7 +262,7 @@ module ProtoBuff
       fields << Field.new(qualifier, type, name, number, options, field_pos)
     end
 
-    Message.new(message_name, fields, options, pos)
+    Message.new(message_name, fields, pos)
   end
 
   # Parse an enum definition
