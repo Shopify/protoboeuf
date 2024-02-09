@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "erb"
 
 module ProtoBuff
@@ -55,9 +57,21 @@ ruby
     end
 
     def to_ruby
-      @ast.messages.map { |message|
+      head = if @ast.package
+        "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
+      else
+        ""
+      end
+
+      tail = if @ast.package
+        "end"
+      else
+        ""
+      end
+
+      head + @ast.messages.map { |message|
         CLASS_TEMPLATE.result(binding)
-      }.join
+      }.join + tail
     end
 
     private
