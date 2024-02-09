@@ -58,6 +58,16 @@ this:
 bundle exec rake gen_proto
 ```
 
+## Benchmarks
+
+Run benchmarks like this:
+
+```
+$ rake bench
+```
+
+Benchmark protobuf files are in `bench/fixtures`, and the benchmarks themselves live in `bench/benchmark.rb`.
+
 ## Development Tips
 
 To view the protobuf encoding for a given message:

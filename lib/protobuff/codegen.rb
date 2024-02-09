@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "erb"
 
 module ProtoBuff
@@ -55,9 +57,21 @@ ruby
     end
 
     def to_ruby
-      @ast.messages.map { |message|
+      head = if @ast.package
+        "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
+      else
+        ""
+      end
+
+      tail = if @ast.package
+        "end"
+      else
+        ""
+      end
+
+      head + @ast.messages.map { |message|
         CLASS_TEMPLATE.result(binding)
-      }.join
+      }.join + tail
     end
 
     private
@@ -68,7 +82,7 @@ ruby
         case field.type
         when "string"
           '""'
-        when "uint64", "int32", "sint32", "uint32"
+        when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
           0
         when "bool"
           false
@@ -103,7 +117,7 @@ ruby
         case field.type
         when "string"
           LEN
-        when "int32", "uint64", "bool", "sint32", "uint32"
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
           LEN
@@ -125,10 +139,14 @@ ruby
         "decoder.pull_uint64"
       when "int32"
         "decoder.pull_int32"
+      when "int64"
+        "decoder.pull_int64"
       when "uint32"
         "decoder.pull_uint32"
       when "sint32"
         "decoder.pull_sint32"
+      when "sint64"
+        "decoder.pull_sint64"
       when "bool"
         "decoder.pull_boolean"
       when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
