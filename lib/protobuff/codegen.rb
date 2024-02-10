@@ -33,20 +33,121 @@ module ProtoBuff
     ruby
 
     PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
-      while true
-        byte = buff.getbyte index
-        index += 1
+      byte0 = buff.getbyte index
 
-        part = byte & 0x7F # remove continuation bit
+      if byte0 < 0x80
+        value = byte0
+        offset = 1
+      else
+        byte1 = buff.getbyte(index + 1)
 
-        # We need to convert to big endian, so we'll "prepend"
-        value |= part << (7 * offset)
+        if byte1 < 0x80
+          value = (byte1 << 7) | (byte0 & 0x7F)
+          offset = 2
+        else
+          byte2 = buff.getbyte(index + 2)
 
-        offset += 1
+          if byte2 < 0x80
+            value = (byte2 << 14) |
+                    ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+            offset = 3
+          else
+            byte3 = buff.getbyte(index + 3)
 
-        # Break if this byte doesn't have a continuation bit
-        break if byte < 0x80
+            if byte3 < 0x80
+              value = (byte3 << 21) |
+                      ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+              offset = 4
+            else
+              byte4 = buff.getbyte(index + 4)
+
+              if byte4 < 0x80
+                value = (byte4 << 28) |
+                        ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                offset = 5
+              else
+                byte5 = buff.getbyte(index + 5)
+
+                if byte5 < 0x80
+                  value = (byte5 << 35) |
+                          ((byte4 & 0x7F) << 28) |
+                          ((byte3 & 0x7F) << 21) |
+                          ((byte2 & 0x7F) << 14) |
+                          ((byte1 & 0x7F) << 7) |
+                          (byte0 & 0x7F)
+                  offset = 6
+                else
+                  byte6 = buff.getbyte(index + 6)
+
+                  if byte6 < 0x80
+                    value = (byte6 << 42) |
+                            ((byte5 & 0x7F) << 35) |
+                            ((byte4 & 0x7F) << 28) |
+                            ((byte3 & 0x7F) << 21) |
+                            ((byte2 & 0x7F) << 14) |
+                            ((byte1 & 0x7F) << 7) |
+                            (byte0 & 0x7F)
+                    offset = 7
+                  else
+                    byte7 = buff.getbyte(index + 7)
+
+                    if byte7 < 0x80
+                      value = (byte7 << 49) |
+                              ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) |
+                              ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) |
+                              ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) |
+                              (byte0 & 0x7F)
+                      offset = 8
+                    else
+                      byte8 = buff.getbyte(index + 8)
+
+                      if byte8 < 0x80
+                        value = (byte8 << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) |
+                                ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                        offset = 9
+                      else
+                        byte9 = buff.getbyte(index + 9)
+
+                        if byte9 < 0x80
+                          value = (byte9 << 63) |
+                                  ((byte8 & 0x7F) << 56) |
+                                  ((byte7 & 0x7F) << 49) |
+                                  ((byte6 & 0x7F) << 42) |
+                                  ((byte5 & 0x7F) << 35) |
+                                  ((byte4 & 0x7F) << 28) |
+                                  ((byte3 & 0x7F) << 21) |
+                                  ((byte2 & 0x7F) << 14) |
+                                  ((byte1 & 0x7F) << 7) |
+                                  (byte0 & 0x7F)
+                          offset = 10
+                        else
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
       end
+      index += offset
     ruby
 
     PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
@@ -59,7 +160,7 @@ module ProtoBuff
       # Negative 32 bit integers are still encoded with 10 bytes
       # handle 2's complement negative numbers
       # If the top bit is 1, then it must be negative.
-      if offset == 10 && part == 1
+      if offset == 10 && (value & (1 << 63)) > 0
         value = -(((~value) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
       end
 
@@ -113,7 +214,7 @@ module ProtoBuff
       # Negative 32 bit integers are still encoded with 10 bytes
       # handle 2's complement negative numbers
       # If the top bit is 1, then it must be negative.
-      if offset == 10 && part == 1
+      if offset == 10 && (value & (1 << 63)) > 0
         value = -(((~value) & 0xFFFF_FFFF) + 1)
       end
 
