@@ -32,11 +32,7 @@ module ProtoBuff
       value = byte == 1
     ruby
 
-    PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL_INT64
-      value = 0
-      offset = 0
-
+    PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
       while true
         byte = buff.getbyte index
         index += 1
@@ -51,6 +47,14 @@ module ProtoBuff
         # Break if this byte doesn't have a continuation bit
         break if byte < 0x80
       end
+    ruby
+
+    PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
+      ## PULL_INT64
+      value = 0
+      offset = 0
+
+      <%= pull_varint %>
 
       # Negative 32 bit integers are still encoded with 10 bytes
       # handle 2's complement negative numbers
@@ -67,41 +71,17 @@ module ProtoBuff
       value = 0
       offset = 0
 
-      while true
-        byte = buff.getbyte index
-        index += 1
+      <%= pull_varint %>
 
-        part = byte & 0x7F # remove continuation bit
-
-        # We need to convert to big endian, so we'll "prepend"
-        value |= part << (7 * offset)
-
-        offset += 1
-
-        # Break if this byte doesn't have a continuation bit
-        break if byte < 0x80
-      end
       ## END PULL_UINT64
     ruby
 
     PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
-      strlen = 0
       offset = 0
-      while true
-        byte = buff.getbyte index
-        index += 1
+      value = 0
+      <%= pull_varint %>
 
-        part = byte & 0x7F # remove continuation bit
-
-        # We need to convert to big endian, so we'll "prepend"
-        strlen |= part << (7 * offset)
-
-        offset += 1
-
-        # Break if this byte doesn't have a continuation bit
-        break if byte < 0x80
-      end
-
+      strlen = value
       value = buff.byteslice(index, strlen)
       index += strlen
       value.force_encoding('UTF-8')
@@ -111,20 +91,8 @@ module ProtoBuff
       ## PULL SINT32
       value = 0
       offset = 0
-      while true
-        byte = buff.getbyte index
-        index += 1
 
-        part = byte & 0x7F # remove continuation bit
-
-        # We need to convert to big endian, so we'll "prepend"
-        value |= part << (7 * offset)
-
-        offset += 1
-
-        # Break if this byte doesn't have a continuation bit
-        break if byte < 0x80
-      end
+      <%= pull_varint %>
 
       # If value is even, then it's positive
       if value.even?
@@ -140,20 +108,7 @@ module ProtoBuff
       value = 0
       offset = 0
 
-      while true
-        byte = buff.getbyte index
-        index += 1
-
-        part = byte & 0x7F # remove continuation bit
-
-        # We need to convert to big endian, so we'll "prepend"
-        value |= part << (7 * offset)
-
-        offset += 1
-
-        # Break if this byte doesn't have a continuation bit
-        break if byte < 0x80
-      end
+      <%= pull_varint %>
 
       # Negative 32 bit integers are still encoded with 10 bytes
       # handle 2's complement negative numbers
@@ -324,33 +279,37 @@ ruby
     end
 
     def pull_int64
-      PULL_INT64.result
+      PULL_INT64.result(binding)
     end
 
     def pull_int32
-      PULL_INT32.result
+      PULL_INT32.result(binding)
     end
 
     def pull_sint32
-      PULL_SINT32.result
+      PULL_SINT32.result(binding)
+    end
+
+    def pull_varint
+      PULL_VARINT.result(binding)
     end
 
     alias :pull_sint64 :pull_sint32
 
     def pull_string
-      PULL_STRING.result
+      PULL_STRING.result(binding)
     end
 
     def pull_uint64
-      PULL_UINT64.result
+      PULL_UINT64.result(binding)
     end
 
     def pull_uint32
-      PULL_UINT64.result
+      PULL_UINT64.result(binding)
     end
 
     def pull_boolean
-      PULL_BOOLEAN.result
+      PULL_BOOLEAN.result(binding)
     end
 
     def decode_code(field)
