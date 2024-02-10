@@ -48,16 +48,17 @@ module ProtoBuff
 
         offset += 1
 
-        # Negative 32 bit integers are still encoded with 10 bytes
-        # handle 2's complement negative numbers
-        # If the top bit is 1, then it must be negative.
-        if offset == 10 && part == 1
-          value = -(((~value) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
-        end
-
         # Break if this byte doesn't have a continuation bit
         break if byte < 0x80
       end
+
+      # Negative 32 bit integers are still encoded with 10 bytes
+      # handle 2's complement negative numbers
+      # If the top bit is 1, then it must be negative.
+      if offset == 10 && part == 1
+        value = -(((~value) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
+      end
+
       ## END PULL_INT64
     ruby
 
@@ -150,16 +151,17 @@ module ProtoBuff
 
         offset += 1
 
-        # Negative 32 bit integers are still encoded with 10 bytes
-        # handle 2's complement negative numbers
-        # If the top bit is 1, then it must be negative.
-        if offset == 10 && part == 1
-          value = -(((~value) & 0xFFFF_FFFF) + 1)
-        end
-
         # Break if this byte doesn't have a continuation bit
         break if byte < 0x80
       end
+
+      # Negative 32 bit integers are still encoded with 10 bytes
+      # handle 2's complement negative numbers
+      # If the top bit is 1, then it must be negative.
+      if offset == 10 && part == 1
+        value = -(((~value) & 0xFFFF_FFFF) + 1)
+      end
+
       ## END PULL INT32
     ruby
 
