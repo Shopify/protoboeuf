@@ -280,7 +280,8 @@ ruby
     end
 
     def to_ruby
-      head = if @ast.package
+      head = "# frozen_string_literal: true\n"
+      head += if @ast.package
         "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
       else
         ""
