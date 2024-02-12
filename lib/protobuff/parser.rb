@@ -408,6 +408,26 @@ module ProtoBuff
           next
         end
 
+        # Multi-line (block) comment
+        if match_exact("/*")
+          loop do
+            if eof?
+              raise ParseError.new("end of input inside block comment", pos)
+            end
+
+            if match_exact("/*")
+              raise ParseError.new("encountered '/*' inside block comment", pos)
+            end
+
+            if match_exact("*/")
+              break
+            end
+
+            eat_ch
+          end
+          next
+        end
+
         ch = peek_ch
 
         if ch == " " || ch == "\t" || ch == "\n" || ch == "\r"

@@ -5,6 +5,13 @@ class ParserTest < ProtoBuff::Test
     ProtoBuff.parse_string('')
   end
 
+  def block_comments
+    ProtoBuff.parse_string('syntax = "proto3" /*hey*/;')
+    ProtoBuff.parse_string("syntax = \"proto3\"; /*hey\nyou*/ message Foo {}")
+    assert_raises { ProtoBuff.parse_string('syntax = "proto3"; /*hi/*') }
+    assert_raises { ProtoBuff.parse_string('syntax = "proto3"; /*hi /*nested*/ */') }
+  end
+
   def test_syntax_mode
     ProtoBuff.parse_string('syntax = "proto3";')
     assert_raises { ProtoBuff.parse_string('syntax = "proto0";') }

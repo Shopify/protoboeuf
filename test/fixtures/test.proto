@@ -29,6 +29,10 @@ message TestMessage {
   bool boolean = 3;
 }
 
+/*
+Multi-line comment
+Heyyy
+*/
 message TestMessage2 {
   string id = 1;
   uint64 shop_id = 2; // Comment after field
@@ -38,10 +42,10 @@ message TestMessage2 {
 }
 
 enum VehicleType {
-  BIKE = 0;
+  BIKE = /* C-style comment */ 0;
   SKATEBOARD = 1;
   CAR = 2;
-  BIG_AMERICAN_SUV = 3;
+  BIG_AMERICAN_SUV = 3; /* Block comment */
   PICKUP_TRUCK = 4;
 }
 
