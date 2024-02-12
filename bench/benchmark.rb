@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "protobuff/decoder"
 require "protobuff/benchmark_pb"
 require "upstream/benchmark_pb"
 require "redblack"
