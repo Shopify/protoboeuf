@@ -185,7 +185,6 @@ module ProtoBuff
       strlen = value
       value = buff.byteslice(index, strlen)
       index += strlen
-      value.force_encoding('UTF-8')
     ruby
 
     PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
@@ -225,6 +224,8 @@ module ProtoBuff
 class <%= message.name %>
   <%- if message.fields.length > 0 -%>
   def self.decode(buff)
+    buff = buff.dup
+    buff.force_encoding("UTF-8")
     decode_from(buff, 0, buff.bytesize)
   end
 
