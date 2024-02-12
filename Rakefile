@@ -8,7 +8,7 @@ rb_files = proto_files.pathmap("#{BASE_DIR}/lib/proto/test/fixtures/%n_pb.rb")
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBUFF_PB = "bench/lib/protobuff/benchmark_pb.rb"
 
-CLOBBER.append rb_files
+rb_files.each { |x| CLOBBER.append x }
 CLOBBER.append BENCHMARK_UPSTREAM_PB
 CLOBBER.append BENCHMARK_PROTOBUFF_PB
 
