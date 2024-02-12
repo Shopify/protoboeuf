@@ -5,7 +5,8 @@ require "erb"
 module ProtoBuff
   class CodeGen
     PRELUDE = ERB.new(<<-ruby, trim_mode: '-')
-    obj = <%= message.name %>.new
+    obj = <%= message.name %>.allocate
+    obj.init_defaults
     index = start
 
     while true
@@ -250,6 +251,12 @@ class <%= message.name %>
   <%- for field in message.fields -%>
     @<%= field.name %> = <%= field.name %>
   <%- end -%>
+  <%- end -%>
+  end
+
+  def init_defaults
+  <%- for field in message.fields -%>
+    @<%= field.name %> = <%= default_for(field) %>
   <%- end -%>
   end
 end
