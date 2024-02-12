@@ -207,6 +207,7 @@ module ProtoBuff
   # Parse a message definition
   def self.parse_message(input, pos)
     fields = []
+    reserved = Set.new
 
     input.eat_ws
     message_name = input.read_ident
@@ -215,6 +216,14 @@ module ProtoBuff
     loop do
       if input.match '}'
         break
+      end
+
+      # For now, we just support one single reserved number
+      if input.match 'reserved'
+        input.eat_ws
+        number = input.read_int
+        reserved.add(number)
+        input.expect ';'
       end
 
       qualifier = :optional
@@ -243,6 +252,12 @@ module ProtoBuff
       end
 
       fields << Field.new(qualifier, type, name, number, options, field_pos)
+    end
+
+    fields.each do |field|
+      if reserved.include? field.number
+        raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+      end
     end
 
     Message.new(message_name, fields, pos)

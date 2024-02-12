@@ -54,6 +54,7 @@ message TestEmbeddee {
 }
 
 message TestEmbedder {
+  reserved 7;
   uint64 id = 1;
   // Comment between fields
   TestEmbeddee value = 2;
