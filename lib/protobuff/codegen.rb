@@ -9,8 +9,6 @@ module ProtoBuff
     obj.init_defaults
     index = start
 
-    while true
-      return obj if index >= len
     ruby
 
     PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
@@ -233,16 +231,19 @@ class <%= message.name %>
   def self.decode_from(buff, start, len)
     <%= prelude(message) %>
 
-      <%= pull_tag %>
+    <%= pull_tag %>
 
-      <%- message.fields.each_with_index do |field, idx| -%>
-      <%= idx == 0 ? "if" : "elsif" %> tag == <%= tag_for_field(field, field.number) %>
+    while true
+      <%- message.fields.each do |field| -%>
+      if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
-      <%- end -%>
-      else
-        raise
+        return obj if index >= len
+        <%= pull_tag %>
       end
-    <%= epilogue(message) %>
+      <%- end -%>
+
+      raise NotImplementedError
+    end
   end
 
   attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
@@ -306,10 +307,6 @@ ruby
 
     def prelude(message)
       PRELUDE.result(binding)
-    end
-
-    def epilogue(message)
-      "end"
     end
 
     def default_for(field)
