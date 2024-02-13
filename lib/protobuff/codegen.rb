@@ -7,7 +7,7 @@ module ProtoBuff
     PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_MESSAGE
       <%= pull_uint64("msg_len") %>
-      <%= dest %> = <%= field.type %>.decode_from(buff, index, index += msg_len)
+      <%= dest %> = <%= field.type %>.allocate.decode_from(buff, index, index += msg_len)
       ## END PULL_MESSAGE
     ruby
 
