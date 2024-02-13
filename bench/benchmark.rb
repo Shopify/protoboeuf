@@ -3,7 +3,18 @@
 require "protobuff/benchmark_pb"
 require "upstream/benchmark_pb"
 require "redblack"
+require "redblack/node"
 require "benchmark/ips"
+
+class Upstream::RedBlackNode
+  include RBNode
+  include Enumerable
+end
+
+class ProtoBuff::RedBlackNode
+  include RBNode
+  include Enumerable
+end
 
 def make_node(key)
   Upstream::MessageWithManyTypes.new(
@@ -17,24 +28,11 @@ end
 
 tree = RBTree.new
 
-tree_10_nodes = nil
-tree_100_nodes = nil
-tree_1000_nodes = nil
-
 1000.times do |i|
   tree = tree.insert(i, make_node(i))
-  if i == 9
-    tree_10_nodes = Upstream::RedBlackNode.encode(tree).freeze
-  end
-
-  if i == 99
-    tree_100_nodes = Upstream::RedBlackNode.encode(tree).freeze
-  end
-
-  if i == 999
-    tree_1000_nodes = Upstream::RedBlackNode.encode(tree).freeze
-  end
 end
+
+binary = Upstream::RedBlackNode.encode(tree).freeze
 
 def walk(node)
   return 0 if node.leaf
@@ -42,21 +40,13 @@ def walk(node)
 end
 
 Benchmark.ips { |x|
-  x.report("decode upstream (#{tree_1000_nodes.bytesize} bytes)") {
-    Upstream::RedBlackNode.decode tree_1000_nodes
-  }
-  x.report("decode protobuff (#{tree_1000_nodes.bytesize} bytes)") {
-    Protobuff::RedBlackNode.decode tree_1000_nodes
-  }
+  x.report("decode upstream")  { Upstream::RedBlackNode.decode binary }
+  x.report("decode protobuff") { ProtoBuff::RedBlackNode.decode binary }
   x.compare!
 }
 
 Benchmark.ips { |x|
-  x.report("decode and read upstream (#{tree_1000_nodes.bytesize} bytes)") {
-    walk Upstream::RedBlackNode.decode tree_1000_nodes
-  }
-  x.report("decode and read protobuff (#{tree_1000_nodes.bytesize} bytes)") {
-    walk Protobuff::RedBlackNode.decode tree_1000_nodes
-  }
+  x.report("decode and read upstream")  { walk Upstream::RedBlackNode.decode binary }
+  x.report("decode and read protobuff") { walk ProtoBuff::RedBlackNode.decode binary }
   x.compare!
 }

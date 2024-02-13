@@ -1,26 +1,7 @@
 # frozen_string_literal: true
 
 require "upstream/benchmark_pb"
-
-module RBNode
-  def insert key, val
-    RBTree.insert self, key, val
-  end
-
-  def key? k
-    return false if leaf
-    return true if k == key
-    k < key ? left.key?(k) : right.key?(k)
-  end
-
-  def deconstruct
-    if leaf
-      ["black", nil, nil, nil, nil]
-    else
-      [color, key, value, left, right]
-    end
-  end
-end
+require "redblack/node"
 
 module RBTree
   private_class_method def self.balance color, key, value, left, right
@@ -75,8 +56,4 @@ module RBTree
   LEAF = Upstream::RedBlackNode.new(color: "black", leaf: true)
 
   def self.new; LEAF; end
-end
-
-class Upstream::RedBlackNode
-  include RBNode
 end

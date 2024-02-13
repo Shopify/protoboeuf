@@ -37,7 +37,7 @@ file BENCHMARK_PROTOBUFF_PB => "bench/fixtures/benchmark.proto" do |t|
   require_relative "lib/protobuff/parser"
 
   unit = ProtoBuff.parse_file t.source
-  unit.package = "protobuff"
+  unit.package = "proto_buff"
   gen = ProtoBuff::CodeGen.new unit
 
   File.binwrite t.name, gen.to_ruby
