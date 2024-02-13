@@ -201,11 +201,7 @@ class <%= message.name %>
   def self.decode(buff)
     buff = buff.dup
     buff.force_encoding("UTF-8")
-    decode_from(buff, 0, buff.bytesize)
-  end
-
-  def self.decode_from(buff, start, len)
-    allocate.decode_from(buff, start, len)
+    allocate.decode_from(buff, 0, buff.bytesize)
   end
 
   attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
