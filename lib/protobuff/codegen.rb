@@ -15,8 +15,7 @@ module ProtoBuff
       ## PULL_MESSAGE
       <%= pull_uint64 %>
       msg_len = value
-      value = <%= field.type %>.decode_from(buff, index, index + msg_len)
-      index += msg_len
+      value = <%= field.type %>.decode_from(buff, index, index += msg_len)
       ## END PULL_MESSAGE
     ruby
 
