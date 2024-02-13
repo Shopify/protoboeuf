@@ -27,13 +27,13 @@ module ProtoBuff
 
       if byte0 < 0x80
         <%= dest %> = byte0
-        offset = 1
+        index += 1
       else
         byte1 = buff.getbyte(index + 1)
 
         if byte1 < 0x80
           <%= dest %> = (byte1 << 7) | (byte0 & 0x7F)
-          offset = 2
+          index += 2
         else
           byte2 = buff.getbyte(index + 2)
 
@@ -41,7 +41,7 @@ module ProtoBuff
             <%= dest %> = (byte2 << 14) |
                     ((byte1 & 0x7F) << 7) |
                     (byte0 & 0x7F)
-            offset = 3
+            index += 3
           else
             byte3 = buff.getbyte(index + 3)
 
@@ -50,7 +50,7 @@ module ProtoBuff
                       ((byte2 & 0x7F) << 14) |
                       ((byte1 & 0x7F) << 7) |
                       (byte0 & 0x7F)
-              offset = 4
+              index += 4
             else
               byte4 = buff.getbyte(index + 4)
 
@@ -60,7 +60,7 @@ module ProtoBuff
                         ((byte2 & 0x7F) << 14) |
                         ((byte1 & 0x7F) << 7) |
                         (byte0 & 0x7F)
-                offset = 5
+                index += 5
               else
                 byte5 = buff.getbyte(index + 5)
 
@@ -71,7 +71,7 @@ module ProtoBuff
                           ((byte2 & 0x7F) << 14) |
                           ((byte1 & 0x7F) << 7) |
                           (byte0 & 0x7F)
-                  offset = 6
+                  index += 6
                 else
                   byte6 = buff.getbyte(index + 6)
 
@@ -83,7 +83,7 @@ module ProtoBuff
                             ((byte2 & 0x7F) << 14) |
                             ((byte1 & 0x7F) << 7) |
                             (byte0 & 0x7F)
-                    offset = 7
+                    index += 7
                   else
                     byte7 = buff.getbyte(index + 7)
 
@@ -96,7 +96,7 @@ module ProtoBuff
                               ((byte2 & 0x7F) << 14) |
                               ((byte1 & 0x7F) << 7) |
                               (byte0 & 0x7F)
-                      offset = 8
+                      index += 8
                     else
                       byte8 = buff.getbyte(index + 8)
 
@@ -110,7 +110,7 @@ module ProtoBuff
                                 ((byte2 & 0x7F) << 14) |
                                 ((byte1 & 0x7F) << 7) |
                                 (byte0 & 0x7F)
-                        offset = 9
+                        index += 9
                       else
                         byte9 = buff.getbyte(index + 9)
 
@@ -125,7 +125,19 @@ module ProtoBuff
                                   ((byte2 & 0x7F) << 14) |
                                   ((byte1 & 0x7F) << 7) |
                                   (byte0 & 0x7F)
-                          offset = 10
+                          <%- if sign == :i64 -%>
+                          # Negative 32 bit integers are still encoded with 10 bytes
+                          # handle 2's complement negative numbers
+                          # If the top bit is 1, then it must be negative.
+                          <%= dest %> = -(((~<%= dest %>) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
+                          <%- end -%>
+                          <%- if sign == :i32 -%>
+                          # Negative 32 bit integers are still encoded with 10 bytes
+                          # handle 2's complement negative numbers
+                          # If the top bit is 1, then it must be negative.
+                          <%= dest %> = -(((~<%= dest %>) & 0xFFFF_FFFF) + 1)
+                          <%- end -%>
+                          index += 10
                         else
                         end
                       end
@@ -137,27 +149,17 @@ module ProtoBuff
           end
         end
       end
-      index += offset
     ruby
 
     PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_INT64
-      <%= pull_varint(dest) %>
-
-      # Negative 32 bit integers are still encoded with 10 bytes
-      # handle 2's complement negative numbers
-      # If the top bit is 1, then it must be negative.
-      if offset == 10
-        <%= dest %> = -(((~<%= dest %>) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
-      end
-
+      <%= pull_varint(dest, sign: :i64) %>
       ## END PULL_INT64
     ruby
 
     PULL_UINT64 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_UINT64
       <%= pull_varint(dest) %>
-
       ## END PULL_UINT64
     ruby
 
@@ -183,15 +185,7 @@ module ProtoBuff
 
     PULL_INT32 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL INT32
-      <%= pull_varint(dest) %>
-
-      # Negative 32 bit integers are still encoded with 10 bytes
-      # handle 2's complement negative numbers
-      # If the top bit is 1, then it must be negative.
-      if offset == 10
-        <%= dest %> = -(((~<%= dest %>) & 0xFFFF_FFFF) + 1)
-      end
-
+      <%= pull_varint(dest, sign: :i32) %>
       ## END PULL INT32
     ruby
 
@@ -364,7 +358,7 @@ ruby
       PULL_SINT32.result(binding)
     end
 
-    def pull_varint(dest)
+    def pull_varint(dest, sign: false)
       PULL_VARINT.result(binding)
     end
 
