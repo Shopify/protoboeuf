@@ -185,4 +185,9 @@ class MessageTest < ProtoBuff::Test
 
     assert_equal expected.a, actual.a
   end
+
+  def test_default_string_is_frozen
+    obj = TestString.new
+    assert_predicate obj.a, :frozen?
+  end
 end
