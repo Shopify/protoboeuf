@@ -57,6 +57,13 @@ class ParserTest < ProtoBuff::Test
     assert_equal :optional, unit.messages[0].fields[0].qualifier
   end
 
+  def test_msg_oneof
+    ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 3; } }')
+
+    # Duplicate field number
+    assert_raises { ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 1; } }') }
+  end
+
   def test_enum
     unit = ProtoBuff.parse_string('enum Foo { CONST1 = 0; }')
     assert_equal 'Foo', unit.enums[0].name
@@ -83,12 +90,17 @@ class ParserTest < ProtoBuff::Test
     assert_equal 3, unit.enums[0].constants.size
   end
 
-  def package_name
+  def test_package_name
     unit = ProtoBuff.parse_string('package foo;')
     assert_equal 'foo', unit.package
 
     unit = ProtoBuff.parse_string('package foo.bar;')
     assert_equal 'foo.bar', unit.package
+
+    unit = ProtoBuff.parse_string('package foo.bar.bif;')
+    assert_equal 'foo.bar.bif', unit.package
+
+    assert_raises { ProtoBuff.parse_string('package foo.bar.bif.;') }
 
     unit = ProtoBuff.parse_string('package .foo.bar; message Test1 { int32 a = 1; }')
     assert_equal '.foo.bar', unit.package
