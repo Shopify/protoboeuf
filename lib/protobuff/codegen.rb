@@ -23,38 +23,28 @@ module ProtoBuff
     ruby
 
     PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
-      byte0 = buff.getbyte index
-
-      if byte0 < 0x80
+      if (byte0 = buff.getbyte(index)) < 0x80
         <%= dest %> = byte0
         index += 1
       else
-        byte1 = buff.getbyte(index + 1)
-
-        if byte1 < 0x80
+        if (byte1 = buff.getbyte(index + 1)) < 0x80
           <%= dest %> = (byte1 << 7) | (byte0 & 0x7F)
           index += 2
         else
-          byte2 = buff.getbyte(index + 2)
-
-          if byte2 < 0x80
+          if (byte2 = buff.getbyte(index + 2)) < 0x80
             <%= dest %> = (byte2 << 14) |
                     ((byte1 & 0x7F) << 7) |
                     (byte0 & 0x7F)
             index += 3
           else
-            byte3 = buff.getbyte(index + 3)
-
-            if byte3 < 0x80
+            if (byte3 = buff.getbyte(index + 3)) < 0x80
               <%= dest %> = (byte3 << 21) |
                       ((byte2 & 0x7F) << 14) |
                       ((byte1 & 0x7F) << 7) |
                       (byte0 & 0x7F)
               index += 4
             else
-              byte4 = buff.getbyte(index + 4)
-
-              if byte4 < 0x80
+              if (byte4 = buff.getbyte(index + 4)) < 0x80
                 <%= dest %> = (byte4 << 28) |
                         ((byte3 & 0x7F) << 21) |
                         ((byte2 & 0x7F) << 14) |
@@ -62,9 +52,7 @@ module ProtoBuff
                         (byte0 & 0x7F)
                 index += 5
               else
-                byte5 = buff.getbyte(index + 5)
-
-                if byte5 < 0x80
+                if (byte5 = buff.getbyte(index + 5)) < 0x80
                   <%= dest %> = (byte5 << 35) |
                           ((byte4 & 0x7F) << 28) |
                           ((byte3 & 0x7F) << 21) |
@@ -73,9 +61,7 @@ module ProtoBuff
                           (byte0 & 0x7F)
                   index += 6
                 else
-                  byte6 = buff.getbyte(index + 6)
-
-                  if byte6 < 0x80
+                  if (byte6 = buff.getbyte(index + 6)) < 0x80
                     <%= dest %> = (byte6 << 42) |
                             ((byte5 & 0x7F) << 35) |
                             ((byte4 & 0x7F) << 28) |
@@ -85,9 +71,7 @@ module ProtoBuff
                             (byte0 & 0x7F)
                     index += 7
                   else
-                    byte7 = buff.getbyte(index + 7)
-
-                    if byte7 < 0x80
+                    if (byte7 = buff.getbyte(index + 7)) < 0x80
                       <%= dest %> = (byte7 << 49) |
                               ((byte6 & 0x7F) << 42) |
                               ((byte5 & 0x7F) << 35) |
@@ -98,9 +82,7 @@ module ProtoBuff
                               (byte0 & 0x7F)
                       index += 8
                     else
-                      byte8 = buff.getbyte(index + 8)
-
-                      if byte8 < 0x80
+                      if (byte8 = buff.getbyte(index + 8)) < 0x80
                         <%= dest %> = (byte8 << 56) |
                                 ((byte7 & 0x7F) << 49) |
                                 ((byte6 & 0x7F) << 42) |
@@ -112,9 +94,7 @@ module ProtoBuff
                                 (byte0 & 0x7F)
                         index += 9
                       else
-                        byte9 = buff.getbyte(index + 9)
-
-                        if byte9 < 0x80
+                        if (byte9 = buff.getbyte(index + 9)) < 0x80
                           <%= dest %> = (byte9 << 63) |
                                   ((byte8 & 0x7F) << 56) |
                                   ((byte7 & 0x7F) << 49) |
