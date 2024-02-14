@@ -72,3 +72,19 @@ message TestInt64 {
 message TestSint64 {
   sint64 sint_64 = 1;
 }
+
+// TODO:
+/*
+message TestMessageWithOneOf {
+  string id = 1;
+  uint64 shop_id = 2;
+
+  oneof oneof_field {
+    uint32 oneof_u32 = 5;
+    TestEmbeddee oneof_msg = 6;
+    string oneof_str = 7;
+  }
+
+  bool boolean = 3;
+}
+*/

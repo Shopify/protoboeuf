@@ -46,6 +46,8 @@ module ProtoBuff
 
   Message = Struct.new(:name, :fields, :pos)
 
+  OneOf = Struct.new(:name, :fields, :pos)
+
   # Qualifier is :optional, :required or :repeated
   Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
 
@@ -204,13 +206,11 @@ module ProtoBuff
     options
   end
 
-  # Parse a message definition
-  def self.parse_message(input, pos)
+  # Parse a list of fields for a message or oneof
+  def self.parse_fields(input, pos, inside_message)
     fields = []
     reserved = Set.new
 
-    input.eat_ws
-    message_name = input.read_ident
     input.expect '{'
 
     loop do
@@ -226,13 +226,23 @@ module ProtoBuff
         input.expect ';'
       end
 
-      qualifier = :optional
-      if input.match 'optional'
-        # This is the default
-      elsif input.match 'required'
-        qualifier = :required
-      elsif input.match 'repeated'
-        qualifier = :repeated
+      qualifier = nil
+      if inside_message
+        qualifier = :optional
+        if input.match 'optional'
+          # This is the default
+        elsif input.match 'required'
+          qualifier = :required
+        elsif input.match 'repeated'
+          qualifier = :repeated
+        end
+
+        # If this is a oneof field
+        oneof_pos = input.pos
+        if input.match 'oneof'
+          fields << parse_oneof(input, oneof_pos)
+          next
+        end
       end
 
       # Field type and name
@@ -270,7 +280,23 @@ module ProtoBuff
       nums_used.add(field.number)
     end
 
+    fields
+  end
+
+  # Parse a message definition
+  def self.parse_message(input, pos)
+    input.eat_ws
+    message_name = input.read_ident
+    fields = parse_fields(input, pos, inside_message = true)
     Message.new(message_name, fields, pos)
+  end
+
+  # Parse a oneof definition
+  def self.parse_oneof(input, pos)
+    input.eat_ws
+    oneof_name = input.read_ident
+    fields = parse_fields(input, pos, inside_message = false)
+    OneOf.new(oneof_name, fields, pos)
   end
 
   # Parse an enum definition
