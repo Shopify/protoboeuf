@@ -265,20 +265,34 @@ module ProtoBuff
     end
 
     # Check that reserved field numbers are not used
-    fields.each do |field|
-      if reserved.include? field.number
-        raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+    check_reserved_fields = lambda do |fields|
+      fields.each do |field|
+        if field.instance_of? OneOf
+          check_reserved_fields.call(field.fields)
+        else
+          if reserved.include? field.number
+            raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+          end
+        end
       end
     end
+    check_reserved_fields.call(fields)
 
     # Check that there are no duplicate field numbers
     nums_used = Set.new
-    fields.each do |field|
-      if nums_used.include? field.number
-        raise ParseError.new("field number #{field.number} already in use", field.pos)
+    check_dup_fields = lambda do |fields|
+      fields.each do |field|
+        if field.instance_of? OneOf
+          check_dup_fields.call(field.fields)
+        else
+          if nums_used.include? field.number
+            raise ParseError.new("field number #{field.number} already in use", field.pos)
+          end
+          nums_used.add(field.number)
+        end
       end
-      nums_used.add(field.number)
     end
+    check_dup_fields.call(fields)
 
     fields
   end

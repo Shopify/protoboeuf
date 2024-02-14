@@ -73,7 +73,7 @@ message TestSint64 {
   sint64 sint_64 = 1;
 }
 
-// TODO:
+// TODO: codegen for oneof not yet supported
 /*
 message TestMessageWithOneOf {
   string id = 1;

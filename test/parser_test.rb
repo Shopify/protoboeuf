@@ -57,6 +57,13 @@ class ParserTest < ProtoBuff::Test
     assert_equal :optional, unit.messages[0].fields[0].qualifier
   end
 
+  def test_msg_oneof
+    ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 3; } }')
+
+    # Duplicate field number
+    assert_raises { ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 1; } }') }
+  end
+
   def test_enum
     unit = ProtoBuff.parse_string('enum Foo { CONST1 = 0; }')
     assert_equal 'Foo', unit.enums[0].name
