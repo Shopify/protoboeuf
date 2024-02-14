@@ -99,7 +99,8 @@ module ProtoBuff
         if package != nil
           raise ParseError.new("only one package name can be specified", pos)
         end
-        package = parse_package(input, pos)
+        package = parse_composite_name(input, allow_leading_dot = true)
+        input.expect ';'
       end
 
       # Option
@@ -129,13 +130,11 @@ module ProtoBuff
     Unit.new(package, options, imports, messages, enums)
   end
 
-  # Parse the package name
-  def self.parse_package(input, pos)
-    input.eat_ws
-
+  # Parse a composite name, e.g. foo.bar.bif
+  def self.parse_composite_name(input, allow_leading_dot = false)
     name = ""
 
-    if input.match '.'
+    if allow_leading_dot && (input.match '.')
       name += '.' + input.read_ident
     else
       name += input.read_ident
@@ -144,12 +143,10 @@ module ProtoBuff
     loop do
       if input.match '.'
         name += '.' + input.read_ident
+      else
+        break
       end
-
-      break
     end
-
-    input.expect ';'
 
     name
   end
@@ -248,7 +245,7 @@ module ProtoBuff
       # Field type and name
       input.eat_ws
       field_pos = input.pos
-      type = input.read_ident
+      type = parse_composite_name(input)
       input.eat_ws
       name = input.read_ident
       input.expect '='

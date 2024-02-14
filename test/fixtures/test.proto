@@ -73,6 +73,13 @@ message TestSint64 {
   sint64 sint_64 = 1;
 }
 
+message TestMsgGoogleTypes {
+  int64 int_64 = 4;
+  google.protobuf.UInt64Value a_id = 1;
+  google.protobuf.StringValue c_id = 2;
+  sint64 sint_64 = 3;
+}
+
 // TODO: codegen for oneof not yet supported
 /*
 message TestMessageWithOneOf {
