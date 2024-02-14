@@ -254,10 +254,20 @@ module ProtoBuff
       fields << Field.new(qualifier, type, name, number, options, field_pos)
     end
 
+    # Check that reserved field numbers are not used
     fields.each do |field|
       if reserved.include? field.number
         raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
       end
+    end
+
+    # Check that there are no duplicate field numbers
+    nums_used = Set.new
+    fields.each do |field|
+      if nums_used.include? field.number
+        raise ParseError.new("field number #{field.number} already in use", field.pos)
+      end
+      nums_used.add(field.number)
     end
 
     Message.new(message_name, fields, pos)
