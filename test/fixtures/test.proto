@@ -95,3 +95,16 @@ message TestMessageWithOneOf {
   bool boolean = 3;
 }
 */
+
+// Nested/local message
+message Bucket {
+  WorldeCoords loc1 = 1;
+
+  // Nested messages are just locally available definitions
+  message WorldeCoords {
+    google.protobuf.DoubleValue lat = 5;
+    google.protobuf.DoubleValue lng = 6;
+  }
+
+  WorldeCoords loc2 = 2;
+}
