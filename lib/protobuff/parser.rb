@@ -452,13 +452,11 @@ module ProtoBuff
       @cur_idx += 1
 
       # Keep track of the line and column number
-      if ch == '\n'
-        if ch != '\r'
-          @col_no += 1
-        end
-      else
+      if ch == "\n"
         @line_no += 1
         @col_no = 1
+      elsif ch != "\r"
+        @col_no += 1
       end
 
       ch

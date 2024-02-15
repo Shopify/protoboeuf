@@ -22,6 +22,21 @@ class ParserTest < ProtoBuff::Test
     assert_equal 'Foo', unit.messages[0].name
   end
 
+  def test_msg_pos
+    unit = ProtoBuff.parse_string('syntax = "proto3"; message Foo {}')
+    pos = unit.messages[0].pos
+    assert_equal 1, pos.line_no
+    assert_equal 20, pos.col_no
+
+    unit = ProtoBuff.parse_string("syntax = \"proto3\";\nmessage Foo {}")
+    pos = unit.messages[0].pos
+
+    p pos
+
+    assert_equal 2, pos.line_no
+    assert_equal 1, pos.col_no
+  end
+
   def test_msg_eos
     assert_raises { ProtoBuff.parse_string('message Foo {') }
   end
