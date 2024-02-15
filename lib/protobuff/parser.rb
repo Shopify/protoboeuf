@@ -45,7 +45,7 @@ module ProtoBuff
   Option = Struct.new(:name, :value, :pos)
 
   # The messages field is for nested/local message definitions
-  Message = Struct.new(:name, :fields, :messages, :pos)
+  Message = Struct.new(:name, :fields, :messages, :enums, :pos)
 
   OneOf = Struct.new(:name, :fields, :pos)
 
@@ -208,6 +208,7 @@ module ProtoBuff
   def self.parse_body(input, pos, inside_message)
     fields = []
     messages = []
+    enums = []
     reserved = Set.new
 
     input.expect '{'
@@ -217,10 +218,16 @@ module ProtoBuff
         break
       end
 
-      # Nested/local message definition
+      # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
         messages << parse_message(input, msg_pos)
+        next
+      end
+      if inside_message && (input.match 'enum')
+        enum_pos = input.pos
+        enums << parse_enum(input, enum_pos)
+        next
       end
 
       # For now, we just support one single reserved number
@@ -299,22 +306,22 @@ module ProtoBuff
     end
     check_dup_fields.call(fields)
 
-    return fields, messages
+    return fields, messages, enums
   end
 
   # Parse a message definition
   def self.parse_message(input, pos)
     input.eat_ws
     message_name = input.read_ident
-    fields, messages = parse_body(input, pos, inside_message = true)
-    Message.new(message_name, fields, messages, pos)
+    fields, messages, enums = parse_body(input, pos, inside_message = true)
+    Message.new(message_name, fields, messages, enums, pos)
   end
 
   # Parse a oneof definition
   def self.parse_oneof(input, pos)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _ = parse_body(input, pos, inside_message = false)
+    fields, _, _ = parse_body(input, pos, inside_message = false)
     OneOf.new(oneof_name, fields, pos)
   end
 

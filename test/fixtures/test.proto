@@ -107,4 +107,11 @@ message Bucket {
   }
 
   WorldeCoords loc2 = 2;
+
+  enum NestedEnum {
+    FOO = 0;
+    BAR = 1;
+  }
+
+  NestedEnum kind = 3;
 }
