@@ -17,6 +17,17 @@ class ParserTest < ProtoBuff::Test
     assert_raises { ProtoBuff.parse_string('syntax = "proto0";') }
   end
 
+  def test_option_str
+    unit = ProtoBuff.parse_string('option foo_bar = "foobar";')
+    assert_equal "foo_bar", unit.options[0].name
+    assert_equal "foobar", unit.options[0].value
+
+    # Check that string escaping is working correctly
+    unit = ProtoBuff.parse_string('option foo_bar = "foo\nbar";')
+    assert_equal "foo_bar", unit.options[0].name
+    assert_equal "foo\nbar", unit.options[0].value
+  end
+
   def test_empty_msg
     unit = ProtoBuff.parse_string('syntax = "proto3"; message Foo {}')
     assert_equal 'Foo', unit.messages[0].name

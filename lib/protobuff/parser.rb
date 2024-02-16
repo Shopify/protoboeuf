@@ -586,10 +586,29 @@ module ProtoBuff
           break
         end
 
-        # TODO: more complete support for string escaping
-        if match("\\'")
-          str << "\'"
-          continue
+        # TODO: \xHH
+        # Hex escape sequence
+
+        # Escape sequences
+        if match("\\")
+          if match("\?")
+            str << "\?"
+          elsif match("\\")
+            str << "\\"
+          elsif match("\'")
+            str << "\'"
+          elsif match("\"")
+            str << "\""
+          elsif match("r")
+            str << "\r"
+          elsif match("n")
+            str << "\n"
+          elsif match("t")
+            str << "\t"
+          else
+            raise ParseError.new("unknown escape sequence in string constant", pos)
+          end
+          next
         end
 
         str << eat_ch
