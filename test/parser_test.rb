@@ -131,6 +131,7 @@ class ParserTest < ProtoBuff::Test
   end
 
   def test_test_proto_file
-    ProtoBuff.parse_file('./test/fixtures/test.proto')
+    unit = ProtoBuff.parse_file('./test/fixtures/test.proto')
+    assert_equal true, (unit.messages[0].pos.file_name.end_with? 'test.proto')
   end
 end

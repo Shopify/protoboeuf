@@ -14,16 +14,22 @@ module ProtoBuff
   # Position in a source file
   # Numbers start from 1
   class SrcPos
+    attr_reader :file_name
     attr_reader :line_no
     attr_reader :col_no
 
-    def initialize(line_no, col_no)
+    def initialize(file_name, line_no, col_no)
+      @file_name = file_name
       @line_no = line_no
       @col_no = col_no
     end
 
     def to_s
-      @line_no.to_s + ":" + @col_no.to_s
+      if @file_name
+        @file_name + "@" + @line_no.to_s + ":" + @col_no.to_s
+      else
+        @line_no.to_s + ":" + @col_no.to_s
+      end
     end
   end
 
@@ -90,9 +96,9 @@ module ProtoBuff
   end
 
   # Parse a source file (i.e. some_file.proto)
-  def self.parse_file(name)
-    str = File.read(name)
-    parse_unit(Input.new(str))
+  def self.parse_file(file_name)
+    str = File.read(file_name)
+    parse_unit(Input.new(str, file_name))
   end
 
   # Parse an entire source unit (e.g. input file)
@@ -416,16 +422,17 @@ module ProtoBuff
   # Represents an input string/file
   # Works as a tokenizer
   class Input
-    def initialize(src)
+    def initialize(src, file_name = nil)
       @src = src
       @cur_idx = 0
       @line_no = 1
       @col_no = 1
+      @file_name = file_name
     end
 
     # Get the current source position
     def pos
-      SrcPos.new(@line_no, @col_no)
+      SrcPos.new(@file_name, @line_no, @col_no)
     end
 
     # Check if we're at the end of the input
