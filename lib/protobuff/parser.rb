@@ -40,21 +40,49 @@ module ProtoBuff
   end
 
   # Whole unit of input (e.g. one source file)
-  Unit = Struct.new(:package, :options, :imports, :messages, :enums)
+  class Unit < Struct.new(:package, :options, :imports, :messages, :enums)
+    def accept(viz)
+      viz.visit_unit self
+    end
+  end
 
-  Option = Struct.new(:name, :value, :pos)
+  class Option < Struct.new(:name, :value, :pos)
+    def accept(viz)
+      viz.visit_option self
+    end
+  end
 
   # The messages field is for nested/local message definitions
-  Message = Struct.new(:name, :fields, :messages, :enums, :pos)
+  class Message < Struct.new(:name, :fields, :messages, :enums, :pos)
+    def accept(viz)
+      viz.visit_message self
+    end
+  end
 
-  OneOf = Struct.new(:name, :fields, :pos)
+  class OneOf < Struct.new(:name, :fields, :pos)
+    def accept(viz)
+      viz.visit_one_of self
+    end
+  end
 
   # Qualifier is :optional, :required or :repeated
-  Field = Struct.new(:qualifier, :type, :name, :number, :options, :pos)
+  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
+    def accept(viz)
+      viz.visit_field self
+    end
+  end
 
   # Enum and enum constants
-  Enum = Struct.new(:name, :constants, :options, :pos)
-  Constant = Struct.new(:name, :number, :pos)
+  class Enum < Struct.new(:name, :constants, :options, :pos)
+    def accept(viz)
+      viz.visit_enum self
+    end
+  end
+  class Constant < Struct.new(:name, :number, :pos)
+    def accept(viz)
+      viz.visit_constant self
+    end
+  end
 
   # Parse a source string
   def self.parse_string(str)
