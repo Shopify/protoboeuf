@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+package fancy.pants;
+
+enum DELIGHTFUL_BANDWIDTH {
+  CALM_ALARM = 0;
+  GLEAMING_PANEL = 1;
+  BRAVE_PORT = 2;
+}
+enum GracefulBus {
+  VAST_APPLICATION = 0;
+}
+
+message CombativeBandwidth {
+  string excited_panel = 1;
+  uint64 cooperative_bus = 2;
+  google.protobuf.UInt64Value successful_port = 3;
+  google.protobuf.StringValue excited_monitor = 4;
+  google.protobuf.UInt64Value glorious_transmitter = 5;
+  google.protobuf.StringValue gifted_transmitter = 6;
+  repeated CleanDriver energetic_protocol = 7;
+  bool faithful_bus = 8;
+  google.protobuf.StringValue glamorous_interface = 9;
+  google.protobuf.StringValue adorable_firewall = 10;
+  InquisitiveMicrochip energetic_circuit = 11;
+  google.protobuf.StringValue comfortable_program = 12;
+  google.protobuf.StringValue famous_circuit = 13;
+  ModernCircuit cooperative_panel = 14;
+  google.protobuf.StringValue combative_protocol = 15;
+  string enthusiastic_card = 16;
+  InquisitiveMicrochip curious_circuit = 17;
+  google.protobuf.UInt64Value precious_program = 18;
+  google.protobuf.UInt64Value happy_interface = 19;
+  google.protobuf.UInt32Value enthusiastic_port = 20;
+  google.protobuf.StringValue lively_system = 21;
+  repeated HilariousMonitor courageous_array = 22;
+  google.protobuf.StringValue lively_bandwidth = 23;
+  google.protobuf.Timestamp shiny_array = 24;
+  google.protobuf.Timestamp cooperative_pixel = 25;
+  uint64 homely_interface = 26;
+  google.protobuf.StringValue enthusiastic_microchip = 27;
+  GoodMonitor colorful_interface = 28;
+  google.protobuf.StringValue rich_protocol = 29;
+  google.protobuf.UInt64Value outstanding_monitor = 30;
+  repeated string vast_firewall = 31;
+  google.protobuf.Timestamp jolly_monitor = 32;
+  google.protobuf.StringValue elegant_panel = 33;
+  google.protobuf.StringValue zany_port = 34;
+}
+message GoodMonitor {
+  google.protobuf.DoubleValue brave_feed = 1;
+  google.protobuf.DoubleValue hilarious_capacitor = 2;
+}
+message ModernCircuit {
+  uint64 famous_feed = 1;
+  uint64 homely_port = 2;
+  google.protobuf.StringValue homely_bandwidth = 3;
+  google.protobuf.StringValue fair_monitor = 4;
+  google.protobuf.StringValue quaint_application = 5;
+  google.protobuf.StringValue glorious_matrix = 6;
+  google.protobuf.StringValue glorious_application = 7;
+  google.protobuf.StringValue colorful_program = 8;
+  google.protobuf.StringValue splendid_bandwidth = 9;
+  google.protobuf.StringValue happy_program = 10;
+  google.protobuf.StringValue nice_port = 11;
+  google.protobuf.StringValue charming_alarm = 12;
+  google.protobuf.DoubleValue pleasant_bandwidth = 13;
+  google.protobuf.DoubleValue successful_feed = 14;
+  google.protobuf.StringValue hilarious_capacitor = 15;
+  google.protobuf.StringValue homely_driver = 16;
+  bool gentle_microchip = 18;
+}
+message CleanDriver {
+  message InquisitiveHarddrive {
+    oneof sensor {
+      uint64 pleasant_program = 1;
+      string agreeable_feed = 2;
+    }
+    uint64 funny_transmitter = 3;
+  }
+  uint64 delightful_card = 1;
+  google.protobuf.UInt32Value zealous_feed = 2;
+  google.protobuf.StringValue brave_protocol = 3;
+  google.protobuf.UInt64Value proud_bus = 4;
+  InquisitiveMicrochip proud_sensor = 5;
+  repeated InquisitiveHarddrive enchanting_port = 6;
+  repeated CharmingAlarm proud_array = 7;
+  google.protobuf.UInt64Value glamorous_program = 8;
+}
+message CharmingAlarm {
+  oneof array {
+    RichBus modern_matrix = 1;
+    OpenTransmitter lively_circuit = 2;
+  }
+}
+message RichBus {
+  FamousCapacitor light_bandwidth = 1;
+  string perfect_transmitter = 2;
+}
+message FamousCapacitor {
+  message TenderBandwidth {
+    string adventurous_firewall = 1;
+    string famous_monitor = 2;
+  }
+  TenderBandwidth victorious_bandwidth = 1;
+  TenderBandwidth brainy_application = 2;
+}
+message OpenTransmitter {
+  google.protobuf.StringValue brainy_matrix = 1;
+  google.protobuf.StringValue graceful_monitor = 2;
+  google.protobuf.UInt64Value thoughtful_driver = 3;
+  google.protobuf.UInt64Value gentle_system = 4;
+  google.protobuf.DoubleValue inexpensive_microchip = 5;
+  DELIGHTFUL_BANDWIDTH attractive_panel = 6;
+  FamousCapacitor elegant_array = 7;
+}
+message HilariousMonitor {
+  enum COOPERATIVE_SYSTEM {
+    HANDSOME_PROGRAM = 0;
+    CHEERFUL_CAPACITOR = 1;
+    COURAGEOUS_INTERFACE = 2;
+  }
+  enum GRACEFUL_FIREWALL {
+    FRIENDLY_MONITOR = 0;
+    FAMOUS_PROTOCOL = 1;
+    CUTE_PORT = 2;
+  }
+  enum BRAVE_MICROCHIP {
+    VAST_MICROCHIP = 0;
+    HILARIOUS_PROTOCOL = 1;
+  }
+  string charming_port = 1;
+  string nice_pixel = 2;
+  string colorful_system = 3;
+  google.protobuf.DoubleValue precious_monitor = 4;
+  google.protobuf.Timestamp tasty_card = 5;
+  string bright_bus = 6;
+  DELIGHTFUL_BANDWIDTH pleasant_panel = 7;
+  COOPERATIVE_SYSTEM thankful_system = 8;
+  GRACEFUL_FIREWALL clean_transmitter = 9;
+  BRAVE_MICROCHIP calm_interface = 10;
+}
+message InquisitiveMicrochip {
+  repeated GiftedProgram kind_feed = 1;
+}
+message GiftedProgram {
+  string funny_card = 1;
+  TenderTransmitter lovely_panel = 2;
+}
+message TenderTransmitter {
+  oneof panel {
+    GracefulBus homely_circuit = 1;
+    uint64 nice_monitor = 2;
+    double precious_protocol = 3;
+    string super_card = 4;
+    bool precious_bus = 5;
+    InquisitiveMicrochip gentle_transmitter = 6;
+    OpenSystem determined_protocol = 7;
+    sint64 quaint_sensor = 8;
+  }
+}
+message OpenSystem {
+  repeated TenderTransmitter healthy_system = 1;
+}
