@@ -31,8 +31,6 @@ class ParserTest < ProtoBuff::Test
     unit = ProtoBuff.parse_string("syntax = \"proto3\";\nmessage Foo {}")
     pos = unit.messages[0].pos
 
-    p pos
-
     assert_equal 2, pos.line_no
     assert_equal 1, pos.col_no
   end
@@ -69,7 +67,7 @@ class ParserTest < ProtoBuff::Test
     unit = ProtoBuff.parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
     assert_equal 3, unit.messages[0].fields.length
     assert_equal 'id', unit.messages[0].fields[0].name
-    assert_equal :optional, unit.messages[0].fields[0].qualifier
+    assert_nil unit.messages[0].fields[0].qualifier
   end
 
   def test_msg_oneof
