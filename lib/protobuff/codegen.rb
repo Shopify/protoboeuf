@@ -273,7 +273,7 @@ ruby
     end
 
     def default_for(field)
-      case field.qualifier
+      case (field.qualifier || :optional)
       when :optional
         case field.type
         when "string"
@@ -308,7 +308,7 @@ ruby
     I32 = 5
 
     def wire_type(field)
-      case field.qualifier
+      case (field.qualifier || :optional)
       when :optional
         case field.type
         when "string"
@@ -383,7 +383,7 @@ ruby
     end
 
     def decode_code(field)
-      case field.qualifier
+      case (field.qualifier || :optional)
       when :optional
         decode_subtype(field, "@#{field.name}")
       when :repeated

@@ -268,9 +268,8 @@ module ProtoBuff
 
       qualifier = nil
       if inside_message
-        qualifier = :optional
         if input.match 'optional'
-          # This is the default
+          qualifier = :optional
         elsif input.match 'required'
           qualifier = :required
         elsif input.match 'repeated'
