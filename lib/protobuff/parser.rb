@@ -419,6 +419,15 @@ module ProtoBuff
         raise ParseError.new("enum constants should be in uint32 range", const_pos)
       end
 
+      # Check for duplicate constant names
+      names_taken = Set.new
+      constants.each do |cst|
+        if names_taken.include? cst.name
+          raise ParseError.new("duplicate enum constant name #{cst.name}", cst.pos)
+        end
+        names_taken.add cst.name
+      end
+
       constants << Constant.new(name, number, const_pos)
     end
 

@@ -79,6 +79,10 @@ class ParserTest < ProtoBuff::Test
     assert_raises { ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof { int32 a = 2; } }') }
   end
 
+  def test_duplicate_enum_const_names
+    assert_raises { ProtoBuff.parse_string('message Enum { FOO=1; FOO=2; }') }
+  end
+
   def test_msg_multiple_fields
     unit = ProtoBuff.parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
     assert_equal 3, unit.messages[0].fields.length
