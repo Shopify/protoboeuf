@@ -339,6 +339,22 @@ module ProtoBuff
     end
     check_dup_fields.call(fields)
 
+    # Check that there are no duplicate field names
+    names_used = Set.new
+    check_dup_names = lambda do |fields|
+      fields.each do |field|
+        if field.instance_of? OneOf
+          check_dup_names.call(field.fields)
+        else
+          if names_used.include? field.name
+            raise ParseError.new("field name #{field.name} already in use", field.pos)
+          end
+          names_used.add(field.name)
+        end
+      end
+    end
+    check_dup_names.call(fields)
+
     return fields, messages, enums
   end
 
