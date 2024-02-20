@@ -71,6 +71,9 @@ module ProtoBuff
     end
   end
 
+  # Represents the type of map<key_type, value_type>
+  MapType = Struct.new(:key_type, :value_type)
+
   # Qualifier is :optional, :required or :repeated
   class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
     def accept(viz)
@@ -134,7 +137,7 @@ module ProtoBuff
         if package != nil
           raise ParseError.new("only one package name can be specified", pos)
         end
-        package = parse_composite_name(input, allow_leading_dot = true)
+        package = parse_package_name(input)
         input.expect ';'
       end
 
@@ -165,11 +168,37 @@ module ProtoBuff
     Unit.new(package, options, imports, messages, enums)
   end
 
-  # Parse a composite name, e.g. foo.bar.bif
-  def self.parse_composite_name(input, allow_leading_dot = false)
+  # Parse the name of a field type
+  def self.parse_field_type(input)
+    input.eat_ws
+    ident = input.read_ident
+
+    if ident == 'map'
+      input.expect '<'
+      t1 = parse_field_type(input)
+      input.expect ','
+      t2 = parse_field_type(input)
+      input.expect '>'
+      return MapType.new(t1, t2)
+    end
+
+    type_name = ident
+    loop do
+      if input.match '.'
+        type_name += '.' + input.read_ident
+      else
+        break
+      end
+    end
+
+    type_name
+  end
+
+  # Parse a package name, e.g. foo.bar.bif
+  def self.parse_package_name(input)
     name = ""
 
-    if allow_leading_dot && (input.match '.')
+    if input.match '.'
       name += '.' + input.read_ident
     else
       name += input.read_ident
@@ -293,7 +322,7 @@ module ProtoBuff
       # Field type and name
       input.eat_ws
       field_pos = input.pos
-      type = parse_composite_name(input)
+      type = parse_field_type(input)
       input.eat_ws
       name = input.read_ident
       input.expect '='

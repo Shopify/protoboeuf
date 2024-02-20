@@ -90,6 +90,11 @@ class ParserTest < ProtoBuff::Test
     assert_nil unit.messages[0].fields[0].qualifier
   end
 
+  def test_msg_map_type
+    ProtoBuff.parse_string('message Test1 { map<int64, int64> imf = 1; }')
+    ProtoBuff.parse_string('message Test1 { map<string, google.protobuf.UInt64Value> mf = 1; }')
+  end
+
   def test_msg_oneof
     ProtoBuff.parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 3; } }')
 
