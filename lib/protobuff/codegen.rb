@@ -10,6 +10,7 @@ module ProtoBuff
       end
 
       attr_reader :message, :fields, :one_of_fields
+      attr_reader :optional_fields
 
       def initialize(message)
         @message = message
@@ -45,7 +46,7 @@ module ProtoBuff
 
       OPTIONAL_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
   <%= optional_field_readers %>
-  <%- optional_fields(message).each_with_index do |field, i| -%>
+  <%- optional_fields.each_with_index do |field, i| -%>
   def <%= field.name %>=(v)
     <%= set_bitmask(field) %>
     @<%= field.name %> = v
@@ -62,7 +63,7 @@ module ProtoBuff
       end
 
       def optional_field_readers
-        "attr_reader " + optional_fields(message).map { |f| ":" + f.name }.join(", ")
+        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ")
       end
 
       ONE_OF_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
@@ -489,12 +490,8 @@ ruby
         msg.fields.select(&:field?).reject(&:optional?)
       end
 
-      def optional_fields(msg)
-        msg.fields.select { |f| f.field? && f.optional? }
-      end
-
       def init_bitmask(msg)
-        optionals = optional_fields(msg)
+        optionals = optional_fields
         raise NotImplementedError unless optionals.length < 63
         if optionals.length > 0
           "@_bitmask = 0"
