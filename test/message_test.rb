@@ -229,4 +229,27 @@ class MessageTest < ProtoBuff::Test
     actual = ManyOptional.decode(bin)
     assert_predicate actual, :has_a?
   end
+
+  def test_oneof_methods_set_oneof_field
+    msg = TestMessageWithOneOf.new
+    assert_equal 0, msg.oneof_u32
+    assert_nil msg.oneof_msg
+    assert_equal "", msg.oneof_str
+    assert_nil msg.oneof_field
+
+    msg.oneof_str = "hello"
+    assert_equal "hello", msg.oneof_str
+    assert_equal :oneof_str, msg.oneof_field
+
+    msg.oneof_u32 = 123
+    assert_equal 123, msg.oneof_u32
+    assert_equal :oneof_u32, msg.oneof_field
+  end
+
+  def xtest_oneof_method_signature
+    msg = TestMessageWithOneOf.new(oneof_str: "hello")
+    assert_equal 0, msg.oneof_u32
+    assert_equal :oneof_str, msg.oneof_field
+    assert_equal "hello", msg.oneof_str
+  end
 end

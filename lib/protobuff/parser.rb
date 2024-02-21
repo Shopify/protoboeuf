@@ -63,6 +63,10 @@ module ProtoBuff
     def accept(viz)
       viz.visit_message self
     end
+
+    def fold(viz, seed)
+      viz.fold_message self, seed
+    end
   end
 
   class OneOf < Struct.new(:name, :fields, :pos)
@@ -72,6 +76,10 @@ module ProtoBuff
 
     def accept(viz)
       viz.visit_one_of self
+    end
+
+    def fold(viz, seed)
+      viz.fold_one_of self, seed
     end
   end
 
@@ -83,6 +91,10 @@ module ProtoBuff
 
     def accept(viz)
       viz.visit_field self
+    end
+
+    def fold(viz, seed)
+      viz.fold_field self, seed
     end
 
     def optional?

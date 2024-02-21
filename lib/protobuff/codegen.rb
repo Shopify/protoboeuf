@@ -9,12 +9,26 @@ module ProtoBuff
         new(message).result
       end
 
-      attr_reader :message
+      attr_reader :message, :fields, :one_of_fields
 
       def initialize(message)
         @message = message
         @optional_field_bit_lut = []
-        optional_fields(message).each_with_index { |field, i|
+        @fields = @message.fields
+
+        field_types = message.fields.group_by { |field|
+          if field.field?
+            field.qualifier || :required
+          else
+            :one_of
+          end
+        }
+
+        @required_fields = field_types[:required] || []
+        @optional_fields = field_types[:optional] || []
+        @one_of_fields = field_types[:one_of] || []
+
+        @optional_fields.each_with_index { |field, i|
           @optional_field_bit_lut[field.number] = i
         }
       end
@@ -49,6 +63,28 @@ module ProtoBuff
 
       def optional_field_readers
         "attr_reader " + optional_fields(message).map { |f| ":" + f.name }.join(", ")
+      end
+
+      ONE_OF_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
+  <%= one_of_field_readers %>
+
+  <%- one_of_fields.each do |one_of| -%>
+  <%- one_of.fields.each do |field| -%>
+  def <%= field.name %>=(v)
+    @<%= one_of.name %> = :<%= field.name %>
+    @<%= field.name %> = v
+  end
+  <%- end -%>
+  <%- end -%>
+      ruby
+
+      def one_of_field_methods
+        ONE_OF_FIELD_METHODS.result(binding)
+      end
+
+      def one_of_field_readers
+        fields = one_of_fields + one_of_fields.flat_map(&:fields)
+        "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
       PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
@@ -249,18 +285,27 @@ class <%= message.name %>
   <%- if message.fields.length > 0 -%>
   <%= required_field_methods %>
 
-  def initialize(<%= initialize_signature(message) %>)
-  <%- for field in message.fields -%>
+  def initialize(<%= initialize_signature %>)
+  <%- for field in fields -%>
+    <%- if field.field? -%>
     @<%= field.name %> = <%= field.name %>
+    <%- else -%>
+    @<%= field.name %> = nil # one_of field
+      <%- for one_of_child in field.fields -%>
+    @<%= one_of_child.name %> = <%= one_of_child.name %>
+      <%- end -%>
+    <%- end -%>
   <%- end -%>
   <%- end -%>
   <%= init_bitmask(message) %>
   end
 
+  <%= one_of_field_methods %>
+
   <%= optional_field_methods %>
 
   def decode_from(buff, index, len)
-    <%- for field in message.fields -%>
+    <%- for field in fields -%>
       @<%= field.name %> = <%= default_for(field) %>
     <%- end -%>
     <%= init_bitmask(message) %>
@@ -268,7 +313,8 @@ class <%= message.name %>
     <%= pull_tag %>
 
     while true
-      <%- message.fields.each do |field| -%>
+      <%- fields.each do |field| -%>
+      <%- next unless field.field? -%>
       if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
         <%= set_bitmask(field) if field.optional? %>
@@ -302,26 +348,31 @@ ruby
       end
 
       def default_for(field)
-        if field.repeated?
-          "[]"
-        else
-          case field.type
-          when "string"
-            '""'
-          when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
-            0
-          when "bool"
-            false
-          when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-            'nil'
+        if field.field?
+          if field.repeated?
+            "[]"
           else
-            raise "Unknown field type #{field.type}"
+            case field.type
+            when "string"
+              '""'
+            when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
+              0
+            when "bool"
+              false
+            when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+              'nil'
+            else
+              raise "Unknown field type #{field.type}"
+            end
           end
+        else
+          'nil'
         end
       end
 
-      def initialize_signature(msg)
-        msg.fields.map { |f| "#{f.name}: #{default_for(f)}" }.join(", ")
+      def initialize_signature
+        fields = self.fields.flat_map { |f| f.field? ? f : f.fields }
+        fields.map { |f| "#{f.name}: #{default_for(f)}" }.join(", ")
       end
 
       def tag_for_field(field, idx)
