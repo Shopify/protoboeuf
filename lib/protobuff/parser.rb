@@ -76,6 +76,31 @@ module ProtoBuff
     def accept(viz)
       viz.visit_field self
     end
+
+    VARINT = 0
+    I64 = 1
+    LEN = 2
+    I32 = 5
+
+    def wire_type
+      case qualifier
+      when :optional, nil
+        case type
+        when "string"
+          LEN
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
+          VARINT
+        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          LEN
+        else
+          raise "Unknown wire type for field #{type}"
+        end
+      when :repeated
+        LEN
+      else
+        raise "Unknown qualifier #{qualifier}"
+      end
+    end
   end
 
   # Enum and enum constants
