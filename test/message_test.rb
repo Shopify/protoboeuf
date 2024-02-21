@@ -252,4 +252,12 @@ class MessageTest < ProtoBuff::Test
     assert_equal :oneof_str, msg.oneof_field
     assert_equal "hello", msg.oneof_str
   end
+
+  def test_oneof_decoding
+    msg = ::TestMessageWithOneOf.new(oneof_str: "hello")
+    actual = TestMessageWithOneOf.decode(::TestMessageWithOneOf.encode(msg))
+    assert_equal "hello", actual.oneof_str
+    assert_equal :oneof_str, actual.oneof_field
+    assert_equal 0, actual.oneof_u32
+  end
 end

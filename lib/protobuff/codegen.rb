@@ -291,6 +291,7 @@ class <%= message.name %>
   <%- end -%>
 
   def initialize(<%= initialize_signature %>)
+  <%= init_bitmask(message) %>
   <%- for field in fields -%>
     <%- if field.field? -%>
     @<%= field.name %> = <%= field.name %>
@@ -307,7 +308,6 @@ class <%= message.name %>
     <%- end -%>
   <%- end -%>
   <%- end -%>
-  <%= init_bitmask(message) %>
   end
 
   <%= one_of_field_methods %>
@@ -315,22 +315,39 @@ class <%= message.name %>
   <%= optional_field_methods %>
 
   def decode_from(buff, index, len)
-    <%- for field in fields -%>
-      @<%= field.name %> = <%= default_for(field) %>
-    <%- end -%>
     <%= init_bitmask(message) %>
+    <%- for field in fields -%>
+      <%- if field.field? -%>
+      @<%= field.name %> = <%= default_for(field) %>
+      <%- else -%>
+      @<%= field.name %> = nil # one_of field
+        <%- for one_of_child in field.fields -%>
+      @<%= one_of_child.name %> = <%= default_for(one_of_child) %>
+        <%- end -%>
+      <%- end -%>
+    <%- end -%>
 
     <%= pull_tag %>
 
     while true
       <%- fields.each do |field| -%>
-      <%- next unless field.field? -%>
+        <%- if field.field? -%>
       if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
         <%= set_bitmask(field) if field.optional? %>
         return self if index >= len
         <%= pull_tag %>
       end
+        <%- else -%>
+          <%- field.fields.each do |child| -%>
+      if tag == <%= tag_for_field(child, child.number) %>
+        <%= decode_code(child) %>
+        @<%= field.name %> = :<%= child.name %>
+        return self if index >= len
+        <%= pull_tag %>
+      end
+          <%- end -%>
+        <%- end -%>
       <%- end -%>
 
       raise NotImplementedError
