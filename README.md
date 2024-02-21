@@ -1,10 +1,12 @@
-# protobuff
+# protoboeuf
 
-Repository for an experimental version of a protobuf encoder / decoder.
+Repository for an experimental version of a pure-Ruby protobuf encoder / decoder supporting `proto3`.
 
 ## Getting started
 
 Make sure you have protobuf installed. On macOS it's like this:
+
+<img align="right" height="200" src="media/image.jpg">
 
 ```
 brew install protobuf
