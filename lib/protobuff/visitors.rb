@@ -70,13 +70,13 @@ module ProtoBuff
         indent("#{const.name} = #{const.number};")
       end
 
-      def visit_one_of(one_of)
+      def visit_oneof(oneof)
         @indent += 1
-        body = one_of.fields.map { |f| f.accept self }.join("\n")
-        body += "\n" if one_of.fields.length > 0
+        body = oneof.fields.map { |f| f.accept self }.join("\n")
+        body += "\n" if oneof.fields.length > 0
         @indent -= 1
 
-        indent("oneof #{one_of.name} {\n") + body + indent("}")
+        indent("oneof #{oneof.name} {\n") + body + indent("}")
       end
 
       private

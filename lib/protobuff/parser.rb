@@ -74,16 +74,16 @@ module ProtoBuff
       false
     end
 
-    def one_of?
+    def oneof?
       true
     end
 
     def accept(viz)
-      viz.visit_one_of self
+      viz.visit_oneof self
     end
 
     def fold(viz, seed)
-      viz.fold_one_of self, seed
+      viz.fold_oneof self, seed
     end
   end
 
@@ -93,7 +93,7 @@ module ProtoBuff
       true
     end
 
-    def one_of?
+    def oneof?
       false
     end
 

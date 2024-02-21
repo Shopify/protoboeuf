@@ -9,7 +9,7 @@ module ProtoBuff
         new(message).result
       end
 
-      attr_reader :message, :fields, :one_of_fields
+      attr_reader :message, :fields, :oneof_fields
       attr_reader :optional_fields
 
       def initialize(message)
@@ -21,13 +21,13 @@ module ProtoBuff
           if field.field?
             field.qualifier || :required
           else
-            :one_of
+            :oneof
           end
         }
 
         @required_fields = field_types[:required] || []
         @optional_fields = field_types[:optional] || []
-        @one_of_fields = field_types[:one_of] || []
+        @oneof_fields = field_types[:oneof] || []
 
         @optional_fields.each_with_index { |field, i|
           @optional_field_bit_lut[field.number] = i
@@ -67,24 +67,24 @@ module ProtoBuff
       end
 
       ONE_OF_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
-  <%= one_of_field_readers %>
+  <%= oneof_field_readers %>
 
-  <%- one_of_fields.each do |one_of| -%>
-  <%- one_of.fields.each do |field| -%>
+  <%- oneof_fields.each do |oneof| -%>
+  <%- oneof.fields.each do |field| -%>
   def <%= field.name %>=(v)
-    @<%= one_of.name %> = :<%= field.name %>
+    @<%= oneof.name %> = :<%= field.name %>
     @<%= field.name %> = v
   end
   <%- end -%>
   <%- end -%>
       ruby
 
-      def one_of_field_methods
+      def oneof_field_methods
         ONE_OF_FIELD_METHODS.result(binding)
       end
 
-      def one_of_field_readers
-        fields = one_of_fields + one_of_fields.flat_map(&:fields)
+      def oneof_field_readers
+        fields = oneof_fields + oneof_fields.flat_map(&:fields)
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
@@ -286,7 +286,7 @@ class <%= message.name %>
   <%- if message.fields.length > 0 -%>
   <%= required_field_methods %>
 
-  <%- if message.fields.any?(&:one_of?) -%>
+  <%- if message.fields.any?(&:oneof?) -%>
   NONE = Object.new
   private_constant :NONE
   <%- end -%>
@@ -297,13 +297,13 @@ class <%= message.name %>
     <%- if field.field? -%>
     @<%= field.name %> = <%= field.name %>
     <%- else -%>
-    @<%= field.name %> = nil # one_of field
-      <%- for one_of_child in field.fields -%>
-    if <%= one_of_child.name %> == NONE
-      @<%= one_of_child.name %> = <%= default_for(one_of_child) %>
+    @<%= field.name %> = nil # oneof field
+      <%- for oneof_child in field.fields -%>
+    if <%= oneof_child.name %> == NONE
+      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
     else
-      @<%= field.name %> = :<%= one_of_child.name %>
-      @<%= one_of_child.name %> = <%= one_of_child.name %>
+      @<%= field.name %> = :<%= oneof_child.name %>
+      @<%= oneof_child.name %> = <%= oneof_child.name %>
     end
       <%- end -%>
     <%- end -%>
@@ -311,7 +311,7 @@ class <%= message.name %>
   <%- end -%>
   end
 
-  <%= one_of_field_methods %>
+  <%= oneof_field_methods %>
 
   <%= optional_field_methods %>
 
@@ -321,9 +321,9 @@ class <%= message.name %>
       <%- if field.field? -%>
       @<%= field.name %> = <%= default_for(field) %>
       <%- else -%>
-      @<%= field.name %> = nil # one_of field
-        <%- for one_of_child in field.fields -%>
-      @<%= one_of_child.name %> = <%= default_for(one_of_child) %>
+      @<%= field.name %> = nil # oneof field
+        <%- for oneof_child in field.fields -%>
+      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
         <%- end -%>
       <%- end -%>
     <%- end -%>
