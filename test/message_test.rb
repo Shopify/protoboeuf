@@ -190,4 +190,74 @@ class MessageTest < ProtoBuff::Test
     obj = TestString.new
     assert_predicate obj.a, :frozen?
   end
+
+  def test_many_optional
+    expected = ::ManyOptional.new
+    actual = ManyOptional.new
+
+    assert_equal expected.a, actual.a
+    refute_predicate expected, :has_a?
+    refute_predicate expected, :has_d?
+    refute_predicate actual, :has_a?
+    refute_predicate actual, :has_d?
+
+    assert_raises { expected.has_c? }
+    assert_raises { actual.has_c? }
+
+    expected.a = 123
+    actual.a = 123
+    expected.d = 456
+    actual.d = 456
+
+    assert_predicate expected, :has_a?
+    assert_predicate expected, :has_d?
+    assert_predicate actual, :has_a?
+    assert_predicate actual, :has_d?
+  end
+
+  def test_optional_from_binary
+    msg = ::ManyOptional.new
+    msg.a = 123
+
+    bin = ::ManyOptional.encode(msg)
+
+    # Upstream knows that "a" has been set
+    loaded = ::ManyOptional.decode(bin)
+    assert_predicate loaded, :has_a?
+
+    # We must match that
+    actual = ManyOptional.decode(bin)
+    assert_predicate actual, :has_a?
+  end
+
+  def test_oneof_methods_set_oneof_field
+    msg = TestMessageWithOneOf.new
+    assert_equal 0, msg.oneof_u32
+    assert_nil msg.oneof_msg
+    assert_equal "", msg.oneof_str
+    assert_nil msg.oneof_field
+
+    msg.oneof_str = "hello"
+    assert_equal "hello", msg.oneof_str
+    assert_equal :oneof_str, msg.oneof_field
+
+    msg.oneof_u32 = 123
+    assert_equal 123, msg.oneof_u32
+    assert_equal :oneof_u32, msg.oneof_field
+  end
+
+  def test_oneof_method_signature
+    msg = TestMessageWithOneOf.new(oneof_str: "hello")
+    assert_equal 0, msg.oneof_u32
+    assert_equal :oneof_str, msg.oneof_field
+    assert_equal "hello", msg.oneof_str
+  end
+
+  def test_oneof_decoding
+    msg = ::TestMessageWithOneOf.new(oneof_str: "hello")
+    actual = TestMessageWithOneOf.decode(::TestMessageWithOneOf.encode(msg))
+    assert_equal "hello", actual.oneof_str
+    assert_equal :oneof_str, actual.oneof_field
+    assert_equal 0, actual.oneof_u32
+  end
 end

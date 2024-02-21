@@ -4,25 +4,109 @@ require "erb"
 
 module ProtoBuff
   class CodeGen
-    PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
+    class MessageCompiler
+      def self.result(message)
+        new(message).result
+      end
+
+      attr_reader :message, :fields, :oneof_fields
+      attr_reader :optional_fields
+
+      def initialize(message)
+        @message = message
+        @optional_field_bit_lut = []
+        @fields = @message.fields
+
+        field_types = message.fields.group_by { |field|
+          if field.field?
+            field.qualifier || :required
+          else
+            :oneof
+          end
+        }
+
+        @required_fields = field_types[:required] || []
+        @optional_fields = field_types[:optional] || []
+        @oneof_fields = field_types[:oneof] || []
+
+        @optional_fields.each_with_index { |field, i|
+          @optional_field_bit_lut[field.number] = i
+        }
+      end
+
+      def result
+        CLASS_TEMPLATE.result(binding)
+      end
+
+      private
+
+      def required_field_methods
+        "attr_accessor " + required_fields(message).map { |f| ":" + f.name }.join(", ")
+      end
+
+      OPTIONAL_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
+  <%= optional_field_readers %>
+  <%- optional_fields.each_with_index do |field, i| -%>
+  def <%= field.name %>=(v)
+    <%= set_bitmask(field) %>
+    @<%= field.name %> = v
+  end
+
+  def has_<%= field.name %>?
+    <%= test_bitmask(field) %>
+  end
+  <%- end -%>
+      ruby
+
+      def optional_field_methods
+        OPTIONAL_FIELD_METHODS.result(binding)
+      end
+
+      def optional_field_readers
+        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ")
+      end
+
+      ONE_OF_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
+  <%= oneof_field_readers %>
+
+  <%- oneof_fields.each do |oneof| -%>
+  <%- oneof.fields.each do |field| -%>
+  def <%= field.name %>=(v)
+    @<%= oneof.name %> = :<%= field.name %>
+    @<%= field.name %> = v
+  end
+  <%- end -%>
+  <%- end -%>
+      ruby
+
+      def oneof_field_methods
+        ONE_OF_FIELD_METHODS.result(binding)
+      end
+
+      def oneof_field_readers
+        fields = oneof_fields + oneof_fields.flat_map(&:fields)
+        "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
+      end
+
+      PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_MESSAGE
       <%= pull_uint64("msg_len") %>
       <%= dest %> = <%= field.type %>.allocate.decode_from(buff, index, index += msg_len)
       ## END PULL_MESSAGE
-    ruby
+      ruby
 
-    PULL_TAG = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_TAG = ERB.new(<<-ruby, trim_mode: '-')
       tag = buff.getbyte(index)
       index += 1
-    ruby
+      ruby
 
-    PULL_BOOLEAN = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_BOOLEAN = ERB.new(<<-ruby, trim_mode: '-')
       byte = buff.getbyte index
       index += 1
       <%= dest %> = byte == 1
-    ruby
+      ruby
 
-    PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
       if (byte0 = buff.getbyte(index)) < 0x80
         index += 1
         byte0
@@ -151,28 +235,28 @@ module ProtoBuff
           end
         end
       end
-    ruby
+      ruby
 
-    PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_INT64
       <%= dest %> = <%= pull_varint(sign: :i64) %>
       ## END PULL_INT64
-    ruby
+      ruby
 
-    PULL_UINT64 = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_UINT64 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL_UINT64
       <%= dest %> = <%= pull_varint %>
       ## END PULL_UINT64
-    ruby
+      ruby
 
-    PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
       value = <%= pull_varint %>
 
       <%= dest %> = buff.byteslice(index, value)
       index += value
-    ruby
+      ruby
 
-    PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL SINT32
       <%= dest %> = <%= pull_varint %>
 
@@ -183,55 +267,97 @@ module ProtoBuff
         -((<%= dest %> + 1) >> 1)
       end
       ## END PULL SINT32
-    ruby
+      ruby
 
-    PULL_INT32 = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_INT32 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL INT32
       <%= dest %> = <%= pull_varint(sign: :i32) %>
       ## END PULL INT32
-    ruby
+      ruby
 
-    CLASS_TEMPLATE = ERB.new(<<-ruby, trim_mode: '-')
+      CLASS_TEMPLATE = ERB.new(<<-ruby, trim_mode: '-')
 class <%= message.name %>
-  <%- if message.fields.length > 0 -%>
   def self.decode(buff)
     buff = buff.dup
     buff.force_encoding("UTF-8")
     allocate.decode_from(buff, 0, buff.bytesize)
   end
 
-  attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
+  <%- if message.fields.length > 0 -%>
+  <%= required_field_methods %>
 
-  def initialize(<%= initialize_signature(message) %>)
-  <%- for field in message.fields -%>
+  <%- if message.fields.any?(&:oneof?) -%>
+  NONE = Object.new
+  private_constant :NONE
+  <%- end -%>
+
+  def initialize(<%= initialize_signature %>)
+  <%= init_bitmask(message) %>
+  <%- for field in fields -%>
+    <%- if field.field? -%>
     @<%= field.name %> = <%= field.name %>
+    <%- else -%>
+    @<%= field.name %> = nil # oneof field
+      <%- for oneof_child in field.fields -%>
+    if <%= oneof_child.name %> == NONE
+      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
+    else
+      @<%= field.name %> = :<%= oneof_child.name %>
+      @<%= oneof_child.name %> = <%= oneof_child.name %>
+    end
+      <%- end -%>
+    <%- end -%>
   <%- end -%>
   <%- end -%>
   end
 
+  <%= oneof_field_methods %>
+
+  <%= optional_field_methods %>
+
   def decode_from(buff, index, len)
-    <%- for field in message.fields -%>
+    <%= init_bitmask(message) %>
+    <%- for field in fields -%>
+      <%- if field.field? -%>
       @<%= field.name %> = <%= default_for(field) %>
+      <%- else -%>
+      @<%= field.name %> = nil # oneof field
+        <%- for oneof_child in field.fields -%>
+      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
+        <%- end -%>
+      <%- end -%>
     <%- end -%>
 
     <%= pull_tag %>
 
     while true
-      <%- message.fields.each do |field| -%>
+      <%- fields.each do |field| -%>
+        <%- if field.field? -%>
       if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
+        <%= set_bitmask(field) if field.optional? %>
         return self if index >= len
         <%= pull_tag %>
       end
+        <%- else -%>
+          <%- field.fields.each do |child| -%>
+      if tag == <%= tag_for_field(child, child.number) %>
+        <%= decode_code(child) %>
+        @<%= field.name %> = :<%= child.name %>
+        return self if index >= len
+        <%= pull_tag %>
+      end
+          <%- end -%>
+        <%- end -%>
       <%- end -%>
 
       raise NotImplementedError
     end
   end
 end
-    ruby
+      ruby
 
-    PACKED_REPEATED = ERB.new(<<ruby)
+      PACKED_REPEATED = ERB.new(<<ruby)
         idx = 0
         <%= pull_uint64("value") %>
         goal = index + value
@@ -242,6 +368,148 @@ end
           idx += 1
         end
 ruby
+
+      private
+
+      def pull_tag
+        PULL_TAG.result(binding)
+      end
+
+      def default_for(field)
+        if field.field?
+          if field.repeated?
+            "[]"
+          else
+            case field.type
+            when "string"
+              '""'
+            when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
+              0
+            when "bool"
+              false
+            when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+              'nil'
+            else
+              raise "Unknown field type #{field.type}"
+            end
+          end
+        else
+          'nil'
+        end
+      end
+
+      def initialize_signature
+        self.fields.flat_map { |f|
+          if f.field?
+            "#{f.name}: #{default_for(f)}"
+          else
+            f.fields.map { |child|
+              "#{child.name}: NONE"
+            }
+          end
+        }.join(", ")
+      end
+
+      def tag_for_field(field, idx)
+        sprintf("%#02x", (idx << 3 | wire_type(field)))
+      end
+
+      def wire_type(field)
+        field.wire_type
+      end
+
+      def decode_subtype(field, dest)
+        case field.type
+        when "string" then pull_string(dest)
+        when "uint64" then pull_uint64(dest)
+        when "int64" then pull_int64(dest)
+        when "int32" then pull_int32(dest)
+        when "uint32" then pull_uint32(dest)
+        when "sint32" then pull_sint32(dest)
+        when "sint64" then pull_sint64(dest)
+        when "bool" then pull_boolean(dest)
+        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          pull_message(field, dest)
+        else
+          raise "Unknown field type #{field.type}"
+        end
+      end
+
+      def pull_message(field, dest)
+        PULL_MESSAGE.result(binding)
+      end
+
+      def pull_int64(dest)
+        PULL_INT64.result(binding)
+      end
+
+      def pull_int32(dest)
+        PULL_INT32.result(binding)
+      end
+
+      def pull_sint32(dest)
+        PULL_SINT32.result(binding)
+      end
+
+      def pull_varint(sign: false)
+        PULL_VARINT.result(binding)
+      end
+
+      alias :pull_sint64 :pull_sint32
+
+      def pull_string(dest)
+        PULL_STRING.result(binding)
+      end
+
+      def pull_uint64(dest)
+        PULL_UINT64.result(binding)
+      end
+
+      def pull_uint32(dest)
+        PULL_UINT64.result(binding)
+      end
+
+      def pull_boolean(dest)
+        PULL_BOOLEAN.result(binding)
+      end
+
+      def decode_code(field)
+        if field.repeated?
+          case field.type
+          when "uint32"
+            PACKED_REPEATED.result(binding)
+          else
+            raise "Unknown field type #{field.type}"
+          end
+        else
+          decode_subtype(field, "@#{field.name}")
+        end
+      end
+
+      def required_fields(msg)
+        msg.fields.select(&:field?).reject(&:optional?)
+      end
+
+      def init_bitmask(msg)
+        optionals = optional_fields
+        raise NotImplementedError unless optionals.length < 63
+        if optionals.length > 0
+          "@_bitmask = 0"
+        else
+          ""
+        end
+      end
+
+      def set_bitmask(field)
+        i = @optional_field_bit_lut[field.number]
+        "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
+      end
+
+      def test_bitmask(field)
+        i = @optional_field_bit_lut[field.number]
+        "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
+      end
+    end
 
     def initialize(ast)
       @ast = ast
@@ -262,140 +530,8 @@ ruby
       end
 
       head + @ast.messages.map { |message|
-        CLASS_TEMPLATE.result(binding)
+        MessageCompiler.result(message)
       }.join + tail
-    end
-
-    private
-
-    def pull_tag
-      PULL_TAG.result(binding)
-    end
-
-    def default_for(field)
-      case (field.qualifier || :optional)
-      when :optional
-        case field.type
-        when "string"
-          '""'
-        when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
-          0
-        when "bool"
-          false
-        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          'nil'
-        else
-          raise "Unknown field type #{field.type}"
-        end
-      when :repeated
-        "[]"
-      else
-        raise "Unknown qualifier #{field.type}"
-      end
-    end
-
-    def initialize_signature(msg)
-      msg.fields.map { |f| "#{f.name}: #{default_for(f)}" }.join(", ")
-    end
-
-    def tag_for_field(field, idx)
-      sprintf("%#02x", (idx << 3 | wire_type(field)))
-    end
-
-    VARINT = 0
-    I64 = 1
-    LEN = 2
-    I32 = 5
-
-    def wire_type(field)
-      case (field.qualifier || :optional)
-      when :optional
-        case field.type
-        when "string"
-          LEN
-        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
-          VARINT
-        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          LEN
-        else
-          raise "Unknown wire type for field #{field.type}"
-        end
-      when :repeated
-        LEN
-      else
-        raise "Unknown qualifier #{field.qualifier}"
-      end
-    end
-
-    def decode_subtype(field, dest)
-      case field.type
-      when "string" then pull_string(dest)
-      when "uint64" then pull_uint64(dest)
-      when "int64" then pull_int64(dest)
-      when "int32" then pull_int32(dest)
-      when "uint32" then pull_uint32(dest)
-      when "sint32" then pull_sint32(dest)
-      when "sint64" then pull_sint64(dest)
-      when "bool" then pull_boolean(dest)
-      when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-        pull_message(field, dest)
-      else
-        raise "Unknown field type #{field.type}"
-      end
-    end
-
-    def pull_message(field, dest)
-      PULL_MESSAGE.result(binding)
-    end
-
-    def pull_int64(dest)
-      PULL_INT64.result(binding)
-    end
-
-    def pull_int32(dest)
-      PULL_INT32.result(binding)
-    end
-
-    def pull_sint32(dest)
-      PULL_SINT32.result(binding)
-    end
-
-    def pull_varint(sign: false)
-      PULL_VARINT.result(binding)
-    end
-
-    alias :pull_sint64 :pull_sint32
-
-    def pull_string(dest)
-      PULL_STRING.result(binding)
-    end
-
-    def pull_uint64(dest)
-      PULL_UINT64.result(binding)
-    end
-
-    def pull_uint32(dest)
-      PULL_UINT64.result(binding)
-    end
-
-    def pull_boolean(dest)
-      PULL_BOOLEAN.result(binding)
-    end
-
-    def decode_code(field)
-      case (field.qualifier || :optional)
-      when :optional
-        decode_subtype(field, "@#{field.name}")
-      when :repeated
-        case field.type
-        when "uint32"
-          PACKED_REPEATED.result(binding)
-        else
-          raise "Unknown field type #{field.type}"
-        end
-      else
-        raise "Unknown qualifier #{field.qualifier}"
-      end
     end
   end
 end

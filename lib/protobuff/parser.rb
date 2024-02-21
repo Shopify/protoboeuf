@@ -63,11 +63,27 @@ module ProtoBuff
     def accept(viz)
       viz.visit_message self
     end
+
+    def fold(viz, seed)
+      viz.fold_message self, seed
+    end
   end
 
   class OneOf < Struct.new(:name, :fields, :pos)
+    def field?
+      false
+    end
+
+    def oneof?
+      true
+    end
+
     def accept(viz)
-      viz.visit_one_of self
+      viz.visit_oneof self
+    end
+
+    def fold(viz, seed)
+      viz.fold_oneof self, seed
     end
   end
 
@@ -76,8 +92,50 @@ module ProtoBuff
 
   # Qualifier is :optional, :required or :repeated
   class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
+    def field?
+      true
+    end
+
+    def oneof?
+      false
+    end
+
     def accept(viz)
       viz.visit_field self
+    end
+
+    def fold(viz, seed)
+      viz.fold_field self, seed
+    end
+
+    def optional?
+      qualifier == :optional
+    end
+
+    def repeated?
+      qualifier == :repeated
+    end
+
+    VARINT = 0
+    I64 = 1
+    LEN = 2
+    I32 = 5
+
+    def wire_type
+      if repeated?
+        LEN
+      else
+        case type
+        when "string"
+          LEN
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
+          VARINT
+        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          LEN
+        else
+          raise "Unknown wire type for field #{type}"
+        end
+      end
     end
   end
 
