@@ -285,6 +285,11 @@ class <%= message.name %>
   <%- if message.fields.length > 0 -%>
   <%= required_field_methods %>
 
+  <%- if message.fields.any?(&:one_of?) -%>
+  NONE = Object.new
+  private_constant :NONE
+  <%- end -%>
+
   def initialize(<%= initialize_signature %>)
   <%- for field in fields -%>
     <%- if field.field? -%>
@@ -292,7 +297,12 @@ class <%= message.name %>
     <%- else -%>
     @<%= field.name %> = nil # one_of field
       <%- for one_of_child in field.fields -%>
-    @<%= one_of_child.name %> = <%= one_of_child.name %>
+    if <%= one_of_child.name %> == NONE
+      @<%= one_of_child.name %> = <%= default_for(one_of_child) %>
+    else
+      @<%= field.name %> = :<%= one_of_child.name %>
+      @<%= one_of_child.name %> = <%= one_of_child.name %>
+    end
       <%- end -%>
     <%- end -%>
   <%- end -%>
@@ -371,8 +381,15 @@ ruby
       end
 
       def initialize_signature
-        fields = self.fields.flat_map { |f| f.field? ? f : f.fields }
-        fields.map { |f| "#{f.name}: #{default_for(f)}" }.join(", ")
+        self.fields.flat_map { |f|
+          if f.field?
+            "#{f.name}: #{default_for(f)}"
+          else
+            f.fields.map { |child|
+              "#{child.name}: NONE"
+            }
+          end
+        }.join(", ")
       end
 
       def tag_for_field(field, idx)

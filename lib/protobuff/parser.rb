@@ -74,6 +74,10 @@ module ProtoBuff
       false
     end
 
+    def one_of?
+      true
+    end
+
     def accept(viz)
       viz.visit_one_of self
     end
@@ -87,6 +91,10 @@ module ProtoBuff
   class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
     def field?
       true
+    end
+
+    def one_of?
+      false
     end
 
     def accept(viz)

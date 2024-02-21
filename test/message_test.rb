@@ -246,7 +246,7 @@ class MessageTest < ProtoBuff::Test
     assert_equal :oneof_u32, msg.oneof_field
   end
 
-  def xtest_oneof_method_signature
+  def test_oneof_method_signature
     msg = TestMessageWithOneOf.new(oneof_str: "hello")
     assert_equal 0, msg.oneof_u32
     assert_equal :oneof_str, msg.oneof_field
