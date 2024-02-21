@@ -190,4 +190,43 @@ class MessageTest < ProtoBuff::Test
     obj = TestString.new
     assert_predicate obj.a, :frozen?
   end
+
+  def test_many_optional
+    expected = ::ManyOptional.new
+    actual = ManyOptional.new
+
+    assert_equal expected.a, actual.a
+    refute_predicate expected, :has_a?
+    refute_predicate expected, :has_d?
+    refute_predicate actual, :has_a?
+    refute_predicate actual, :has_d?
+
+    assert_raises { expected.has_c? }
+    assert_raises { actual.has_c? }
+
+    expected.a = 123
+    actual.a = 123
+    expected.d = 456
+    actual.d = 456
+
+    assert_predicate expected, :has_a?
+    assert_predicate expected, :has_d?
+    assert_predicate actual, :has_a?
+    assert_predicate actual, :has_d?
+  end
+
+  def test_optional_from_binary
+    msg = ::ManyOptional.new
+    msg.a = 123
+
+    bin = ::ManyOptional.encode(msg)
+
+    # Upstream knows that "a" has been set
+    loaded = ::ManyOptional.decode(bin)
+    assert_predicate loaded, :has_a?
+
+    # We must match that
+    actual = ManyOptional.decode(bin)
+    assert_predicate actual, :has_a?
+  end
 end

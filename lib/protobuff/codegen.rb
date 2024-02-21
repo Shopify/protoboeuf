@@ -200,19 +200,33 @@ class <%= message.name %>
     allocate.decode_from(buff, 0, buff.bytesize)
   end
 
-  attr_accessor <%= message.fields.map { |f| ":" + f.name }.join(", ") %>
+  attr_accessor <%= required_fields(message).map { |f| ":" + f.name }.join(", ") %>
+  attr_reader <%= optional_fields(message).map { |f| ":" + f.name }.join(", ") %>
 
   def initialize(<%= initialize_signature(message) %>)
   <%- for field in message.fields -%>
     @<%= field.name %> = <%= field.name %>
   <%- end -%>
   <%- end -%>
+  <%= init_bitmask(message) %>
   end
+
+  <%- optional_fields(message).each_with_index do |field, i| -%>
+  def <%= field.name %>=(v)
+    <%= set_bitmask(message, field) %>
+    @<%= field.name %> = v
+  end
+
+  def has_<%= field.name %>?
+    <%= test_bitmask(i) %>
+  end
+  <%- end -%>
 
   def decode_from(buff, index, len)
     <%- for field in message.fields -%>
       @<%= field.name %> = <%= default_for(field) %>
     <%- end -%>
+    <%= init_bitmask(message) %>
 
     <%= pull_tag %>
 
@@ -220,6 +234,7 @@ class <%= message.name %>
       <%- message.fields.each do |field| -%>
       if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
+        <%= set_bitmask(message, field) if field.qualifier == :optional %>
         return self if index >= len
         <%= pull_tag %>
       end
@@ -383,8 +398,8 @@ ruby
     end
 
     def decode_code(field)
-      case (field.qualifier || :optional)
-      when :optional
+      case (field.qualifier || :required)
+      when :optional, :required
         decode_subtype(field, "@#{field.name}")
       when :repeated
         case field.type
@@ -396,6 +411,35 @@ ruby
       else
         raise "Unknown qualifier #{field.qualifier}"
       end
+    end
+
+    def required_fields(msg)
+      msg.fields.reject { |f| f.qualifier == :optional }
+    end
+
+    def optional_fields(msg)
+      msg.fields.select { |f| f.qualifier == :optional }
+    end
+
+    def init_bitmask(msg)
+      optionals = optional_fields(msg)
+      raise NotImplementedError unless optionals.length < 63
+      if optionals.length > 0
+        "@_bitmask = 0"
+      else
+        ""
+      end
+    end
+
+    def set_bitmask(msg, field)
+      # FIXME: this is very inefficient. We're looping through all fields
+      # too many times.
+      i = optional_fields(msg).index(field)
+      "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
+    end
+
+    def test_bitmask(i)
+      "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
     end
   end
 end

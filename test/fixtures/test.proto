@@ -115,3 +115,10 @@ message Bucket {
 
   NestedEnum kind = 3;
 }
+
+message ManyOptional {
+  optional uint64 a = 1;
+  optional uint64 b = 2;
+  uint64 c = 3;
+  optional uint64 d = 4;
+}
