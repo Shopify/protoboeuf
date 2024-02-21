@@ -66,6 +66,10 @@ module ProtoBuff
   end
 
   class OneOf < Struct.new(:name, :fields, :pos)
+    def field?
+      false
+    end
+
     def accept(viz)
       viz.visit_one_of self
     end
@@ -73,8 +77,20 @@ module ProtoBuff
 
   # Qualifier is :optional, :required or :repeated
   class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
+    def field?
+      true
+    end
+
     def accept(viz)
       viz.visit_field self
+    end
+
+    def optional?
+      qualifier == :optional
+    end
+
+    def repeated?
+      qualifier == :repeated
     end
 
     VARINT = 0
@@ -83,8 +99,9 @@ module ProtoBuff
     I32 = 5
 
     def wire_type
-      case qualifier
-      when :optional, nil
+      if repeated?
+        LEN
+      else
         case type
         when "string"
           LEN
@@ -95,10 +112,6 @@ module ProtoBuff
         else
           raise "Unknown wire type for field #{type}"
         end
-      when :repeated
-        LEN
-      else
-        raise "Unknown qualifier #{qualifier}"
       end
     end
   end
