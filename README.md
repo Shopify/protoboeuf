@@ -1,6 +1,6 @@
 # protoboeuf
 
-Repository for an experimental version of a pure-Ruby protobuf encoder / decoder supporting `proto3`.
+Repository for an *experimental* version of a pure-Ruby protobuf encoder / decoder supporting `proto3`.
 
 ## Getting started
 
