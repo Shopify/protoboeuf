@@ -260,4 +260,14 @@ class MessageTest < ProtoBuff::Test
     assert_equal :oneof_str, actual.oneof_field
     assert_equal 0, actual.oneof_u32
   end
+
+  def test_optional_passed_to_constructor
+    msg = ManyOptional.new
+    assert_equal 0, msg.a
+    refute_predicate msg, :has_a?
+
+    msg = ManyOptional.new(a: 0)
+    assert_equal 0, msg.a
+    assert_predicate msg, :has_a?
+  end
 end

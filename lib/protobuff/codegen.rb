@@ -286,7 +286,7 @@ class <%= message.name %>
   <%- if message.fields.length > 0 -%>
   <%= required_field_methods %>
 
-  <%- if message.fields.any?(&:oneof?) -%>
+  <%- if message.fields.any? { |msg| msg.oneof? || msg.optional? } -%>
   NONE = Object.new
   private_constant :NONE
   <%- end -%>
@@ -295,7 +295,16 @@ class <%= message.name %>
   <%= init_bitmask(message) %>
   <%- for field in fields -%>
     <%- if field.field? -%>
+      <%- if field.optional? -%>
+    if <%= field.name %> == NONE
+      @<%= field.name %> = <%= default_for(field) %>
+    else
+      <%= set_bitmask(field) %>
+      @<%= field.name %> = <%= field.name %>
+    end
+      <%- else -%>
     @<%= field.name %> = <%= field.name %>
+      <%- end -%>
     <%- else -%>
     @<%= field.name %> = nil # oneof field
       <%- for oneof_child in field.fields -%>
@@ -401,7 +410,11 @@ ruby
       def initialize_signature
         self.fields.flat_map { |f|
           if f.field?
-            "#{f.name}: #{default_for(f)}"
+            if f.optional?
+              "#{f.name}: NONE"
+            else
+              "#{f.name}: #{default_for(f)}"
+            end
           else
             f.fields.map { |child|
               "#{child.name}: NONE"
