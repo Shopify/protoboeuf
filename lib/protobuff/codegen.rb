@@ -219,13 +219,6 @@ module ProtoBuff
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
-      PULL_MESSAGE = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL_MESSAGE
-      <%= pull_uint64("msg_len") %>
-      <%= dest %> = <%= field.type %>.allocate.decode_from(buff, index, index += msg_len)
-      ## END PULL_MESSAGE
-      ruby
-
       PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
       if (byte0 = buff.getbyte(index)) < 0x80
         index += 1
@@ -505,7 +498,10 @@ ruby
       end
 
       def pull_message(field, dest)
-        PULL_MESSAGE.result(binding)
+        "        ## PULL_MESSAGE\n" +
+          pull_uint64("msg_len") + "\n" +
+          "        #{dest} = #{field.type}.allocate.decode_from(buff, index, index += msg_len)\n" +
+          "        ## END PULL_MESSAGE\n"
       end
 
       def pull_int64(dest)
