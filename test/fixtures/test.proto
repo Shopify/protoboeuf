@@ -144,3 +144,11 @@ message BucketObj {
 message NoFieldsLol {
 }
 */
+
+// FIXME: not yet supported
+/*
+message DoubleNumbers {
+  double a = 1;
+  optional double b = 2;
+}
+*/
