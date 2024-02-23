@@ -270,4 +270,11 @@ class MessageTest < ProtoBuff::Test
     assert_equal 0, msg.a
     assert_predicate msg, :has_a?
   end
+
+  def test_empty_message
+    data = ::EmptyMessage.encode(::EmptyMessage.new)
+
+    obj = EmptyMessage.decode data
+    assert_kind_of EmptyMessage, obj
+  end
 end

@@ -384,7 +384,9 @@ module ProtoBuff
       <%- end -%>
     <%- end -%>
 
+    <%- unless fields.empty? -%>
     <%= pull_tag %>
+    <%- end -%>
 
     while true
       <%- fields.each do |field| -%>
@@ -407,6 +409,7 @@ module ProtoBuff
         <%- end -%>
       <%- end -%>
 
+      return self if index >= len
       raise NotImplementedError
     end
   end
