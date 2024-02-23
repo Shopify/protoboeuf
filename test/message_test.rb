@@ -277,4 +277,21 @@ class MessageTest < ProtoBuff::Test
     obj = EmptyMessage.decode data
     assert_kind_of EmptyMessage, obj
   end
+
+  def test_decode_map
+    data = ::HasMap.encode(::HasMap.new.tap { |x|
+      x.something["a"] = 1
+      x.something["b"] = 2
+      x.something["c"] = 3
+      x.something["d"] = 0xFF
+      x.number = 1234
+    })
+
+    obj = HasMap.decode data
+    assert_equal 1, obj.something["a"]
+    assert_equal 2, obj.something["b"]
+    assert_equal 3, obj.something["c"]
+    assert_equal 0xFF, obj.something["d"]
+    assert_equal 1234, obj.number
+  end
 end

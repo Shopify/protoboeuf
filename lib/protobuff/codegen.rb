@@ -35,9 +35,7 @@ module ProtoBuff
       end
 
       def result
-        "class #{message.name}\n" +
-          class_body +
-          "end\n"
+        "class #{message.name}\n" + class_body + "end\n"
       end
 
       private
@@ -216,6 +214,7 @@ module ProtoBuff
 
       def oneof_field_readers
         fields = oneof_fields + oneof_fields.flat_map(&:fields)
+        return "" if fields.empty?
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
@@ -395,7 +394,9 @@ module ProtoBuff
         <%= decode_code(field) %>
         <%= set_bitmask(field) if field.optional? %>
         return self if index >= len
+        <%- if !field.map? -%>
         <%= pull_tag %>
+        <%- end -%>
       end
         <%- else -%>
           <%- field.fields.each do |child| -%>
@@ -422,7 +423,7 @@ module ProtoBuff
         list = @<%= field.name %>
         while true
           break if index >= goal
-          <%= decode_subtype(field, "list[idx]") %>
+          <%= decode_subtype(field.type, "list[idx]") %>
           idx += 1
         end
 ruby
@@ -448,10 +449,14 @@ ruby
               false
             when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
               'nil'
+            when MapType
+              "{}"
             else
               raise "Unknown field type #{field.type}"
             end
           end
+        elsif field.map?
+          "{}"
         else
           'nil'
         end
@@ -483,8 +488,8 @@ ruby
         field.wire_type
       end
 
-      def decode_subtype(field, dest)
-        case field.type
+      def decode_subtype(type, dest)
+        case type
         when "string" then pull_string(dest)
         when "uint64" then pull_uint64(dest)
         when "int64" then pull_int64(dest)
@@ -494,16 +499,30 @@ ruby
         when "sint64" then pull_sint64(dest)
         when "bool" then pull_boolean(dest)
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          pull_message(field, dest)
+          pull_message(type, dest)
         else
           raise "Unknown field type #{field.type}"
         end
       end
 
-      def pull_message(field, dest)
+      def decode_map(field)
+        "        ## PULL_MAP\n" +
+        "        map = @#{field.name}\n" +
+        "        while tag == #{tag_for_field(field, field.number)}\n" +
+        pull_uint64("value") + "\n" +
+        "          index += 1\n" + # skip the tag, assume it's the key
+        decode_subtype(field.type.key_type, "key") + "\n" +
+        "          index += 1\n" + # skip the tag, assume it's the value
+        decode_subtype(field.type.value_type, "map[key]") + "\n" +
+        "          return self if index >= len\n" +
+        pull_tag + "\n" +
+        "        end\n"
+      end
+
+      def pull_message(type, dest)
         "        ## PULL_MESSAGE\n" +
           pull_uint64("msg_len") + "\n" +
-          "        #{dest} = #{field.type}.allocate.decode_from(buff, index, index += msg_len)\n" +
+          "        #{dest} = #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
           "        ## END PULL_MESSAGE\n"
       end
 
@@ -557,7 +576,11 @@ ruby
             raise "Unknown field type #{field.type}"
           end
         else
-          decode_subtype(field, "@#{field.name}")
+          if field.type.is_a?(MapType)
+            decode_map(field)
+          else
+            decode_subtype(field.type, "@#{field.name}")
+          end
         end
       end
 
@@ -587,7 +610,7 @@ ruby
     end
 
     def initialize(ast)
-      @ast = ast
+      @ast = ast # unit node
     end
 
     def to_ruby
