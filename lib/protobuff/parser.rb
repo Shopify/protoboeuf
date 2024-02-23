@@ -741,12 +741,19 @@ module ProtoBuff
       value = 0
       num_digits = 0
       sign = 1
+      base = 10
 
       # Negative number
       if match_exact '-'
         sign = -1
       end
 
+      # Hexadecimal
+      if match_exact '0x'
+        base = 16
+      end
+
+      # For each digit
       loop do
         if eof?
           break
@@ -754,13 +761,18 @@ module ProtoBuff
 
         ch = peek_ch
 
-        if ch < '0' || ch > '9'
+        if ch >= '0' && ch <= '9'
+          digit = ch.getbyte(0) - 0x30
+        elsif (base == 16) && (ch >= 'A' && ch <= 'F')
+          digit = 10 + (ch.getbyte(0) - 0x41)
+        elsif (base == 16) && (ch >= 'a' && ch <= 'f')
+          digit = 10 + (ch.getbyte(0) - 0x61)
+        else
           break
         end
 
         # Decimal digit value
-        digit = ch.getbyte(0) - 0x30
-        value = 10 * value + digit
+        value = base * value + digit
         num_digits += 1
         eat_ch
       end

@@ -66,6 +66,13 @@ class ParserTest < ProtoBuff::Test
     assert_equal :optional, unit.messages[0].fields[0].qualifier
   end
 
+  def test_hex_field_num
+    unit = ProtoBuff.parse_string('message Test1 { int32 a = 0xFF; }')
+    assert_equal 0xFF, unit.messages[0].fields[0].number
+    unit = ProtoBuff.parse_string('message Test1 { int32 a = 0xaa; }')
+    assert_equal 0xAA, unit.messages[0].fields[0].number
+  end
+
   def test_negative_field_num
     assert_raises { ProtoBuff.parse_string('message Test1 { optional int32 a = -1; }') }
   end
@@ -131,6 +138,12 @@ class ParserTest < ProtoBuff::Test
     unit = ProtoBuff.parse_string('enum Foo { option allow_alias = true; CONST0 = 0; CONST1 = 1; CONST2 = 1; }')
     assert_equal 'Foo', unit.enums[0].name
     assert_equal 3, unit.enums[0].constants.size
+  end
+
+  def test_hex_enum_const
+    unit = ProtoBuff.parse_string('enum Foo { FOO = 0; BAR = -0xBA; }')
+    assert_equal 'Foo', unit.enums[0].name
+    assert_equal -0xBA, unit.enums[0].constants[1].number
   end
 
   def test_package_name

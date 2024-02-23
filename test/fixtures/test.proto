@@ -121,7 +121,9 @@ message ManyOptional {
   optional uint64 d = 4;
 }
 
-enum EnumNegative {
+enum EnumAllTheInts {
   FOO = 0;
   BAR = -1; // Allowed by the spec
+  BIF = 0xFF0000;
+  BIF2 = -0xFF0000;
 }
