@@ -126,3 +126,15 @@ enum EnumAllTheInts {
   BIF = 0xFF0000;
   BIF2 = -0xFF0000;
 }
+
+message BucketObj {
+  message OrigFoo {
+    oneof foo_bar_bif {
+      uint32 i = 1;
+      string s = 2;
+    }
+    sint32 q = 7;
+  }
+
+  sint32 fi = 5;
+}

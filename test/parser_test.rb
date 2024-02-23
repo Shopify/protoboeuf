@@ -146,7 +146,7 @@ class ParserTest < ProtoBuff::Test
   def test_hex_enum_const
     unit = ProtoBuff.parse_string('enum Foo { FOO = 0; BAR = -0xBA; }')
     assert_equal 'Foo', unit.enums[0].name
-    assert_equal -0xBA, unit.enums[0].constants[1].number
+    assert_equal (-0xBA), unit.enums[0].constants[1].number
   end
 
   def test_package_name
