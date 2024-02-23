@@ -35,52 +35,183 @@ module ProtoBuff
       end
 
       def result
-        CLASS_TEMPLATE.result(binding)
+        "class #{message.name}\n" +
+          class_body +
+          "end\n"
       end
 
       private
 
-      def required_field_methods
-        "attr_accessor " + required_fields(message).map { |f| ":" + f.name }.join(", ")
+      def class_body
+        prelude +
+          constants +
+          readers +
+          writers +
+          initialize_code +
+          extra_api +
+          decode
       end
 
-      OPTIONAL_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
-  <%= optional_field_readers %>
-  <%- optional_fields.each_with_index do |field, i| -%>
-  def <%= field.name %>=(v)
-    <%= set_bitmask(field) %>
-    @<%= field.name %> = v
+      def prelude
+        <<-eoruby
+  def self.decode(buff)
+    buff = buff.dup
+    buff.force_encoding("UTF-8")
+    allocate.decode_from(buff, 0, buff.bytesize)
   end
 
-  def has_<%= field.name %>?
-    <%= test_bitmask(field) %>
-  end
-  <%- end -%>
-      ruby
-
-      def optional_field_methods
-        OPTIONAL_FIELD_METHODS.result(binding)
+        eoruby
       end
 
-      def optional_field_readers
-        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ")
+      def constants
+        if message.fields.any? { |msg| msg.oneof? || msg.optional? }
+          <<-eoruby
+  NONE = Object.new
+  private_constant :NONE
+
+          eoruby
+        else
+          ""
+        end
       end
 
-      ONE_OF_FIELD_METHODS = ERB.new(<<-ruby, trim_mode: '-')
-  <%= oneof_field_readers %>
+      def readers
+        required_readers + optional_readers + oneof_readers
+      end
 
-  <%- oneof_fields.each do |oneof| -%>
-  <%- oneof.fields.each do |field| -%>
-  def <%= field.name %>=(v)
-    @<%= oneof.name %> = :<%= field.name %>
-    @<%= field.name %> = v
+      def required_readers
+        fields = message.fields.select(&:field?).reject(&:optional?)
+        return "" unless fields.length > 0
+
+        "  # required field readers\n" +
+        "  attr_accessor " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+      end
+
+      def optional_readers
+        return "" unless optional_fields.length > 0
+        "  # optional field readers\n" +
+        "  attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+      end
+
+      def oneof_readers
+        return "" unless oneof_fields.length > 0
+        fields = oneof_fields + oneof_fields.flat_map(&:fields)
+
+        "  # oneof field readers\n" +
+        "  attr_reader " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+      end
+
+      def writers
+        required_writers + optional_writers + oneof_writers
+      end
+
+      def required_writers
+        # We generate attr_accessors for required fields, so no need for writers
+        ""
+      end
+
+      def optional_writers
+        return "" unless optional_fields.length > 0
+
+        "  # BEGIN writers for optional fields\n" +
+        optional_fields.map { |field|
+          <<-eorb
+  def #{field.name}=(v)
+    #{set_bitmask(field)}
+    @#{field.name} = v
   end
-  <%- end -%>
-  <%- end -%>
-      ruby
+          eorb
+        }.join("\n") +
+        "  # END writers for optional fields\n\n"
+      end
 
-      def oneof_field_methods
-        ONE_OF_FIELD_METHODS.result(binding)
+      def oneof_writers
+        return "" unless oneof_fields.length > 0
+
+        "  # BEGIN writers for oneof fields\n" +
+        oneof_fields.map { |oneof|
+          oneof.fields.map { |field|
+            <<-eorb
+  def #{field.name}=(v)
+    @#{oneof.name} = :#{field.name}
+    @#{field.name} = v
+  end
+            eorb
+          }.join("\n")
+        }.join("\n") +
+        "  # END writers for oneof fields\n\n"
+      end
+
+      def initialize_code
+        "  def initialize(" + initialize_signature + ")\n" +
+          init_bitmask(message) +
+          fields.map { |field|
+            if field.field?
+              initialize_field(field)
+            elsif field.oneof?
+              initialize_oneof(field)
+            else
+              p field
+              raise
+            end
+          }.join("\n") + "\n  end\n\n"
+      end
+
+      def initialize_oneof(oneof)
+        "    @#{oneof.name} = nil # oneof field\n" +
+          oneof.fields.map { |field|
+            <<-eoruby
+    if #{field.name} == NONE
+      @#{field.name} = #{default_for(field)}
+    else
+      @#{oneof.name} = :#{field.name}
+      @#{field.name} = #{field.name}
+    end
+            eoruby
+          }.join("\n")
+      end
+
+      def initialize_field(field)
+        if field.optional?
+          initialize_optional_field(field)
+        else
+          initialize_required_field(field)
+        end
+      end
+
+      def initialize_optional_field(field)
+        <<-eoruby
+    if #{field.name} == NONE
+      @#{field.name} = #{default_for(field)}
+    else
+      #{set_bitmask(field)}
+      @#{field.name} = #{field.name}
+    end
+        eoruby
+      end
+
+      def initialize_required_field(field)
+        "    @#{field.name} = #{field.name}"
+      end
+
+      def extra_api
+        optional_predicates
+      end
+
+      def optional_predicates
+        return "" unless optional_fields.length > 0
+
+        optional_fields.map { |field|
+          <<-eoruby
+  def has_#{field.name}?
+    #{test_bitmask(field)}
+  end
+          eoruby
+        }.join("\n") + "\n"
+      end
+
+      def decode
+        DECODE_METHOD.result(binding)
       end
 
       def oneof_field_readers
@@ -93,11 +224,6 @@ module ProtoBuff
       <%= pull_uint64("msg_len") %>
       <%= dest %> = <%= field.type %>.allocate.decode_from(buff, index, index += msg_len)
       ## END PULL_MESSAGE
-      ruby
-
-      PULL_TAG = ERB.new(<<-ruby, trim_mode: '-')
-      tag = buff.getbyte(index)
-      index += 1
       ruby
 
       PULL_BOOLEAN = ERB.new(<<-ruby, trim_mode: '-')
@@ -237,18 +363,6 @@ module ProtoBuff
       end
       ruby
 
-      PULL_INT64 = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL_INT64
-      <%= dest %> = <%= pull_varint(sign: :i64) %>
-      ## END PULL_INT64
-      ruby
-
-      PULL_UINT64 = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL_UINT64
-      <%= dest %> = <%= pull_varint %>
-      ## END PULL_UINT64
-      ruby
-
       PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
       value = <%= pull_varint %>
 
@@ -269,61 +383,7 @@ module ProtoBuff
       ## END PULL SINT32
       ruby
 
-      PULL_INT32 = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL INT32
-      <%= dest %> = <%= pull_varint(sign: :i32) %>
-      ## END PULL INT32
-      ruby
-
-      CLASS_TEMPLATE = ERB.new(<<-ruby, trim_mode: '-')
-class <%= message.name %>
-  def self.decode(buff)
-    buff = buff.dup
-    buff.force_encoding("UTF-8")
-    allocate.decode_from(buff, 0, buff.bytesize)
-  end
-
-  <%- if message.fields.length > 0 -%>
-  <%= required_field_methods %>
-
-  <%- if message.fields.any? { |msg| msg.oneof? || msg.optional? } -%>
-  NONE = Object.new
-  private_constant :NONE
-  <%- end -%>
-
-  def initialize(<%= initialize_signature %>)
-  <%= init_bitmask(message) %>
-  <%- for field in fields -%>
-    <%- if field.field? -%>
-      <%- if field.optional? -%>
-    if <%= field.name %> == NONE
-      @<%= field.name %> = <%= default_for(field) %>
-    else
-      <%= set_bitmask(field) %>
-      @<%= field.name %> = <%= field.name %>
-    end
-      <%- else -%>
-    @<%= field.name %> = <%= field.name %>
-      <%- end -%>
-    <%- else -%>
-    @<%= field.name %> = nil # oneof field
-      <%- for oneof_child in field.fields -%>
-    if <%= oneof_child.name %> == NONE
-      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
-    else
-      @<%= field.name %> = :<%= oneof_child.name %>
-      @<%= oneof_child.name %> = <%= oneof_child.name %>
-    end
-      <%- end -%>
-    <%- end -%>
-  <%- end -%>
-  <%- end -%>
-  end
-
-  <%= oneof_field_methods %>
-
-  <%= optional_field_methods %>
-
+      DECODE_METHOD = ERB.new(<<-ruby, trim_mode: '-')
   def decode_from(buff, index, len)
     <%= init_bitmask(message) %>
     <%- for field in fields -%>
@@ -363,7 +423,6 @@ class <%= message.name %>
       raise NotImplementedError
     end
   end
-end
       ruby
 
       PACKED_REPEATED = ERB.new(<<ruby)
@@ -378,10 +437,11 @@ end
         end
 ruby
 
-      private
-
       def pull_tag
-        PULL_TAG.result(binding)
+        <<-eoruby
+        tag = buff.getbyte(index)
+        index += 1
+        eoruby
       end
 
       def default_for(field)
@@ -453,11 +513,15 @@ ruby
       end
 
       def pull_int64(dest)
-        PULL_INT64.result(binding)
+        "        ## PULL_INT64\n" +
+          "        #{dest} = #{pull_varint(sign: :i64)}\n" +
+          "        ## END PULL_INT64\n"
       end
 
       def pull_int32(dest)
-        PULL_INT32.result(binding)
+        "        ## PULL_INT32\n" +
+          "        #{dest} = #{pull_varint(sign: :i32)}\n" +
+          "        ## END PULL_INT32\n"
       end
 
       def pull_sint32(dest)
@@ -475,12 +539,12 @@ ruby
       end
 
       def pull_uint64(dest)
-        PULL_UINT64.result(binding)
+        "        ## PULL_UINT64\n" +
+          "        #{dest} = #{pull_varint}\n" +
+          "        ## END PULL_UINT64\n"
       end
 
-      def pull_uint32(dest)
-        PULL_UINT64.result(binding)
-      end
+      alias :pull_uint32 :pull_uint64
 
       def pull_boolean(dest)
         PULL_BOOLEAN.result(binding)
@@ -507,7 +571,7 @@ ruby
         optionals = optional_fields
         raise NotImplementedError unless optionals.length < 63
         if optionals.length > 0
-          "@_bitmask = 0"
+          "    @_bitmask = 0\n"
         else
           ""
         end
