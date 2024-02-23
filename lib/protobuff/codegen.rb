@@ -475,10 +475,12 @@ ruby
             else
               "#{f.name}: #{default_for(f)}"
             end
-          else
+          elsif f.oneof?
             f.fields.map { |child|
               "#{child.name}: NONE"
             }
+          else
+            raise NotImplementedError
           end
         }.join(", ")
       end
