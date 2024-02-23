@@ -226,12 +226,6 @@ module ProtoBuff
       ## END PULL_MESSAGE
       ruby
 
-      PULL_BOOLEAN = ERB.new(<<-ruby, trim_mode: '-')
-      byte = buff.getbyte index
-      index += 1
-      <%= dest %> = byte == 1
-      ruby
-
       PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
       if (byte0 = buff.getbyte(index)) < 0x80
         index += 1
@@ -549,7 +543,10 @@ ruby
       alias :pull_uint32 :pull_uint64
 
       def pull_boolean(dest)
-        PULL_BOOLEAN.result(binding)
+        "        ## PULL BOOLEAN\n" +
+          "        #{dest} = buff.getbyte(index) == 1\n" +
+          "        index += 1\n" +
+          "        ## END PULL BOOLEAN\n"
       end
 
       def decode_code(field)
