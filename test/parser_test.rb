@@ -107,6 +107,11 @@ class ParserTest < ProtoBuff::Test
     assert_equal 'Foo', unit.enums[0].name
   end
 
+  def test_enum_negative
+    # Enum with a negative constant value
+    ProtoBuff.parse_string('enum Foo { FOO = 0; BAR = -1; }')
+  end
+
   def test_enum_two_fields
     unit = ProtoBuff.parse_string('enum Foo { CONST0 = 0; CONST1 = 1; }')
     assert_equal 'Foo', unit.enums[0].name

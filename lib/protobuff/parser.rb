@@ -279,7 +279,7 @@ module ProtoBuff
 
     if ch == '"'
       return input.read_string
-    elsif ch >= '0' && ch <= '9'
+    elsif (ch >= '0' && ch <= '9') || ch == '-'
       return input.read_int
     elsif input.match "true"
       return true
@@ -502,8 +502,8 @@ module ProtoBuff
         raise ParseError.new("the first enum constant should always have value 0", const_pos)
       end
 
-      if number < 0 || number > 0xFF_FF_FF_FF
-        raise ParseError.new("enum constants should be in uint32 range", const_pos)
+      if number < -0x80_00_00_00 || number > 0x7F_FF_FF_FF
+        raise ParseError.new("enum constants should be in int32 range", const_pos)
       end
 
       # Check for duplicate constant names
@@ -740,6 +740,12 @@ module ProtoBuff
     def read_int
       value = 0
       num_digits = 0
+      sign = 1
+
+      # Negative number
+      if match_exact '-'
+        sign = -1
+      end
 
       loop do
         if eof?
@@ -763,7 +769,7 @@ module ProtoBuff
         raise ParseError.new("expected integer", pos)
       end
 
-      value
+      sign * value
     end
   end
 end

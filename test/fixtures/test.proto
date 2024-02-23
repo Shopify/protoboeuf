@@ -120,3 +120,8 @@ message ManyOptional {
   uint64 c = 3;
   optional uint64 d = 4;
 }
+
+enum EnumNegative {
+  FOO = 0;
+  BAR = -1; // Allowed by the spec
+}
