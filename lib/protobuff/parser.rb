@@ -389,8 +389,8 @@ module ProtoBuff
       options = parse_field_options(input)
       input.expect ';'
 
-      if number < 0 || number > 0xFF_FF_FF_FF
-        raise ParseError.new("field number should be in uint32 range", field_pos)
+      if number < 1 || number > 536_870_911
+        raise ParseError.new("field number outside of valid range #{number}", field_pos)
       end
 
       fields << Field.new(qualifier, type, name, number, options, field_pos)
