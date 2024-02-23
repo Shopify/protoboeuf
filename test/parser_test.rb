@@ -125,9 +125,12 @@ class ParserTest < ProtoBuff::Test
     assert_equal 2, unit.enums[0].constants.size
   end
 
-  def test_enum_no_zero_const
+  def test_enum_zero_const
     # Should always have an enum constant with value 0
      assert_raises { ProtoBuff.parse_string('enum Foo { CONST0 = 1; }') }
+
+     # The first constant needs to have value 0
+     assert_raises { ProtoBuff.parse_string('enum Foo { BAR = 1; FOO = 0; }') }
   end
 
   def test_enum_duplicate

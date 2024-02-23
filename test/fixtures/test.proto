@@ -80,7 +80,6 @@ message TestMsgGoogleTypes {
   sint64 sint_64 = 3;
 }
 
-// TODO: codegen for oneof not yet supported
 message TestMessageWithOneOf {
   string id = 1;
   uint64 shop_id = 2;
