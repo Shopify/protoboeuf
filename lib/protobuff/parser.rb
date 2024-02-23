@@ -100,6 +100,10 @@ module ProtoBuff
       false
     end
 
+    def map?
+      MapType === type
+    end
+
     def accept(viz)
       viz.visit_field self
     end
@@ -131,6 +135,8 @@ module ProtoBuff
         when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          LEN
+        when MapType
           LEN
         else
           raise "Unknown wire type for field #{type}"

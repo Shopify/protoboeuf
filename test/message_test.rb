@@ -59,6 +59,7 @@ class MessageTest < ProtoBuff::Test
       x.e[1] = 2
       x.e[2] = 3
       x.e[3] = 0xFF
+      x.another_value = 0xCAFE
     })
 
     obj = TestRepeatedField.decode data
@@ -67,6 +68,7 @@ class MessageTest < ProtoBuff::Test
     end
 
     assert_equal 0xFF, obj.e[3]
+    assert_equal 0xCAFE, obj.another_value
   end
 
   def test_decode_embedded
@@ -276,5 +278,22 @@ class MessageTest < ProtoBuff::Test
 
     obj = EmptyMessage.decode data
     assert_kind_of EmptyMessage, obj
+  end
+
+  def test_decode_map
+    data = ::HasMap.encode(::HasMap.new.tap { |x|
+      x.something["a"] = 1
+      x.something["b"] = 2
+      x.something["c"] = 3
+      x.something["d"] = 0xFF
+      x.number = 1234
+    })
+
+    obj = HasMap.decode data
+    assert_equal 1, obj.something["a"]
+    assert_equal 2, obj.something["b"]
+    assert_equal 3, obj.something["c"]
+    assert_equal 0xFF, obj.something["d"]
+    assert_equal 1234, obj.number
   end
 end
