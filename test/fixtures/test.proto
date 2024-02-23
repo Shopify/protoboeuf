@@ -138,3 +138,9 @@ message BucketObj {
 
   sint32 fi = 5;
 }
+
+// FIXME: this currently fails, but is valid protobuf
+/*
+message NoFieldsLol {
+}
+*/
