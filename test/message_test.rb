@@ -59,6 +59,7 @@ class MessageTest < ProtoBuff::Test
       x.e[1] = 2
       x.e[2] = 3
       x.e[3] = 0xFF
+      x.another_value = 0xCAFE
     })
 
     obj = TestRepeatedField.decode data
@@ -67,6 +68,7 @@ class MessageTest < ProtoBuff::Test
     end
 
     assert_equal 0xFF, obj.e[3]
+    assert_equal 0xCAFE, obj.another_value
   end
 
   def test_decode_embedded
