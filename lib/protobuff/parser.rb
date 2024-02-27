@@ -87,6 +87,11 @@ module ProtoBuff
     end
   end
 
+  SCALAR_TYPES = %w{
+    double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
+    sfixed32 sfixed64 bool string bytes
+  }
+
   # Represents the type of map<key_type, value_type>
   MapType = Struct.new(:key_type, :value_type)
 
@@ -102,6 +107,10 @@ module ProtoBuff
 
     def map?
       MapType === type
+    end
+
+    def reads_next_tag?
+      map? || (repeated? && !packed?)
     end
 
     def accept(viz)
@@ -120,13 +129,25 @@ module ProtoBuff
       qualifier == :repeated
     end
 
+    def packed?
+      # fields default to packed
+      if options.key?(:packed)
+        options[:packed]
+      else
+        # only scalar types that are not "string" or "byte" are allowed
+        # to be packed.
+        # https://protobuf.dev/programming-guides/encoding/#packed
+        (SCALAR_TYPES - ["string", "byte"]).include?(type)
+      end
+    end
+
     VARINT = 0
     I64 = 1
     LEN = 2
     I32 = 5
 
     def wire_type
-      if repeated?
+      if repeated? && packed?
         LEN
       else
         case type

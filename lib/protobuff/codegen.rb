@@ -352,20 +352,20 @@ module ProtoBuff
       PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
       value = <%= pull_varint %>
 
-      <%= dest %> = buff.byteslice(index, value)
+      <%= dest %> <%= operator %> buff.byteslice(index, value)
       index += value
       ruby
 
       PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL SINT32
-      <%= dest %> = <%= pull_varint %>
+      value = <%= pull_varint %>
 
       # If value is even, then it's positive
-      <%= dest %> = if <%= dest %>.even?
-        <%= dest %> >> 1
+      <%= dest %> <%= operator %> (if value.even?
+        value >> 1
       else
-        -((<%= dest %> + 1) >> 1)
-      end
+        -((value + 1) >> 1)
+      end)
       ## END PULL SINT32
       ruby
 
@@ -394,7 +394,7 @@ module ProtoBuff
         <%= decode_code(field) %>
         <%= set_bitmask(field) if field.optional? %>
         return self if index >= len
-        <%- if !field.map? -%>
+        <%- if !field.reads_next_tag? -%>
         <%= pull_tag %>
         <%- end -%>
       end
@@ -417,22 +417,26 @@ module ProtoBuff
       ruby
 
       PACKED_REPEATED = ERB.new(<<ruby)
-        idx = 0
-        <%= pull_uint64("value") %>
+        <%= pull_uint64("value", "=") %>
         goal = index + value
         list = @<%= field.name %>
         while true
           break if index >= goal
-          <%= decode_subtype(field.type, "list[idx]") %>
-          idx += 1
+          <%= decode_subtype(field.type, "list", "<<") %>
         end
 ruby
 
       def pull_tag
-        <<-eoruby
+        str = <<-eoruby
         tag = buff.getbyte(index)
         index += 1
         eoruby
+
+        if $DEBUG
+          str += "puts \"reading field \#{tag >> 3} type: \#{tag & 0x7} \#{tag}\"\n"
+        end
+
+        str
       end
 
       def default_for(field)
@@ -488,18 +492,18 @@ ruby
         field.wire_type
       end
 
-      def decode_subtype(type, dest)
+      def decode_subtype(type, dest, operator)
         case type
-        when "string" then pull_string(dest)
-        when "uint64" then pull_uint64(dest)
-        when "int64" then pull_int64(dest)
-        when "int32" then pull_int32(dest)
-        when "uint32" then pull_uint32(dest)
-        when "sint32" then pull_sint32(dest)
-        when "sint64" then pull_sint64(dest)
-        when "bool" then pull_boolean(dest)
+        when "string" then pull_string(dest, operator)
+        when "uint64" then pull_uint64(dest, operator)
+        when "int64" then pull_int64(dest, operator)
+        when "int32" then pull_int32(dest, operator)
+        when "uint32" then pull_uint32(dest, operator)
+        when "sint32" then pull_sint32(dest, operator)
+        when "sint64" then pull_sint64(dest, operator)
+        when "bool" then pull_boolean(dest, operator)
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          pull_message(type, dest)
+          pull_message(type, dest, operator)
         else
           raise "Unknown field type #{field.type}"
         end
@@ -509,36 +513,49 @@ ruby
         "        ## PULL_MAP\n" +
         "        map = @#{field.name}\n" +
         "        while tag == #{tag_for_field(field, field.number)}\n" +
-        pull_uint64("value") + "\n" +
+        pull_uint64("value", "=") + "\n" +
         "          index += 1\n" + # skip the tag, assume it's the key
-        decode_subtype(field.type.key_type, "key") + "\n" +
+        decode_subtype(field.type.key_type, "key", "=") + "\n" +
         "          index += 1\n" + # skip the tag, assume it's the value
-        decode_subtype(field.type.value_type, "map[key]") + "\n" +
+        decode_subtype(field.type.value_type, "map[key]", "=") + "\n" +
         "          return self if index >= len\n" +
         pull_tag + "\n" +
         "        end\n"
       end
 
-      def pull_message(type, dest)
+      def decode_repeated(field)
+        <<-eoruby
+        ## DECODE REPEATED
+        list = @#{field.name}
+        while true
+          #{decode_subtype(field.type, "list", "<<")}
+          #{pull_tag}
+          break unless tag == #{tag_for_field(field, field.number)}
+        end
+        ## END DECODE REPEATED
+        eoruby
+      end
+
+      def pull_message(type, dest, operator)
         "        ## PULL_MESSAGE\n" +
-          pull_uint64("msg_len") + "\n" +
-          "        #{dest} = #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
+          pull_uint64("msg_len", "=") + "\n" +
+          "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
           "        ## END PULL_MESSAGE\n"
       end
 
-      def pull_int64(dest)
+      def pull_int64(dest, operator)
         "        ## PULL_INT64\n" +
-          "        #{dest} = #{pull_varint(sign: :i64)}\n" +
+          "        #{dest} #{operator} #{pull_varint(sign: :i64)}\n" +
           "        ## END PULL_INT64\n"
       end
 
-      def pull_int32(dest)
+      def pull_int32(dest, operator)
         "        ## PULL_INT32\n" +
-          "        #{dest} = #{pull_varint(sign: :i32)}\n" +
+          "        #{dest} #{operator} #{pull_varint(sign: :i32)}\n" +
           "        ## END PULL_INT32\n"
       end
 
-      def pull_sint32(dest)
+      def pull_sint32(dest, operator)
         PULL_SINT32.result(binding)
       end
 
@@ -548,38 +565,37 @@ ruby
 
       alias :pull_sint64 :pull_sint32
 
-      def pull_string(dest)
+      def pull_string(dest, operator)
         PULL_STRING.result(binding)
       end
 
-      def pull_uint64(dest)
+      def pull_uint64(dest, operator)
         "        ## PULL_UINT64\n" +
-          "        #{dest} = #{pull_varint}\n" +
+          "        #{dest} #{operator} #{pull_varint}\n" +
           "        ## END PULL_UINT64\n"
       end
 
       alias :pull_uint32 :pull_uint64
 
-      def pull_boolean(dest)
+      def pull_boolean(dest, operator)
         "        ## PULL BOOLEAN\n" +
-          "        #{dest} = buff.getbyte(index) == 1\n" +
+          "        #{dest} #{operator} (buff.getbyte(index) == 1)\n" +
           "        index += 1\n" +
           "        ## END PULL BOOLEAN\n"
       end
 
       def decode_code(field)
         if field.repeated?
-          case field.type
-          when "uint32"
+          if field.packed?
             PACKED_REPEATED.result(binding)
           else
-            raise "Unknown field type #{field.type}"
+            decode_repeated(field)
           end
         else
           if field.type.is_a?(MapType)
             decode_map(field)
           else
-            decode_subtype(field.type, "@#{field.name}")
+            decode_subtype(field.type, "@#{field.name}", "=")
           end
         end
       end

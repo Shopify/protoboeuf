@@ -296,4 +296,57 @@ class MessageTest < ProtoBuff::Test
     assert_equal 0xFF, obj.something["d"]
     assert_equal 1234, obj.number
   end
+
+  def test_decode_repeated_unpacked
+    data = ::UnpackedFields.encode(::UnpackedFields.new.tap { |x|
+      x.a = 1234
+      x.ids[0] = 1
+      x.ids[1] = 2
+      x.ids[2] = 3
+      x.ids[3] = 0xFF
+      x.b = 0xCAFE
+    })
+
+    obj = UnpackedFields.decode data
+    assert_equal 1234, obj.a
+    3.times do |i|
+      assert_equal i + 1, obj.ids[i]
+    end
+
+    assert_equal 0xFF, obj.ids[3]
+    assert_equal 0xCAFE, obj.b
+  end
+
+  def test_decode_repeated_strings
+    data = ::RepeatedStrings.encode(::RepeatedStrings.new.tap { |x|
+      x.a = 1234
+      x.names[0] = "a"
+      x.names[1] = "b"
+      x.names[2] = "c"
+      x.names[3] = "d"
+      x.b = 0xCAFE
+    })
+
+    obj = RepeatedStrings.decode data
+    assert_equal 1234, obj.a
+    assert_equal "a", obj.names[0]
+    assert_equal "b", obj.names[1]
+    assert_equal "c", obj.names[2]
+    assert_equal "d", obj.names[3]
+    assert_equal 0xCAFE, obj.b
+  end
+
+  def test_decode_repeated_messages
+    data = ::RepeatedSubMessages.encode(::RepeatedSubMessages.new(ints:[
+      ::TestSint64.new(sint_64: 1),
+      ::TestSint64.new(sint_64: 2),
+      ::TestSint64.new(sint_64: 3),
+      ::TestSint64.new(sint_64: 4),
+    ]))
+
+    obj = RepeatedSubMessages.decode data
+    4.times do |i|
+      assert_equal i + 1, obj.ints[i].sint_64
+    end
+  end
 end
