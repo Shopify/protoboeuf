@@ -104,6 +104,10 @@ module ProtoBuff
       MapType === type
     end
 
+    def reads_next_tag?
+      map? || (repeated? && !packed?)
+    end
+
     def accept(viz)
       viz.visit_field self
     end
@@ -120,13 +124,19 @@ module ProtoBuff
       qualifier == :repeated
     end
 
+    def packed?
+      # fields default to packed
+      return true unless options.key?(:packed)
+      !!options[:packed]
+    end
+
     VARINT = 0
     I64 = 1
     LEN = 2
     I32 = 5
 
     def wire_type
-      if repeated?
+      if repeated? && packed?
         LEN
       else
         case type

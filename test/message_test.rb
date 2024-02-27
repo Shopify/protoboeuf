@@ -296,4 +296,24 @@ class MessageTest < ProtoBuff::Test
     assert_equal 0xFF, obj.something["d"]
     assert_equal 1234, obj.number
   end
+
+  def test_decode_repeated_unpacked
+    data = ::UnpackedFields.encode(::UnpackedFields.new.tap { |x|
+      x.a = 1234
+      x.ids[0] = 1
+      x.ids[1] = 2
+      x.ids[2] = 3
+      x.ids[3] = 0xFF
+      x.b = 0xCAFE
+    })
+
+    obj = UnpackedFields.decode data
+    assert_equal 1234, obj.a
+    3.times do |i|
+      assert_equal i + 1, obj.ids[i]
+    end
+
+    assert_equal 0xFF, obj.ids[3]
+    assert_equal 0xCAFE, obj.b
+  end
 end

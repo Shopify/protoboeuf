@@ -158,3 +158,9 @@ message DoubleNumbers {
   optional double b = 2;
 }
 */
+
+message UnpackedFields {
+  uint32 a = 1;
+  repeated uint32 ids = 2 [packed = false];
+  uint32 b = 3;
+}
