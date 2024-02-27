@@ -170,3 +170,7 @@ message RepeatedStrings {
   repeated string names = 2;
   uint32 b = 3;
 }
+
+message RepeatedSubMessages {
+  repeated TestSint64 ints = 1;
+}

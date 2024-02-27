@@ -335,4 +335,18 @@ class MessageTest < ProtoBuff::Test
     assert_equal "d", obj.names[3]
     assert_equal 0xCAFE, obj.b
   end
+
+  def test_decode_repeated_messages
+    data = ::RepeatedSubMessages.encode(::RepeatedSubMessages.new(ints:[
+      ::TestSint64.new(sint_64: 1),
+      ::TestSint64.new(sint_64: 2),
+      ::TestSint64.new(sint_64: 3),
+      ::TestSint64.new(sint_64: 4),
+    ]))
+
+    obj = RepeatedSubMessages.decode data
+    4.times do |i|
+      assert_equal i + 1, obj.ints[i].sint_64
+    end
+  end
 end
