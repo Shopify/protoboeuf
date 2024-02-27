@@ -587,12 +587,7 @@ ruby
       def decode_code(field)
         if field.repeated?
           if field.packed?
-            case field.type
-            when "uint32"
-              PACKED_REPEATED.result(binding)
-            else
-              raise "Unknown field type #{field.type}"
-            end
+            PACKED_REPEATED.result(binding)
           else
             decode_repeated(field)
           end

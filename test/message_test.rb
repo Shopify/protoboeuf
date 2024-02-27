@@ -316,4 +316,23 @@ class MessageTest < ProtoBuff::Test
     assert_equal 0xFF, obj.ids[3]
     assert_equal 0xCAFE, obj.b
   end
+
+  def test_decode_repeated_strings
+    data = ::RepeatedStrings.encode(::RepeatedStrings.new.tap { |x|
+      x.a = 1234
+      x.names[0] = "a"
+      x.names[1] = "b"
+      x.names[2] = "c"
+      x.names[3] = "d"
+      x.b = 0xCAFE
+    })
+
+    obj = RepeatedStrings.decode data
+    assert_equal 1234, obj.a
+    assert_equal "a", obj.names[0]
+    assert_equal "b", obj.names[1]
+    assert_equal "c", obj.names[2]
+    assert_equal "d", obj.names[3]
+    assert_equal 0xCAFE, obj.b
+  end
 end

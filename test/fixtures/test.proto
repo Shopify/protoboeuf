@@ -164,3 +164,9 @@ message UnpackedFields {
   repeated uint32 ids = 2 [packed = false];
   uint32 b = 3;
 }
+
+message RepeatedStrings {
+  uint32 a = 1;
+  repeated string names = 2;
+  uint32 b = 3;
+}
