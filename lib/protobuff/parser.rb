@@ -131,13 +131,14 @@ module ProtoBuff
 
     def packed?
       # fields default to packed
-      unless options.key?(:packed)
+      if options.key?(:packed)
+        options[:packed]
+      else
         # only scalar types that are not "string" or "byte" are allowed
         # to be packed.
         # https://protobuf.dev/programming-guides/encoding/#packed
-        return (SCALAR_TYPES - ["string", "byte"]).include?(type)
+        (SCALAR_TYPES - ["string", "byte"]).include?(type)
       end
-      !!options[:packed]
     end
 
     VARINT = 0
