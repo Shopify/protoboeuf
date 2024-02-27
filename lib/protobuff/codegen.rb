@@ -427,10 +427,16 @@ module ProtoBuff
 ruby
 
       def pull_tag
-        <<-eoruby
+        str = <<-eoruby
         tag = buff.getbyte(index)
         index += 1
         eoruby
+
+        if $DEBUG
+          str += "puts \"reading field \#{tag >> 3} type: \#{tag & 0x7} \#{tag}\"\n"
+        end
+
+        str
       end
 
       def default_for(field)
