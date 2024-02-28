@@ -349,4 +349,23 @@ class MessageTest < ProtoBuff::Test
       assert_equal i + 1, obj.ints[i].sint_64
     end
   end
+
+  def test_default_double
+    expected = ::FixedWidthNumbers.new
+    actual = FixedWidthNumbers.new
+    assert_same expected.a, actual.a
+    assert_same expected.b, actual.b
+    assert_same expected.c, actual.c
+    assert_same expected.d, actual.d
+    assert_same expected.e, actual.e
+  end
+
+  def test_decode_doubles
+    data = ::FixedWidthNumbers.encode(::FixedWidthNumbers.new(a: 1.2, b: 2.3, c: 2, d: 2.0))
+    actual = FixedWidthNumbers.decode(data)
+    assert_equal 1.2, actual.a
+    assert_equal 2.3, actual.b
+    assert_equal 2, actual.c
+    assert_equal 2.0, actual.d
+  end
 end

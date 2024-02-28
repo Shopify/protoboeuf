@@ -152,12 +152,13 @@ message NoFieldsLol {
 }
 
 // FIXME: not yet supported
-/*
-message DoubleNumbers {
+message FixedWidthNumbers {
   double a = 1;
   optional double b = 2;
+  fixed64 c = 3;
+  float d = 4;
+  fixed32 e = 5;
 }
-*/
 
 message UnpackedFields {
   uint32 a = 1;
