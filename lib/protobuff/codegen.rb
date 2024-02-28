@@ -62,7 +62,7 @@ module ProtoBuff
       end
 
       def constants
-        if message.fields.any? { |msg| msg.oneof? || msg.optional? }
+        (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
           <<-eoruby
   NONE = Object.new
   private_constant :NONE
@@ -70,7 +70,7 @@ module ProtoBuff
           eoruby
         else
           ""
-        end
+        end) + message.messages.map { |x| self.class.new(x).result }.join("\n")
       end
 
       def readers

@@ -368,4 +368,11 @@ class MessageTest < ProtoBuff::Test
     assert_equal 2, actual.c
     assert_equal 2.0, actual.d
   end
+
+  def test_embedded_encode
+    data = ::ObjWithEmbedded::Embedded.encode(::ObjWithEmbedded::Embedded.new(b: 2, c: 3))
+    actual = ObjWithEmbedded::Embedded.decode(data)
+    assert_equal 2, actual.b
+    assert_equal 3, actual.c
+  end
 end

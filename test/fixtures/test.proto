@@ -175,3 +175,14 @@ message RepeatedStrings {
 message RepeatedSubMessages {
   repeated TestSint64 ints = 1;
 }
+
+message ObjWithEmbedded {
+  uint32 a = 1;
+
+  message Embedded {
+    uint32 b = 1;
+    uint32 c = 2;
+  }
+
+  Embedded b = 2;
+}
