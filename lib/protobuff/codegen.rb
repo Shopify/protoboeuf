@@ -62,7 +62,7 @@ module ProtoBuff
       end
 
       def constants
-        if message.fields.any? { |msg| msg.oneof? || msg.optional? }
+        (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
           <<-eoruby
   NONE = Object.new
   private_constant :NONE
@@ -70,7 +70,7 @@ module ProtoBuff
           eoruby
         else
           ""
-        end
+        end) + message.messages.map { |x| self.class.new(x).result }.join("\n")
       end
 
       def readers
@@ -447,8 +447,10 @@ ruby
             case field.type
             when "string"
               '""'
-            when "uint64", "int32", "sint32", "uint32", "int64", "sint64"
+            when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
               0
+            when "double", "float"
+              0.0
             when "bool"
               false
             when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
@@ -502,11 +504,31 @@ ruby
         when "sint32" then pull_sint32(dest, operator)
         when "sint64" then pull_sint64(dest, operator)
         when "bool" then pull_boolean(dest, operator)
+        when "double" then pull_double(dest, operator)
+        when "fixed64" then pull_fixed_int64(dest, operator)
+        when "fixed32" then pull_fixed_int32(dest, operator)
+        when "float" then pull_float(dest, operator)
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
           pull_message(type, dest, operator)
         else
-          raise "Unknown field type #{field.type}"
+          raise "Unknown field type #{type}"
         end
+      end
+
+      def pull_double(dest, operator)
+        "#{dest} #{operator} buff.byteslice(index, 8).unpack1('D'); index += 8"
+      end
+
+      def pull_float(dest, operator)
+        "#{dest} #{operator} buff.byteslice(index, 4).unpack1('F'); index += 4"
+      end
+
+      def pull_fixed_int64(dest, operator)
+        "#{dest} #{operator} (" + 8.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 8"
+      end
+
+      def pull_fixed_int32(dest, operator)
+        "#{dest} #{operator} (" + 4.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 4"
       end
 
       def decode_map(field)

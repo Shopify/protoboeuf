@@ -155,6 +155,10 @@ module ProtoBuff
           LEN
         when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
+        when "double", "fixed64"
+          I64
+        when "float", "fixed32"
+          I32
         when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
           LEN
         when MapType
