@@ -41,12 +41,12 @@ end
 
 Benchmark.ips { |x|
   x.report("decode upstream")  { Upstream::RedBlackNode.decode binary }
-  x.report("decode protobuff") { ProtoBuff::RedBlackNode.decode binary }
+  x.report("decode protoboeuf") { ProtoBuff::RedBlackNode.decode binary }
   x.compare!
 }
 
 Benchmark.ips { |x|
   x.report("decode and read upstream")  { walk Upstream::RedBlackNode.decode binary }
-  x.report("decode and read protobuff") { walk ProtoBuff::RedBlackNode.decode binary }
+  x.report("decode and read protoboeuf") { walk ProtoBuff::RedBlackNode.decode binary }
   x.compare!
 }
