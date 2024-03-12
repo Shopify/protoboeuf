@@ -1,6 +1,7 @@
 # protoboeuf
 
 Repository for an *experimental* version of a pure-Ruby protobuf encoder / decoder supporting `proto3`.
+This Ruby gem is aimed at Shopify-internal use cases, and currently comes with limited support.
 
 ## Getting started
 
