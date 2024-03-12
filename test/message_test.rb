@@ -424,4 +424,34 @@ class MessageTest < ProtoBoeuf::Test
 
     assert_equal :ONE, obj.a
   end
+
+  def test_subenum_values
+    refute_equal ::HasSubEnum::Thing, HasSubEnum::Thing
+    assert_equal ::HasSubEnum::Thing::BASE, HasSubEnum::Thing::BASE
+    assert_equal ::HasSubEnum::Thing::NEAT, HasSubEnum::Thing::NEAT
+
+    assert_equal ::HasSubEnum::Thing.lookup(0), HasSubEnum::Thing.lookup(0)
+    assert_equal ::HasSubEnum::Thing.resolve(:BASE), HasSubEnum::Thing.resolve(:BASE)
+  end
+
+  def test_subenum_methods
+    expected = ::HasSubEnum.new
+    actual = HasSubEnum.new
+    assert_equal expected.a, actual.a
+
+    expected.a = 1
+    actual.a = 1
+
+    assert_equal expected.a, actual.a
+
+    expected.a = :BASE
+    actual.a = :BASE
+
+    assert_equal expected.a, actual.a
+
+    expected.a = 10
+    actual.a = 10
+
+    assert_equal expected.a, actual.a
+  end
 end

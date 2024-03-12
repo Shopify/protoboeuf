@@ -48,13 +48,13 @@ module ProtoBoeuf
       end
 
       attr_reader :message, :fields, :oneof_fields
-      attr_reader :optional_fields, :toplevel_enums
+      attr_reader :optional_fields, :enum_field_types
 
       def initialize(message, toplevel_enums)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.fields
-        @toplevel_enums = toplevel_enums
+        @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
 
         field_types = message.fields.group_by { |field|
           if field.field?
@@ -82,6 +82,7 @@ module ProtoBoeuf
       def class_body
         prelude +
           constants +
+          enums +
           readers +
           writers +
           initialize_code +
@@ -100,6 +101,12 @@ module ProtoBoeuf
         eoruby
       end
 
+      def enums
+        message.enums.map { |enum|
+          EnumCompiler.result(enum)
+        }.join("\n")
+      end
+
       def constants
         (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
           <<-eoruby
@@ -109,7 +116,7 @@ module ProtoBoeuf
           eoruby
         else
           ""
-        end) + message.messages.map { |x| self.class.new(x, toplevel_enums).result }.join("\n")
+        end) + message.messages.map { |x| self.class.new(x, enum_field_types).result }.join("\n")
       end
 
       def readers
@@ -117,7 +124,7 @@ module ProtoBoeuf
       end
 
       def enum?(field)
-        toplevel_enums.key?(field)
+        enum_field_types.key?(field)
       end
 
       def enum_readers
