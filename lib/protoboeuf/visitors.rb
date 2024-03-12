@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ProtoBuff
+module ProtoBoeuf
   module Visitors
     class ToString
       def initialize

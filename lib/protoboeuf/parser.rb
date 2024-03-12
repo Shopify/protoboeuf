@@ -10,7 +10,7 @@
 
 require 'set'
 
-module ProtoBuff
+module ProtoBoeuf
   # Position in a source file
   # Numbers start from 1
   class SrcPos

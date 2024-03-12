@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "protobuff/benchmark_pb"
+require "protoboeuf/benchmark_pb"
 require "upstream/benchmark_pb"
 require "redblack"
 require "redblack/node"
@@ -11,7 +11,7 @@ class Upstream::RedBlackNode
   include Enumerable
 end
 
-class ProtoBuff::RedBlackNode
+class ProtoBoeuf::RedBlackNode
   include RBNode
   include Enumerable
 end
@@ -41,12 +41,12 @@ end
 
 Benchmark.ips { |x|
   x.report("decode upstream")  { Upstream::RedBlackNode.decode binary }
-  x.report("decode protoboeuf") { ProtoBuff::RedBlackNode.decode binary }
+  x.report("decode protoboeuf") { ProtoBoeuf::RedBlackNode.decode binary }
   x.compare!
 }
 
 Benchmark.ips { |x|
   x.report("decode and read upstream")  { walk Upstream::RedBlackNode.decode binary }
-  x.report("decode and read protoboeuf") { walk ProtoBuff::RedBlackNode.decode binary }
+  x.report("decode and read protoboeuf") { walk ProtoBoeuf::RedBlackNode.decode binary }
   x.compare!
 }

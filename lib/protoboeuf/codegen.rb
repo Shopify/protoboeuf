@@ -2,7 +2,7 @@
 
 require "erb"
 
-module ProtoBuff
+module ProtoBoeuf
   class CodeGen
     class MessageCompiler
       def self.result(message)

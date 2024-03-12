@@ -6,11 +6,11 @@ proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
 rb_files = proto_files.pathmap("#{BASE_DIR}/lib/proto/test/fixtures/%n_pb.rb")
 
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
-BENCHMARK_PROTOBUFF_PB = "bench/lib/protobuff/benchmark_pb.rb"
+BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
 
 rb_files.each { |x| CLOBBER.append x }
 CLOBBER.append BENCHMARK_UPSTREAM_PB
-CLOBBER.append BENCHMARK_PROTOBUFF_PB
+CLOBBER.append BENCHMARK_PROTOBOEUF_PB
 
 rule "_pb.rb" => "test/fixtures/%{_pb,}n.proto" do |task|
   mkdir_p "lib/proto"
@@ -31,14 +31,14 @@ file BENCHMARK_UPSTREAM_PB => "bench/fixtures/benchmark.proto" do
   end
 end
 
-file BENCHMARK_PROTOBUFF_PB => "bench/fixtures/benchmark.proto" do |t|
-  mkdir_p "bench/lib/protobuff"
-  require_relative "lib/protobuff/codegen"
-  require_relative "lib/protobuff/parser"
+file BENCHMARK_PROTOBOEUF_PB => "bench/fixtures/benchmark.proto" do |t|
+  mkdir_p "bench/lib/protoboeuf"
+  require_relative "lib/protoboeuf/codegen"
+  require_relative "lib/protoboeuf/parser"
 
-  unit = ProtoBuff.parse_file t.source
+  unit = ProtoBoeuf.parse_file t.source
   unit.package = "proto_buff"
-  gen = ProtoBuff::CodeGen.new unit
+  gen = ProtoBoeuf::CodeGen.new unit
 
   File.binwrite t.name, gen.to_ruby
 end
@@ -55,7 +55,7 @@ task :gen_proto => rb_files
 task :test => :gen_proto
 task :default => :test
 
-task :bench => [BENCHMARK_UPSTREAM_PB, BENCHMARK_PROTOBUFF_PB] do
+task :bench => [BENCHMARK_UPSTREAM_PB, BENCHMARK_PROTOBOEUF_PB] do
   puts "###### INTERPRETER ######"
   ruby "-I lib:bench/lib bench/benchmark.rb"
 

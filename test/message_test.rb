@@ -1,9 +1,9 @@
 require "helper"
 
-class MessageTest < ProtoBuff::Test
+class MessageTest < ProtoBoeuf::Test
   FIXTURE_FILE = File.join(File.dirname(__FILE__), "fixtures/test.proto")
-  unit = ProtoBuff.parse_file(FIXTURE_FILE)
-  gen = ProtoBuff::CodeGen.new unit
+  unit = ProtoBoeuf.parse_file(FIXTURE_FILE)
+  gen = ProtoBoeuf::CodeGen.new unit
 
   class_eval gen.to_ruby
 

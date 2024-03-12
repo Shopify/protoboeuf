@@ -1,11 +1,11 @@
 require "minitest/autorun"
 require "minitest/color"
 require "proto/test/fixtures/test_pb"
-require "protobuff/parser"
-require "protobuff/codegen"
-require "protobuff/visitors"
+require "protoboeuf/parser"
+require "protoboeuf/codegen"
+require "protoboeuf/visitors"
 
-module ProtoBuff
+module ProtoBoeuf
   class Test < Minitest::Test
   end
 end

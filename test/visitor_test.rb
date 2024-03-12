@@ -1,10 +1,10 @@
 require "helper"
 
-module ProtoBuff
+module ProtoBoeuf
   class VisitorTest < Test
     def test_syntax
       proto = "syntax = \"proto3\";"
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -16,7 +16,7 @@ syntax = "proto3";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/metafield.proto";
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -25,9 +25,9 @@ import "google/protobuf/metafield.proto";
       proto = (<<-eoproto).strip
 syntax = "proto3";
 
-package protoboeuf.protobuff;
+package protoboeuf.protoboeuf;
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -39,7 +39,7 @@ syntax = "proto3";
 message Aaron {
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -56,7 +56,7 @@ message Aaron {
   uint32 number_of_cats = 5;
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -74,7 +74,7 @@ message Aaron {
   required Cool field = 1;
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -89,7 +89,7 @@ message Aaron {
   }
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -108,7 +108,7 @@ message Aaron {
   }
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -125,7 +125,7 @@ message Aaron {
   required Hello hi = 1;
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
@@ -138,7 +138,7 @@ message Aaron {
   int32 old_field = 6 [deprecated = true];
 }
       eoproto
-      unit = ProtoBuff.parse_string(proto)
+      unit = ProtoBoeuf.parse_string(proto)
       viz = Visitors::ToString.new
       assert_equal proto, viz.accept(unit)
     end
