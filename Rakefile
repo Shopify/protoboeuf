@@ -8,10 +8,12 @@ rb_files = proto_files.pathmap("#{BASE_DIR}/lib/proto/test/fixtures/%n_pb.rb")
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
 
+# Clobber/clean rules
 rb_files.each { |x| CLOBBER.append x }
 CLOBBER.append BENCHMARK_UPSTREAM_PB
 CLOBBER.append BENCHMARK_PROTOBOEUF_PB
 
+# Makefile-like rule to generate "_pb.rb"
 rule "_pb.rb" => "test/fixtures/%{_pb,}n.proto" do |task|
   mkdir_p "lib/proto"
   begin
@@ -31,6 +33,7 @@ file BENCHMARK_UPSTREAM_PB => "bench/fixtures/benchmark.proto" do
   end
 end
 
+# This is a file task to generate an rb file from benchmark.proto
 file BENCHMARK_PROTOBOEUF_PB => "bench/fixtures/benchmark.proto" do |t|
   mkdir_p "bench/lib/protoboeuf"
   require_relative "lib/protoboeuf/codegen"
