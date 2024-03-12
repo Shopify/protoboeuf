@@ -37,7 +37,7 @@ file BENCHMARK_PROTOBOEUF_PB => "bench/fixtures/benchmark.proto" do |t|
   require_relative "lib/protoboeuf/parser"
 
   unit = ProtoBoeuf.parse_file t.source
-  unit.package = "proto_buff"
+  unit.package = "proto_boeuf"
   gen = ProtoBoeuf::CodeGen.new unit
 
   File.binwrite t.name, gen.to_ruby
