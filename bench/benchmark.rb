@@ -5,8 +5,52 @@ require "protoboeuf/benchmark_pb"
 require "upstream/benchmark_pb"
 require "benchmark/ips"
 
+# Given a message definition, generate fake data
+def gen_msg_data(msg)
+
+end
+
+
+
+
+# Given a type name, generate fake data
+def gen_data(type_name)
+  # TODO: resolve the type name
+  #unit.messages
+  #unit.enums
+  #message.enums
+  #message.messages
+
+
+
+end
+
+
+
+
 # Parse the proto file so we can generate fake data
 unit = ProtoBoeuf.parse_file "bench/fixtures/benchmark.proto"
+root_msg = unit.messages.select {|msg| msg.name == 'ParkingLot' }[0]
+
+
+# NOTE: for the benchmark, we can guarantee that we don't have overlapping
+# type names, so we can keep a hash of name => definition
+
+
+
+
+msgs = (0..100).map { |i| gen_msg_data(root_msg) }
+p msgs
+
+
+
+
+
+
+# For each message type, we can write a method to generate fake data...
+# One challenge is that each message can refer to others...?
+
+
 
 
 # TODO:
