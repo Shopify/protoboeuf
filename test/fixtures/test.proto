@@ -186,3 +186,13 @@ message ObjWithEmbedded {
 
   Embedded b = 2;
 }
+
+enum SimpleEnum {
+  ZERO = 0;
+  ONE = 1;
+  TWO = 2;
+}
+
+message HasEnum {
+  SimpleEnum a = 1;
+}

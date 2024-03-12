@@ -4,18 +4,57 @@ require "erb"
 
 module ProtoBoeuf
   class CodeGen
+    class EnumCompiler
+      def self.result(enum)
+        new(enum).result
+      end
+
+      attr_reader :enum
+
+      def initialize(enum)
+        @enum = enum
+      end
+
+      def result
+        "module #{enum.name}\n" + class_body + "; end\n"
+      end
+
+      private
+
+      def class_body
+        enum.constants.map { |const|
+          "#{const.name} = #{const.number}"
+        }.join("\n") + "\n" + lookup + "\n" + resolve
+      end
+
+      def lookup
+        "def self.lookup(val) " +
+        "if " + enum.constants.map { |const|
+          "val == #{const.number} then :#{const.name}"
+        }.join(" elsif ") + " end; end"
+      end
+
+      def resolve
+        "def self.resolve(val) " +
+        "if " + enum.constants.map { |const|
+          "val == :#{const.name} then #{const.number}"
+        }.join(" elsif ") + " end; end"
+      end
+    end
+
     class MessageCompiler
-      def self.result(message)
-        new(message).result
+      def self.result(message, toplevel_enums)
+        new(message, toplevel_enums).result
       end
 
       attr_reader :message, :fields, :oneof_fields
-      attr_reader :optional_fields
+      attr_reader :optional_fields, :toplevel_enums
 
-      def initialize(message)
+      def initialize(message, toplevel_enums)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.fields
+        @toplevel_enums = toplevel_enums
 
         field_types = message.fields.group_by { |field|
           if field.field?
@@ -70,15 +109,29 @@ module ProtoBoeuf
           eoruby
         else
           ""
-        end) + message.messages.map { |x| self.class.new(x).result }.join("\n")
+        end) + message.messages.map { |x| self.class.new(x, toplevel_enums).result }.join("\n")
       end
 
       def readers
-        required_readers + optional_readers + oneof_readers
+        required_readers + enum_readers + optional_readers + oneof_readers
+      end
+
+      def enum?(field)
+        toplevel_enums.key?(field)
+      end
+
+      def enum_readers
+        fields = message.fields.select { |field| field.field? && enum?(field.type) }
+        "  # enum readers\n" +
+          fields.map { |field|
+            "def #{field.name}; #{field.type}.lookup(@#{field.name}) || @#{field.name}; end"
+          }.join("\n") + "\n"
       end
 
       def required_readers
-        fields = message.fields.select(&:field?).reject(&:optional?)
+        fields = message.fields.select(&:field?).reject(&:optional?).reject { |field|
+          enum?(field.type)
+        }
         return "" unless fields.length > 0
 
         "  # required field readers\n" +
@@ -100,7 +153,15 @@ module ProtoBoeuf
       end
 
       def writers
-        required_writers + optional_writers + oneof_writers
+        required_writers + enum_writers + optional_writers + oneof_writers
+      end
+
+      def enum_writers
+        fields = message.fields.select { |field| field.field? && enum?(field.type) }
+        "  # enum writers\n" +
+          fields.map { |field|
+            "def #{field.name}=(v); @#{field.name} = #{field.type}.resolve(v) || v; end"
+          }.join("\n") + "\n"
       end
 
       def required_writers
@@ -172,6 +233,8 @@ module ProtoBoeuf
       def initialize_field(field)
         if field.optional?
           initialize_optional_field(field)
+        elsif field.field? && enum?(field.type)
+          initialize_enum_field(field)
         else
           initialize_required_field(field)
         end
@@ -190,6 +253,10 @@ module ProtoBoeuf
 
       def initialize_required_field(field)
         "    @#{field.name} = #{field.name}"
+      end
+
+      def initialize_enum_field(field)
+        "    @#{field.name} = #{field.type}.resolve(#{field.name}) || #{field.name}"
       end
 
       def extra_api
@@ -444,21 +511,25 @@ ruby
           if field.repeated?
             "[]"
           else
-            case field.type
-            when "string"
-              '""'
-            when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
+            if enum?(field.type)
               0
-            when "double", "float"
-              0.0
-            when "bool"
-              false
-            when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-              'nil'
-            when MapType
-              "{}"
             else
-              raise "Unknown field type #{field.type}"
+              case field.type
+              when "string"
+                '""'
+              when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
+                0
+              when "double", "float"
+                0.0
+              when "bool"
+                false
+              when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+                'nil'
+              when MapType
+                "{}"
+              else
+                raise "Unknown field type #{field.type}"
+              end
             end
           end
         elsif field.map?
@@ -491,27 +562,35 @@ ruby
       end
 
       def wire_type(field)
-        field.wire_type
+        if enum?(field.type)
+          ProtoBoeuf::Field::VARINT
+        else
+          field.wire_type
+        end
       end
 
       def decode_subtype(type, dest, operator)
-        case type
-        when "string" then pull_string(dest, operator)
-        when "uint64" then pull_uint64(dest, operator)
-        when "int64" then pull_int64(dest, operator)
-        when "int32" then pull_int32(dest, operator)
-        when "uint32" then pull_uint32(dest, operator)
-        when "sint32" then pull_sint32(dest, operator)
-        when "sint64" then pull_sint64(dest, operator)
-        when "bool" then pull_boolean(dest, operator)
-        when "double" then pull_double(dest, operator)
-        when "fixed64" then pull_fixed_int64(dest, operator)
-        when "fixed32" then pull_fixed_int32(dest, operator)
-        when "float" then pull_float(dest, operator)
-        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          pull_message(type, dest, operator)
+        if enum?(type)
+          pull_int64(dest, operator)
         else
-          raise "Unknown field type #{type}"
+          case type
+          when "string" then pull_string(dest, operator)
+          when "uint64" then pull_uint64(dest, operator)
+          when "int64" then pull_int64(dest, operator)
+          when "int32" then pull_int32(dest, operator)
+          when "uint32" then pull_uint32(dest, operator)
+          when "sint32" then pull_sint32(dest, operator)
+          when "sint64" then pull_sint64(dest, operator)
+          when "bool" then pull_boolean(dest, operator)
+          when "double" then pull_double(dest, operator)
+          when "fixed64" then pull_fixed_int64(dest, operator)
+          when "fixed32" then pull_fixed_int32(dest, operator)
+          when "float" then pull_float(dest, operator)
+          when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+            pull_message(type, dest, operator)
+          else
+            raise "Unknown field type #{type}"
+          end
         end
       end
 
@@ -665,8 +744,12 @@ ruby
         ""
       end
 
-      head + @ast.messages.map { |message|
-        MessageCompiler.result(message)
+      toplevel_enums = @ast.enums.group_by(&:name)
+
+      head + @ast.enums.map { |enum|
+        EnumCompiler.result(enum)
+      }.join + @ast.messages.map { |message|
+        MessageCompiler.result(message, toplevel_enums)
       }.join + tail
     end
   end

@@ -375,4 +375,53 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 2, actual.b
     assert_equal 3, actual.c
   end
+
+  def test_enum_values
+    refute_equal ::SimpleEnum, SimpleEnum
+    assert_equal ::SimpleEnum::ZERO, SimpleEnum::ZERO
+    assert_equal ::SimpleEnum::ONE, SimpleEnum::ONE
+    assert_equal ::SimpleEnum::TWO, SimpleEnum::TWO
+
+    assert_equal ::SimpleEnum.lookup(0), SimpleEnum.lookup(0)
+    assert_equal ::SimpleEnum.resolve(:ZERO), SimpleEnum.resolve(:ZERO)
+    assert_nil ::SimpleEnum.lookup(10)
+    assert_nil SimpleEnum.lookup(10)
+  end
+
+  def test_enum_methods
+    expected = ::HasEnum.new
+    actual = HasEnum.new
+    assert_equal expected.a, actual.a
+
+    expected.a = 1
+    actual.a = 1
+
+    assert_equal expected.a, actual.a
+
+    expected.a = :TWO
+    actual.a = :TWO
+
+    assert_equal expected.a, actual.a
+
+    expected.a = 10
+    actual.a = 10
+
+    assert_equal expected.a, actual.a
+  end
+
+  def test_enum_new
+    expected = ::HasEnum.new(a: :ONE)
+    actual = HasEnum.new(a: :ONE)
+    assert_equal expected.a, actual.a
+
+    expected = ::HasEnum.new(a: 0)
+    actual = HasEnum.new(a: 0)
+    assert_equal expected.a, actual.a
+  end
+
+  def test_enum_decode
+    obj = HasEnum.decode(::HasEnum.encode(::HasEnum.new(a: :ONE)))
+
+    assert_equal :ONE, obj.a
+  end
 end
