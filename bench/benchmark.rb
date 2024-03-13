@@ -101,35 +101,17 @@ p fake_msgs[0]
 
 
 
+binary = Upstream::ParkingLot.encode(fake_msgs[0]).freeze
 
-# For each message type, we can write a method to generate fake data...
-# One challenge is that each message can refer to others...?
+puts "encoded #{binary.size} bytes"
 
+decoded = ProtoBoeuf::ParkingLot.decode(binary)
 
-
-
-# TODO:
-# Walk the AST and generate some fake data
-# Need to encode using upstream since we don't have an encoder yet
+puts decoded.class
 
 
 
 
-
-
-
-
-Upstream::ParkingLot
-
-
-
-# Our implementation
-ProtoBoeuf::ParkingLot
-# Instantiate with ParkingLot.new
-
-
-
-# TODO: generate fake data
 
 
 
