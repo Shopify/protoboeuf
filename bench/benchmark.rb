@@ -33,7 +33,7 @@ def gen_fake_field_val(type_map, field)
   when "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32"
     # TODO: we may want a normal or poisson distribution?
     # TODO: do we care about negative integers for this benchmark?
-    rand(0..100)
+    rand(0..300)
   when "float", "double"
     rand() * 100.0
   else
@@ -99,7 +99,7 @@ type_map = {}
 pop_type_map(type_map, unit)
 
 # Generate some fake instances of the root message type
-fake_msgs = (0..100).map { |i| gen_fake_data(type_map, 'ParkingLot') }
+fake_msgs = (0..50).map { |i| gen_fake_data(type_map, 'ParkingLot') }
 #p fake_msgs[0]
 
 
