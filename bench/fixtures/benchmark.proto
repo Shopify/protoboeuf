@@ -70,21 +70,32 @@ message Vehicle
 }
 */
 
+
+// TODO: ParkingSpace?
+// bool electric?
+// optional vehicle?
+
+
+
+
+
+
 message ParkingFloor
 {
   uint64 id = 1;
   uint32 num_spaces = 2;
-  uint32 num_fire_exits = 3;
-  uint32 num_sprinklers = 4;
-  double area_sqft = 5;
+  uint32 num_electric = 3;
+  uint32 num_fire_exits = 4;
+  uint32 num_sprinklers = 5;
+  double area_sqft = 6;
 
   // inches because 'Murica
   // Also we don't want too many doubles because that
   // wouldn't be representative of most real-world use cases
-  uint32 ceiling_height_inches = 6;
+  uint32 ceiling_height_inches = 7;
 
   // List of vehicles
-  //repeated Vehicle vehicles = 7;
+  //repeated Vehicle vehicles = 8;
 }
 
 message ParkingLot

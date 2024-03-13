@@ -47,20 +47,20 @@ def gen_fake_msg(type_map, msg_def)
 
   # For each field of this message
   msg_def.fields.each do |field|
-
-    # TODO: optional fields?
-
     if field.repeated?
       arr = (0..20).map { gen_fake_field_val(type_map, field) }
       repeated_field = msg.send("#{field.name}")
       repeated_field.replace(arr)
+    elsif field.optional?
+      # If optional, randomly set the field or not
+      if rand() < 0.5
+        field_val = gen_fake_field_val(type_map, field)
+        msg.send("#{field.name}=", field_val)
+      end
     else
       field_val = gen_fake_field_val(type_map, field)
       msg.send("#{field.name}=", field_val)
     end
-
-
-
   end
 
   msg
