@@ -8,6 +8,7 @@ package upstream;
 // multiple different types.
 //
 
+/*
 message Position
 {
   uint32 x = 1;
@@ -67,6 +68,7 @@ message Vehicle
   // List of items in the trunk
   repeated TrunkItem trunk_items = 11;
 }
+*/
 
 message ParkingFloor
 {
@@ -75,10 +77,14 @@ message ParkingFloor
   uint32 num_fire_exits = 3;
   uint32 num_sprinklers = 4;
   double area_sqft = 5;
-  double ceiling_height = 6;
+
+  // inches because 'Murica
+  // Also we don't want too many doubles because that
+  // wouldn't be representative of most real-world use cases
+  uint32 ceiling_height_inches = 6;
 
   // List of vehicles
-  repeated Vehicle vehicles = 7;
+  //repeated Vehicle vehicles = 7;
 }
 
 message ParkingLot
