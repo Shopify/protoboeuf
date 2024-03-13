@@ -25,6 +25,8 @@ end
 # Generate a fake value for a field
 def gen_fake_field_val(type_map, field)
   field_val = case field.type
+  when "bool"
+    rand() < 0.5
   when "string"
     # TODO: better random strings with variable lengths
     "foobar" + '_foo' * rand(0..8)
@@ -66,7 +68,10 @@ def gen_fake_msg(type_map, msg_def)
   msg
 end
 
-
+# Generate a fake enum value
+def gen_fake_enum(enum)
+  enum.constants.sample.name.to_sym
+end
 
 # Given a type name, generate fake data
 def gen_fake_data(type_map, type_name)
@@ -76,6 +81,8 @@ def gen_fake_data(type_map, type_name)
 
   if type_def.instance_of? ProtoBoeuf::Message
     return gen_fake_msg(type_map, type_def)
+  elsif type_def.instance_of? ProtoBoeuf::Enum
+    return gen_fake_enum(type_def)
   end
 
   # TODO: enums
@@ -93,7 +100,7 @@ pop_type_map(type_map, unit)
 
 # Generate some fake instances of the root message type
 fake_msgs = (0..100).map { |i| gen_fake_data(type_map, 'ParkingLot') }
-p fake_msgs[0]
+#p fake_msgs[0]
 
 
 
@@ -105,20 +112,8 @@ binary = Upstream::ParkingLot.encode(fake_msgs[0]).freeze
 
 puts "encoded #{binary.size} bytes"
 
-decoded = ProtoBoeuf::ParkingLot.decode(binary)
-
-puts decoded.class
-
-
-
-
-
-
-
-# TODO: run the benchmark
-
-
-
+Upstream::ParkingLot.decode binary
+ProtoBoeuf::ParkingLot.decode binary
 
 
 
@@ -126,48 +121,15 @@ puts decoded.class
 
 
 =begin
-class Upstream::RedBlackNode
-  include RBNode
-  include Enumerable
-end
-
-class ProtoBoeuf::RedBlackNode
-  include RBNode
-  include Enumerable
-end
-
-def make_node(key)
-  Upstream::MessageWithManyTypes.new(
-    unsigned_64: key,
-    unsigned_32: key,
-    signed_64: key,
-    signed_32: key,
-    a_string: "hello world #{key}"
-  )
-end
-
-tree = RBTree.new
-
-1000.times do |i|
-  tree = tree.insert(i, make_node(i))
-end
-
-binary = Upstream::RedBlackNode.encode(tree).freeze
-
-def walk(node)
-  return 0 if node.leaf
-  walk(node.left) + walk(node.right) + node.value.unsigned_64
-end
-
 Benchmark.ips { |x|
-  x.report("decode upstream")  { Upstream::RedBlackNode.decode binary }
-  x.report("decode protoboeuf") { ProtoBoeuf::RedBlackNode.decode binary }
+  x.report("decode upstream")  { Upstream::ParkingLot.decode binary }
+  x.report("decode protoboeuf") { ProtoBoeuf::ParkingLot.decode binary }
   x.compare!
 }
 
 Benchmark.ips { |x|
-  x.report("decode and read upstream")  { walk Upstream::RedBlackNode.decode binary }
-  x.report("decode and read protoboeuf") { walk ProtoBoeuf::RedBlackNode.decode binary }
+  x.report("decode and read upstream")  { walk Upstream::ParkingLot.decode binary }
+  x.report("decode and read protoboeuf") { walk ProtoBoeuf::ParkingLot.decode binary }
   x.compare!
 }
 =end
