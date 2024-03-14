@@ -102,31 +102,23 @@ pop_type_map(type_map, unit)
 fake_msgs = (0..50).map { |i| gen_fake_data(type_map, 'ParkingLot') }
 #p fake_msgs[0]
 
+encoded_bins = fake_msgs.map { |msg| Upstream::ParkingLot.encode(msg).freeze }
+
+bin_sizes = encoded_bins.map { |bin| bin.size }
+total_bin_size = bin_sizes.sum
+puts "total encoded size: #{total_bin_size} bytes"
 
 
 
-
-
-
-binary = Upstream::ParkingLot.encode(fake_msgs[0]).freeze
-
-puts "encoded #{binary.size} bytes"
-
-Upstream::ParkingLot.decode binary
-ProtoBoeuf::ParkingLot.decode binary
-
-
-
+Benchmark.ips { |x|
+  x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
+  x.report("decode protoboeuf") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
+  x.compare!
+}
 
 
 
 =begin
-Benchmark.ips { |x|
-  x.report("decode upstream")  { Upstream::ParkingLot.decode binary }
-  x.report("decode protoboeuf") { ProtoBoeuf::ParkingLot.decode binary }
-  x.compare!
-}
-
 Benchmark.ips { |x|
   x.report("decode and read upstream")  { walk Upstream::ParkingLot.decode binary }
   x.report("decode and read protoboeuf") { walk ProtoBoeuf::ParkingLot.decode binary }
