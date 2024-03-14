@@ -24,7 +24,7 @@ end
 
 # Generate a fake value for a field
 def gen_fake_field_val(type_map, field)
-  field_val = case field.type
+  case field.type
   when "bool"
     rand() < 0.5
   when "string"
@@ -32,7 +32,7 @@ def gen_fake_field_val(type_map, field)
     "foobar" + '_foo' * rand(0..8)
   when "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32"
     # TODO: we may want a normal or poisson distribution?
-    # TODO: do we care about negative integers for this benchmark?
+    # We don't care about negative integers for this benchmark (rarely used)
     rand(0..300)
   when "float", "double"
     rand() * 100.0
@@ -85,9 +85,40 @@ def gen_fake_data(type_map, type_name)
     return gen_fake_enum(type_def)
   end
 
-  # TODO: enums
-
   raise "unknown type #{type_name}"
+end
+
+# Generate a function to read all fields on every node type
+def gen_walk_fn(type_def)
+
+  out = "def walk_#{type_def.name}(node)\n"
+  out += "  return unless node\n"
+
+  if type_def.instance_of? ProtoBoeuf::Message
+    # For each field of this message
+    type_def.fields.each do |field|
+      if field.repeated?
+        out += "  node.#{field.name}.each { |v| walk_#{field.type}(v) }\n"
+      else
+        case field.type
+        when "bool", "string", "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32", "float", "double"
+          out += "  node.#{field.name}\n"
+        else
+          out += "  walk_#{field.type}(node.#{field.name})\n"
+        end
+      end
+    end
+
+  elsif type_def.instance_of? ProtoBoeuf::Enum
+    # Do nothing
+  end
+
+  out += "end"
+
+  #puts out
+
+  # Define the function
+  eval(out)
 end
 
 # Parse the proto file so we can generate fake data
@@ -98,9 +129,11 @@ unit = ProtoBoeuf.parse_file "bench/fixtures/benchmark.proto"
 type_map = {}
 pop_type_map(type_map, unit)
 
+# Generate a sum functions for the root type
+type_map.each { |type_name, type_def| gen_walk_fn(type_def) }
+
 # Generate some fake instances of the root message type
-fake_msgs = (0..50).map { |i| gen_fake_data(type_map, 'ParkingLot') }
-#p fake_msgs[0]
+fake_msgs = (0..10).map { |i| gen_fake_data(type_map, 'ParkingLot') }
 
 encoded_bins = fake_msgs.map { |msg| Upstream::ParkingLot.encode(msg).freeze }
 
@@ -108,20 +141,14 @@ bin_sizes = encoded_bins.map { |bin| bin.size }
 total_bin_size = bin_sizes.sum
 puts "total encoded size: #{total_bin_size} bytes"
 
-
-
 Benchmark.ips { |x|
   x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
   x.report("decode protoboeuf") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
   x.compare!
 }
 
-
-
-=begin
 Benchmark.ips { |x|
-  x.report("decode and read upstream")  { walk Upstream::ParkingLot.decode binary }
-  x.report("decode and read protoboeuf") { walk ProtoBoeuf::ParkingLot.decode binary }
+  x.report("decode and read upstream")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
+  x.report("decode and read protoboeuf") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
   x.compare!
 }
-=end
