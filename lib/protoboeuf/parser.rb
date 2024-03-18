@@ -151,9 +151,7 @@ module ProtoBoeuf
         LEN
       else
         case type
-        when "string"
-          LEN
-        when "bytes"
+        when "string", "bytes"
           LEN
         when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
