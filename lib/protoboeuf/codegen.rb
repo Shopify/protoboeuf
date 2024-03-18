@@ -522,7 +522,7 @@ ruby
               0
             else
               case field.type
-              when "string"
+              when "string", "bytes"
                 '""'
               when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
                 0
@@ -582,6 +582,7 @@ ruby
         else
           case type
           when "string" then pull_string(dest, operator)
+          when "bytes" then pull_string(dest, operator)
           when "uint64" then pull_uint64(dest, operator)
           when "int64" then pull_int64(dest, operator)
           when "int32" then pull_int32(dest, operator)

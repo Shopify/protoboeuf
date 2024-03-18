@@ -134,10 +134,10 @@ module ProtoBoeuf
       if options.key?(:packed)
         options[:packed]
       else
-        # only scalar types that are not "string" or "byte" are allowed
+        # only scalar types that are not "string" or "bytes" are allowed
         # to be packed.
         # https://protobuf.dev/programming-guides/encoding/#packed
-        (SCALAR_TYPES - ["string", "byte"]).include?(type)
+        (SCALAR_TYPES - ["string", "bytes"]).include?(type)
       end
     end
 
@@ -152,6 +152,8 @@ module ProtoBoeuf
       else
         case type
         when "string"
+          LEN
+        when "bytes"
           LEN
         when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
           VARINT
