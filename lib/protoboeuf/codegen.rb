@@ -430,6 +430,13 @@ module ProtoBoeuf
       index += value
       ruby
 
+      PULL_BYTES = ERB.new(<<-ruby, trim_mode: '-')
+      value = <%= pull_varint %>
+
+      <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
+      index += value
+      ruby
+
       PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
       ## PULL SINT32
       value = <%= pull_varint %>
@@ -522,7 +529,7 @@ ruby
               0
             else
               case field.type
-              when "string"
+              when "string", "bytes"
                 '""'
               when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
                 0
@@ -582,6 +589,7 @@ ruby
         else
           case type
           when "string" then pull_string(dest, operator)
+          when "bytes" then pull_bytes(dest, operator)
           when "uint64" then pull_uint64(dest, operator)
           when "int64" then pull_int64(dest, operator)
           when "int32" then pull_int32(dest, operator)
@@ -674,7 +682,15 @@ ruby
       alias :pull_sint64 :pull_sint32
 
       def pull_string(dest, operator)
-        PULL_STRING.result(binding)
+        "        ## PULL_STRING\n" +
+          PULL_STRING.result(binding) +
+          "        ## END PULL_STRING\n"
+      end
+
+      def pull_bytes(dest, operator)
+        "        ## PULL_BYTES\n" +
+          PULL_BYTES.result(binding) +
+          "        ## END PULL_BYTES\n"
       end
 
       def pull_uint64(dest, operator)

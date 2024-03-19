@@ -26,10 +26,15 @@ message TestString {
   optional string a = 1;
 }
 
+message TestBytes {
+  optional string a = 1;
+}
+
 message TestMessage {
   string id = 1;
   uint64 shop_id = 2; // Comment after field
   bool boolean = 3;
+  bytes uuid = 4;
 }
 
 /*

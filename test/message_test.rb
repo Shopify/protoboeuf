@@ -89,23 +89,27 @@ class MessageTest < ProtoBoeuf::Test
       x.id = "hello world"
       x.shop_id = 1234
       x.boolean = false
+      x.uuid = ["123e4567-e89b-12d3-a456-426614174000".delete("-")].pack("H*")
     })
 
     obj = TestMessage.decode data
     assert_equal 1234, obj.shop_id
     assert_equal "hello world", obj.id
     assert_equal false, obj.boolean
+    assert_equal "\x12>Eg\xE8\x9B\x12\xD3\xA4VBf\x14\x17@\x00".b, obj.uuid
 
     data = ::TestMessage.encode(::TestMessage.new.tap { |x|
       x.id = "hello world2"
       x.shop_id = 555
       x.boolean = true
+      x.uuid = ["345e4567-e89b-12d3-a456-426614174000".delete("-")].pack("H*")
     })
 
     obj = TestMessage.decode data
     assert_equal 555, obj.shop_id
     assert_equal "hello world2", obj.id
     assert_equal true, obj.boolean
+    assert_equal "4^Eg\xE8\x9B\x12\xD3\xA4VBf\x14\x17@\x00".b, obj.uuid
   end
 
   def test_decode_test1
@@ -134,6 +138,12 @@ class MessageTest < ProtoBoeuf::Test
     data = ::TestString.encode(::TestString.new.tap { |x| x.a = "foo" })
     obj = TestString.decode data
     assert_equal "foo", obj.a
+  end
+
+  def test_decode_testbytes
+    data = ::TestBytes.encode(::TestBytes.new.tap { |x| x.a = "\x00\x01\x02\x03\x04".b })
+    obj = TestBytes.decode data
+    assert_equal "\x00\x01\x02\x03\x04".b, obj.a
   end
 
   def test_default_values_repeated_field
@@ -184,6 +194,13 @@ class MessageTest < ProtoBoeuf::Test
   def test_default_string
     expected = ::TestString.new
     actual = TestString.new
+
+    assert_equal expected.a, actual.a
+  end
+
+  def test_default_Bytes
+    expected = ::TestBytes.new
+    actual = TestBytes.new
 
     assert_equal expected.a, actual.a
   end
