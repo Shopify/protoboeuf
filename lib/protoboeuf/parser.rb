@@ -182,6 +182,19 @@ module ProtoBoeuf
     end
   end
 
+  # Check for duplicate enum constant names
+  def self.check_enum_collision(enums)
+    names = Set.new
+    enums.each do |enum|
+      enum.constants.each do |const|
+        if names.include? const.name
+          raise ParseError.new("duplicate enum constant name #{const.name}", const.pos)
+        end
+        names.add(const.name)
+      end
+    end
+  end
+
   # Parse a source string
   def self.parse_string(str)
     parse_unit(Input.new(str))
@@ -254,6 +267,7 @@ module ProtoBoeuf
       end
     end
 
+    check_enum_collision(enums)
     Unit.new(package, options, imports, messages, enums)
   end
 
@@ -472,6 +486,8 @@ module ProtoBoeuf
       end
     end
     check_dup_names.call(fields)
+
+    check_enum_collision(enums)
 
     return fields, messages, enums
   end

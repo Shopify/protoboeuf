@@ -125,6 +125,13 @@ class ParserTest < ProtoBoeuf::Test
     assert_equal 2, unit.enums[0].constants.size
   end
 
+  def test_enum_collision
+    assert_raises { ProtoBoeuf.parse_string('enum Foo1 { BAR=0; } enum Foo2 { BAR=0; }') }
+
+    ProtoBoeuf.parse_string('message Msg { enum Foo1 { BAR=0; } enum Foo2 { BAR2=0; } }')
+    assert_raises { ProtoBoeuf.parse_string('message Msg { enum Foo1 { BAR=0; } enum Foo2 { BAR=0; } }') }
+  end
+
   def test_enum_zero_const
     # Should always have an enum constant with value 0
      assert_raises { ProtoBoeuf.parse_string('enum Foo { CONST0 = 1; }') }
