@@ -49,10 +49,10 @@ def gen_fake_field_val(type_map, field)
   when "bool"
     rand < 0.5
   when "bytes"
-    Array.new(255).map { rand(255).chr("BINARY") }.join
+    (1..rand(255)).map { rand(255).chr("BINARY") }.join
   when "string"
     # TODO: better random strings with variable lengths
-    Array.new(255).map { gen_fake_unicode }.join
+    (1..rand(255)).map { gen_fake_unicode }.join
   when "uint32"
     # TODO: we may want a normal or poisson distribution?
     # We don't care about negative integers for this benchmark (rarely used)
