@@ -754,26 +754,25 @@ ruby
     end
 
     def to_ruby
-      head = "# frozen_string_literal: true\n"
-      head += if @ast.package
-        "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
-      else
-        ""
-      end
+      # This is a poorman's indent prettier.
+      # TODO: We really should build a ruby AST and then apply a ruby serializer that pretties appropriately
 
-      tail = if @ast.package
-        "end"
-      else
-        ""
-      end
+      indent_level = 0
+      indent = -> { "  " * ((indent_level += 1) - 1) }
+      unindent = -> { "  " * ((indent_level -= 1) + 1) }
+      indent_lines = ->(body) { body.split("\n").map { |line| ("  " * indent_level) + line }.join("\n") }
+
+      packages = (@ast.package || "").split(".").reject(&:empty?)
+      head = "# frozen_string_literal: true\n\n"
+      head += packages.map { |m| indent.call + "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
+      body = indent_lines.call(@ast.enums.map { |enum| EnumCompiler.result(enum) }.join) + "\n"
+      body += indent_lines.call(@ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join)
 
-      head + @ast.enums.map { |enum|
-        EnumCompiler.result(enum)
-      }.join + @ast.messages.map { |message|
-        MessageCompiler.result(message, toplevel_enums)
-      }.join + tail
+      tail = packages.map { unindent.call + "end" }.join("\n")
+
+      head + body + tail
     end
   end
 end

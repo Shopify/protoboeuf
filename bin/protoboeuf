@@ -1,17 +1,18 @@
-#!/bin/env ruby
+#!env ruby
+# frozen_string_literal: true
 
-require "protoboeuf/codegen"
-require "protoboeuf/parser"
+require_relative "../lib/protoboeuf/codegen"
+require_relative "../lib/protoboeuf/parser"
 require "optparse"
 
-op = OptionParser.new { |opts|
+op = OptionParser.new do |opts|
   opts.banner = "Usage: protoboeuf file.proto"
-}
+end
 op.parse!
 
 if ARGV[0] && File.exist?(ARGV[0])
-  unit = ProtoBoeuf.parse_file ARGV[0]
-  gen = ProtoBoeuf::CodeGen.new unit
+  unit = ProtoBoeuf.parse_file(ARGV[0])
+  gen = ProtoBoeuf::CodeGen.new(unit)
   puts gen.to_ruby
 else
   $stderr.puts op
