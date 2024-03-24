@@ -759,7 +759,7 @@ ruby
 
       indent_level = 0
       indent = -> { "  " * ((indent_level += 1) - 1) }
-      unindent = -> { "  " * ((indent_level -= 1) + 1) }
+      unindent = -> { "  " * (indent_level -= 1) }
       indent_lines = ->(body) { body.split("\n").map { |line| ("  " * indent_level) + line }.join("\n") }
 
       packages = (@ast.package || "").split(".").reject(&:empty?)
@@ -770,7 +770,7 @@ ruby
       body = indent_lines.call(@ast.enums.map { |enum| EnumCompiler.result(enum) }.join) + "\n"
       body += indent_lines.call(@ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join)
 
-      tail = packages.map { unindent.call + "end" }.join("\n")
+      tail = "\n" + packages.map { unindent.call + "end" }.join("\n")
 
       head + body + tail
     end
