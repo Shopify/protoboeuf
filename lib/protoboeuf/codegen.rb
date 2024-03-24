@@ -93,9 +93,8 @@ module ProtoBoeuf
       def prelude
         <<-eoruby
   def self.decode(buff)
-    buff = buff.dup
-    buff.force_encoding("UTF-8")
-    allocate.decode_from(buff, 0, buff.bytesize)
+    buff = StringIO.new(buff, "rb")
+    allocate.decode_from(buff, buff.size)
   end
 
         eoruby
@@ -292,38 +291,32 @@ module ProtoBoeuf
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
-      PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
-      if (byte0 = buff.getbyte(index)) < 0x80
-        index += 1
+      PULL_VARINT = ERB.new(<<-ruby, trim_mode: "-")
+      if (byte0 = buff.getbyte) < 0x80
         byte0
       else
-        if (byte1 = buff.getbyte(index + 1)) < 0x80
-          index += 2
+        if (byte1 = buff.getbyte) < 0x80
           (byte1 << 7) | (byte0 & 0x7F)
         else
-          if (byte2 = buff.getbyte(index + 2)) < 0x80
-            index += 3
+          if (byte2 = buff.getbyte) < 0x80
             (byte2 << 14) |
                     ((byte1 & 0x7F) << 7) |
                     (byte0 & 0x7F)
           else
-            if (byte3 = buff.getbyte(index + 3)) < 0x80
-              index += 4
+            if (byte3 = buff.getbyte) < 0x80
               (byte3 << 21) |
                       ((byte2 & 0x7F) << 14) |
                       ((byte1 & 0x7F) << 7) |
                       (byte0 & 0x7F)
             else
-              if (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
+              if (byte4 = buff.getbyte) < 0x80
                 (byte4 << 28) |
                         ((byte3 & 0x7F) << 21) |
                         ((byte2 & 0x7F) << 14) |
                         ((byte1 & 0x7F) << 7) |
                         (byte0 & 0x7F)
               else
-                if (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
+                if (byte5 = buff.getbyte) < 0x80
                   (byte5 << 35) |
                           ((byte4 & 0x7F) << 28) |
                           ((byte3 & 0x7F) << 21) |
@@ -331,8 +324,7 @@ module ProtoBoeuf
                           ((byte1 & 0x7F) << 7) |
                           (byte0 & 0x7F)
                 else
-                  if (byte6 = buff.getbyte(index + 6)) < 0x80
-                    index += 7
+                  if (byte6 = buff.getbyte) < 0x80
                     (byte6 << 42) |
                             ((byte5 & 0x7F) << 35) |
                             ((byte4 & 0x7F) << 28) |
@@ -341,8 +333,7 @@ module ProtoBoeuf
                             ((byte1 & 0x7F) << 7) |
                             (byte0 & 0x7F)
                   else
-                    if (byte7 = buff.getbyte(index + 7)) < 0x80
-                      index += 8
+                    if (byte7 = buff.getbyte) < 0x80
                       (byte7 << 49) |
                               ((byte6 & 0x7F) << 42) |
                               ((byte5 & 0x7F) << 35) |
@@ -352,8 +343,7 @@ module ProtoBoeuf
                               ((byte1 & 0x7F) << 7) |
                               (byte0 & 0x7F)
                     else
-                      if (byte8 = buff.getbyte(index + 8)) < 0x80
-                        index += 9
+                      if (byte8 = buff.getbyte) < 0x80
                         (byte8 << 56) |
                                 ((byte7 & 0x7F) << 49) |
                                 ((byte6 & 0x7F) << 42) |
@@ -364,8 +354,7 @@ module ProtoBoeuf
                                 ((byte1 & 0x7F) << 7) |
                                 (byte0 & 0x7F)
                       else
-                        if (byte9 = buff.getbyte(index + 9)) < 0x80
-                          index += 10
+                        if (byte9 = buff.getbyte) < 0x80
 
                           <%- if sign == :i64 -%>
                           # Negative 32 bit integers are still encoded with 10 bytes
@@ -426,18 +415,16 @@ module ProtoBoeuf
       PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
       value = <%= pull_varint %>
 
-      <%= dest %> <%= operator %> buff.byteslice(index, value)
-      index += value
+      <%= dest %> <%= operator %> buff.read(value).force_encoding(Encoding::UTF_8)
       ruby
 
       PULL_BYTES = ERB.new(<<-ruby, trim_mode: '-')
       value = <%= pull_varint %>
 
-      <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
-      index += value
+      <%= dest %> <%= operator %> buff.read(value)
       ruby
 
-      PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
+      PULL_SINT32 = ERB.new(<<-ruby, trim_mode: "-")
       ## PULL SINT32
       value = <%= pull_varint %>
 
@@ -451,7 +438,7 @@ module ProtoBoeuf
       ruby
 
       DECODE_METHOD = ERB.new(<<-ruby, trim_mode: '-')
-  def decode_from(buff, index, len)
+  def decode_from(buff, len)
     <%= init_bitmask(message) %>
     <%- for field in fields -%>
       <%- if field.field? -%>
@@ -464,17 +451,19 @@ module ProtoBoeuf
       <%- end -%>
     <%- end -%>
 
+    return self if buff.pos >= len
+
     <%- unless fields.empty? -%>
     <%= pull_tag %>
     <%- end -%>
 
-    while true
+    while buff.pos < len
       <%- fields.each do |field| -%>
         <%- if field.field? -%>
       if tag == <%= tag_for_field(field, field.number) %>
         <%= decode_code(field) %>
         <%= set_bitmask(field) if field.optional? %>
-        return self if index >= len
+        return self if buff.pos >= len
         <%- if !field.reads_next_tag? -%>
         <%= pull_tag %>
         <%- end -%>
@@ -484,37 +473,40 @@ module ProtoBoeuf
       if tag == <%= tag_for_field(child, child.number) %>
         <%= decode_code(child) %>
         @<%= field.name %> = :<%= child.name %>
-        return self if index >= len
+        return self if buff.pos >= len
+        <%- if !child.reads_next_tag? -%>
         <%= pull_tag %>
+        <%- end -%>
       end
           <%- end -%>
         <%- end -%>
       <%- end -%>
 
-      return self if index >= len
+      return self if buff.pos >= len
       raise NotImplementedError
     end
+    buff.close if len == buff.pos
+    return self
   end
       ruby
 
       PACKED_REPEATED = ERB.new(<<ruby)
         <%= pull_uint64("value", "=") %>
-        goal = index + value
+        goal = buff.pos + value
         list = @<%= field.name %>
         while true
-          break if index >= goal
+          break if buff.pos >= goal
           <%= decode_subtype(field.type, "list", "<<") %>
         end
 ruby
 
       def pull_tag
         str = <<-eoruby
-        tag = buff.getbyte(index)
-        index += 1
+        tag = buff.getbyte
         eoruby
 
         if $DEBUG
-          str += "puts \"reading field \#{tag >> 3} type: \#{tag & 0x7} \#{tag}\"\n"
+          str += "puts \"reading field \#{tag >> 3} type: \#{tag & 0x7} \#{tag}\" if tag \n"
         end
 
         str
@@ -538,7 +530,7 @@ ruby
               when "bool"
                 false
               when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-                'nil'
+                "nil"
               when MapType
                 "{}"
               else
@@ -549,7 +541,7 @@ ruby
         elsif field.map?
           "{}"
         else
-          'nil'
+          "nil"
         end
       end
 
@@ -610,33 +602,33 @@ ruby
       end
 
       def pull_double(dest, operator)
-        "#{dest} #{operator} buff.byteslice(index, 8).unpack1('D'); index += 8"
+        "#{dest} #{operator} buff.read(8).unpack1('E')"
       end
 
       def pull_float(dest, operator)
-        "#{dest} #{operator} buff.byteslice(index, 4).unpack1('F'); index += 4"
+        "#{dest} #{operator} buff.read(4).unpack1('e')"
       end
 
       def pull_fixed_int64(dest, operator)
-        "#{dest} #{operator} (" + 8.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 8"
+        "#{dest} #{operator} buff.read(8).unpack1('q<')"
       end
 
       def pull_fixed_int32(dest, operator)
-        "#{dest} #{operator} (" + 4.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 4"
+        "#{dest} #{operator} buff.read(4).unpack1('l<')"
       end
 
       def decode_map(field)
         "        ## PULL_MAP\n" +
-        "        map = @#{field.name}\n" +
-        "        while tag == #{tag_for_field(field, field.number)}\n" +
-        pull_uint64("value", "=") + "\n" +
-        "          index += 1\n" + # skip the tag, assume it's the key
-        decode_subtype(field.type.key_type, "key", "=") + "\n" +
-        "          index += 1\n" + # skip the tag, assume it's the value
-        decode_subtype(field.type.value_type, "map[key]", "=") + "\n" +
-        "          return self if index >= len\n" +
-        pull_tag + "\n" +
-        "        end\n"
+          "        map = @#{field.name}\n" +
+          "        while tag == #{tag_for_field(field, field.number)}\n" +
+          pull_uint64("value", "=") + "\n" +
+          "          buff.pos = buff.pos + 1\n" + # skip the tag, assume it's the key
+          decode_subtype(field.type.key_type, "key", "=") + "\n" +
+          "          buff.pos = buff.pos + 1\n" + # skip the tag, assume it's the value
+          decode_subtype(field.type.value_type, "map[key]", "=") + "\n" +
+          "          return self if buff.pos >= len\n" +
+          pull_tag + "\n" +
+          "        end\n"
       end
 
       def decode_repeated(field)
@@ -645,9 +637,11 @@ ruby
         list = @#{field.name}
         while true
           #{decode_subtype(field.type, "list", "<<")}
+          return self if buff.pos >= len
           #{pull_tag}
           break unless tag == #{tag_for_field(field, field.number)}
         end
+
         ## END DECODE REPEATED
         eoruby
       end
@@ -655,7 +649,7 @@ ruby
       def pull_message(type, dest, operator)
         "        ## PULL_MESSAGE\n" +
           pull_uint64("msg_len", "=") + "\n" +
-          "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
+          "        #{dest} #{operator} #{type}.allocate.decode_from(buff, buff.pos + msg_len)\n" +
           "        ## END PULL_MESSAGE\n"
       end
 
@@ -703,8 +697,7 @@ ruby
 
       def pull_boolean(dest, operator)
         "        ## PULL BOOLEAN\n" +
-          "        #{dest} #{operator} (buff.getbyte(index) == 1)\n" +
-          "        index += 1\n" +
+          "        #{dest} #{operator} (buff.getbyte == 1)\n" +
           "        ## END PULL BOOLEAN\n"
       end
 
@@ -754,7 +747,7 @@ ruby
     end
 
     def to_ruby
-      head = "# frozen_string_literal: true\n"
+      head = "# frozen_string_literal: true\n\nrequire 'stringio'\n"
       head += if @ast.package
         "module " + @ast.package.split('_').map(&:capitalize).join + "\n"
       else
