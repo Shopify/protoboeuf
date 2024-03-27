@@ -55,6 +55,7 @@ module ProtoBoeuf
         @optional_field_bit_lut = []
         @fields = @message.fields
         @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
+        @requires = Set.new
 
         field_types = message.fields.group_by { |field|
           if field.field?
@@ -74,7 +75,12 @@ module ProtoBoeuf
       end
 
       def result
-        "class #{message.name}\n" + class_body + "end\n"
+        body = "class #{message.name}\n" + class_body + "end\n"
+        if @requires.empty?
+          body
+        else
+          @requires.map { |r| "require #{r.dump}" }.join("\n") + "\n\n" + body
+        end
       end
 
       private
@@ -653,6 +659,11 @@ ruby
       end
 
       def pull_message(type, dest, operator)
+        if type == "google.protobuf.UInt64Value"
+          @requires << "protoboeuf/protobuf/uint64value"
+          type = "ProtoBoeuf::Protobuf::UInt64Value"
+        end
+
         "        ## PULL_MESSAGE\n" +
           pull_uint64("msg_len", "=") + "\n" +
           "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
@@ -772,7 +783,7 @@ ruby
 
       tail = "\n" + packages.map { unindent.call + "end" }.join("\n")
 
-      head + body + tail
+      (head + body + tail).gsub(/[ ]*(?=$)/, '')
     end
   end
 end
