@@ -10,6 +10,9 @@ module ProtoBoeuf
         allocate.decode_from(buff, 0, buff.bytesize)
       end
 
+      def self.encode(obj)
+        obj._encode
+      end
       # required field readers
       attr_accessor :value
 
@@ -142,6 +145,20 @@ module ProtoBoeuf
           raise NotImplementedError
         end
       end
+    def _encode
+      buff = ''.b
+            ## encode the tag
+            buff << 0x08
+            val = @value
+            while val > 0
+              byte = val & 0x7F
+              val >>= 7
+              byte |= 0x80 if val > 0
+              buff << byte
+            end
+
+      buff
+    end
     end
   end
 end

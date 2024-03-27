@@ -93,7 +93,37 @@ module ProtoBoeuf
           writers +
           initialize_code +
           extra_api +
-          decode
+          decode +
+          encode
+      end
+
+      def encode
+        # FIXME: we should probably sort fields by field number
+        "def _encode\n  buff = ''.b\n" +
+          fields.map { |field|
+          # FIXME: we need to support all types
+          next unless field.field? && field.scalar?
+
+          method = "encode_#{field.type}"
+
+          send(method, field) if respond_to?(method, true)
+        }.compact.join("\n") +
+        "\n  buff\nend\n"
+      end
+
+      def encode_uint64(field)
+        tag = (field.number << 3) | field.wire_type
+        <<-eocode
+        ## encode the tag
+        buff << #{sprintf("%#04x", tag)}
+        val = @#{field.name}
+        while val > 0
+          byte = val & 0x7F
+          val >>= 7
+          byte |= 0x80 if val > 0
+          buff << byte
+        end
+        eocode
       end
 
       def prelude
@@ -104,6 +134,9 @@ module ProtoBoeuf
     allocate.decode_from(buff, 0, buff.bytesize)
   end
 
+  def self.encode(obj)
+    obj._encode
+  end
         eoruby
       end
 

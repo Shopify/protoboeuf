@@ -145,6 +145,10 @@ module ProtoBoeuf
       end
     end
 
+    def scalar?
+      SCALAR_TYPES.include?(type)
+    end
+
     VARINT = 0
     I64 = 1
     LEN = 2
