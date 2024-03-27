@@ -50,6 +50,10 @@ module ProtoBoeuf
     def accept(viz)
       viz.visit_unit self
     end
+
+    def to_ruby
+      ProtoBoeuf::CodeGen.new(self).to_ruby
+    end
   end
 
   class Option < Struct.new(:name, :value, :pos)

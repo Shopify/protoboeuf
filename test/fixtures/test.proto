@@ -210,3 +210,7 @@ message HasSubEnum {
 
   Thing a = 1;
 }
+
+message HasKnownValue {
+  google.protobuf.UInt64Value id = 1;
+}

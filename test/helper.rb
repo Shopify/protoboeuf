@@ -1,3 +1,5 @@
+ENV["MT_NO_PLUGINS"] = "1"
+
 require "minitest/autorun"
 require "minitest/color"
 require "proto/test/fixtures/test_pb"

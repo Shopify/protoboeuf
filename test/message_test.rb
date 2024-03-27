@@ -471,4 +471,14 @@ class MessageTest < ProtoBoeuf::Test
 
     assert_equal expected.a, actual.a
   end
+
+  def test_translate_known_types_in_proto
+    data = ::HasKnownValue.encode(::HasKnownValue.new.tap { |x|
+      x.id = Google::Protobuf::UInt64Value.new(value: 123456)
+    })
+
+    instance = HasKnownValue.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::UInt64Value, instance.id
+    assert_equal 123456, instance.id.value
+  end
 end
