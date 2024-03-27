@@ -481,4 +481,26 @@ class MessageTest < ProtoBoeuf::Test
     assert_kind_of ::ProtoBoeuf::Protobuf::UInt64Value, instance.id
     assert_equal 123456, instance.id.value
   end
+
+  def test_encode_uint64
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
+
+message UInt64Value {
+  uint64 value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    # Should fit in one byte
+    actual = m::UInt64Value.encode m::UInt64Value.new(value: 12)
+    expected = ::Google::Protobuf::UInt64Value.encode(::Google::Protobuf::UInt64Value.new(value: 12))
+    assert_equal expected, actual
+
+    # Use more bytes
+    actual = m::UInt64Value.encode m::UInt64Value.new(value: 0xFF)
+    expected = ::Google::Protobuf::UInt64Value.encode(::Google::Protobuf::UInt64Value.new(value: 0xFF))
+    assert_equal expected, actual
+  end
 end
