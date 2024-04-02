@@ -492,6 +492,16 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 123456, instance.id.value
   end
 
+  def test_translate_known_type_double
+    data = ::HasKnownTypeDouble.encode(::HasKnownTypeDouble.new.tap { |x|
+      x.id = Google::Protobuf::DoubleValue.new(value: 123456)
+    })
+
+    instance = HasKnownTypeDouble.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::DoubleValue, instance.id
+    assert_equal 123456, instance.id.value
+  end
+
   def test_encode_uint64
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
