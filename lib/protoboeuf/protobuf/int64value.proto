@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package proto_boeuf.protobuf;
+
+message Int64Value {
+  int64 value = 1;
+}

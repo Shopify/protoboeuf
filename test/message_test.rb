@@ -472,6 +472,26 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal expected.a, actual.a
   end
 
+  def test_translate_known_type_int32
+    data = ::HasKnownTypeInt32.encode(::HasKnownTypeInt32.new.tap { |x|
+      x.id = Google::Protobuf::Int32Value.new(value: -123456)
+    })
+
+    instance = HasKnownTypeInt32.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::Int32Value, instance.id
+    assert_equal -123456, instance.id.value
+  end
+
+  def test_translate_known_type_int64
+    data = ::HasKnownTypeInt64.encode(::HasKnownTypeInt64.new.tap { |x|
+      x.id = Google::Protobuf::Int64Value.new(value: -123456)
+    })
+
+    instance = HasKnownTypeInt64.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::Int64Value, instance.id
+    assert_equal -123456, instance.id.value
+  end
+
   def test_translate_known_type_uint32
     data = ::HasKnownTypeUInt32.encode(::HasKnownTypeUInt32.new.tap { |x|
       x.id = Google::Protobuf::UInt32Value.new(value: 123456)
