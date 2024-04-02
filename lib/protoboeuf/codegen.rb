@@ -712,6 +712,11 @@ ruby
           type = "ProtoBoeuf::Protobuf::UInt64Value"
         end
 
+        if type == "google.protobuf.FloatValue"
+          @requires << "protoboeuf/protobuf/floatvalue"
+          type = "ProtoBoeuf::Protobuf::FloatValue"
+        end
+
         if type == "google.protobuf.DoubleValue"
           @requires << "protoboeuf/protobuf/doublevalue"
           type = "ProtoBoeuf::Protobuf::DoubleValue"

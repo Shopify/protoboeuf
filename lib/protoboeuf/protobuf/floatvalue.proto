@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package proto_boeuf.protobuf;
+
+message FloatValue {
+  float value = 1;
+}

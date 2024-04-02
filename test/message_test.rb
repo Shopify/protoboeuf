@@ -512,14 +512,24 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 123456, instance.id.value
   end
 
+  def test_translate_known_type_float
+    data = ::HasKnownTypeFloat.encode(::HasKnownTypeFloat.new.tap { |x|
+      x.id = Google::Protobuf::FloatValue.new(value: 123.5)
+    })
+
+    instance = HasKnownTypeFloat.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::FloatValue, instance.id
+    assert_equal 123.5, instance.id.value
+  end
+
   def test_translate_known_type_double
     data = ::HasKnownTypeDouble.encode(::HasKnownTypeDouble.new.tap { |x|
-      x.id = Google::Protobuf::DoubleValue.new(value: 123456)
+      x.id = Google::Protobuf::DoubleValue.new(value: 123.75)
     })
 
     instance = HasKnownTypeDouble.decode(data)
     assert_kind_of ::ProtoBoeuf::Protobuf::DoubleValue, instance.id
-    assert_equal 123456, instance.id.value
+    assert_equal 123.75, instance.id.value
   end
 
   def test_translate_known_type_string
