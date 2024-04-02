@@ -156,7 +156,6 @@ message HasMap {
 message NoFieldsLol {
 }
 
-// FIXME: not yet supported
 message FixedWidthNumbers {
   double a = 1;
   optional double b = 2;
@@ -211,6 +210,11 @@ message HasSubEnum {
   Thing a = 1;
 }
 
-message HasKnownValue {
+// Google's well-known types
+message HasKnownTypeUInt32 {
+  google.protobuf.UInt32Value id = 1;
+}
+
+message HasKnownTypeUInt64 {
   google.protobuf.UInt64Value id = 1;
 }

@@ -692,6 +692,11 @@ ruby
       end
 
       def pull_message(type, dest, operator)
+        if type == "google.protobuf.UInt32Value"
+          @requires << "protoboeuf/protobuf/uint32value"
+          type = "ProtoBoeuf::Protobuf::UInt32Value"
+        end
+
         if type == "google.protobuf.UInt64Value"
           @requires << "protoboeuf/protobuf/uint64value"
           type = "ProtoBoeuf::Protobuf::UInt64Value"
