@@ -211,6 +211,12 @@ message HasSubEnum {
 }
 
 // Google's well-known types
+message HasKnownTypeInt32 {
+  google.protobuf.Int32Value id = 1;
+}
+message HasKnownTypeInt64 {
+  google.protobuf.Int64Value id = 1;
+}
 message HasKnownTypeUInt32 {
   google.protobuf.UInt32Value id = 1;
 }
