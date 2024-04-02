@@ -472,6 +472,16 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal expected.a, actual.a
   end
 
+  def test_translate_known_type_bool
+    data = ::HasKnownTypeBool.encode(::HasKnownTypeBool.new.tap { |x|
+      x.id = Google::Protobuf::BoolValue.new(value: true)
+    })
+
+    instance = HasKnownTypeBool.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::BoolValue, instance.id
+    assert_equal true, instance.id.value
+  end
+
   def test_translate_known_type_int32
     data = ::HasKnownTypeInt32.encode(::HasKnownTypeInt32.new.tap { |x|
       x.id = Google::Protobuf::Int32Value.new(value: -123456)
@@ -540,6 +550,16 @@ class MessageTest < ProtoBoeuf::Test
     instance = HasKnownTypeString.decode(data)
     assert_kind_of ::ProtoBoeuf::Protobuf::StringValue, instance.id
     assert_equal "foobar bif", instance.id.value
+  end
+
+  def test_translate_known_type_bytes
+    data = ::HasKnownTypeBytes.encode(::HasKnownTypeBytes.new.tap { |x|
+      x.id = Google::Protobuf::BytesValue.new(value: "string of bytes")
+    })
+
+    instance = HasKnownTypeBytes.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::BytesValue, instance.id
+    assert_equal "string of bytes", instance.id.value
   end
 
   def test_translate_known_type_timestamp

@@ -692,6 +692,11 @@ ruby
       end
 
       def pull_message(type, dest, operator)
+        if type == "google.protobuf.BoolValue"
+          @requires << "protoboeuf/protobuf/boolvalue"
+          type = "ProtoBoeuf::Protobuf::BoolValue"
+        end
+
         if type == "google.protobuf.Int32Value"
           @requires << "protoboeuf/protobuf/int32value"
           type = "ProtoBoeuf::Protobuf::Int32Value"
@@ -725,6 +730,11 @@ ruby
         if type == "google.protobuf.StringValue"
           @requires << "protoboeuf/protobuf/stringvalue"
           type = "ProtoBoeuf::Protobuf::StringValue"
+        end
+
+        if type == "google.protobuf.BytesValue"
+          @requires << "protoboeuf/protobuf/bytesvalue"
+          type = "ProtoBoeuf::Protobuf::BytesValue"
         end
 
         if type == "google.protobuf.Timestamp"

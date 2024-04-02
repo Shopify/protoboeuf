@@ -211,6 +211,9 @@ message HasSubEnum {
 }
 
 // Google's well-known types
+message HasKnownTypeBool {
+  google.protobuf.BoolValue id = 1;
+}
 message HasKnownTypeInt32 {
   google.protobuf.Int32Value id = 1;
 }
@@ -231,6 +234,9 @@ message HasKnownTypeDouble {
 }
 message HasKnownTypeString {
   google.protobuf.StringValue id = 1;
+}
+message HasKnownTypeBytes {
+  google.protobuf.BytesValue id = 1;
 }
 message HasKnownTypeTimestamp {
   google.protobuf.Timestamp t = 1;
