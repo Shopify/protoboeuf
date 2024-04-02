@@ -512,6 +512,17 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal "foobar bif", instance.id.value
   end
 
+  def test_translate_known_type_timestamp
+    data = ::HasKnownTypeTimestamp.encode(::HasKnownTypeTimestamp.new.tap { |x|
+      x.t = Google::Protobuf::Timestamp.new(seconds: 5555, nanos: 3337)
+    })
+
+    instance = HasKnownTypeTimestamp.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::Timestamp, instance.t
+    assert_equal 5555, instance.t.seconds
+    assert_equal 3337, instance.t.nanos
+  end
+
   def test_encode_uint64
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";

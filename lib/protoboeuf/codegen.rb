@@ -712,6 +712,11 @@ ruby
           type = "ProtoBoeuf::Protobuf::StringValue"
         end
 
+        if type == "google.protobuf.Timestamp"
+          @requires << "protoboeuf/protobuf/timestamp"
+          type = "ProtoBoeuf::Protobuf::Timestamp"
+        end
+
         "        ## PULL_MESSAGE\n" +
           pull_uint64("msg_len", "=") + "\n" +
           "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
