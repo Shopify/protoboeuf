@@ -223,6 +223,9 @@ message HasKnownTypeUInt32 {
 message HasKnownTypeUInt64 {
   google.protobuf.UInt64Value id = 1;
 }
+message HasKnownTypeFloat {
+  google.protobuf.FloatValue id = 1;
+}
 message HasKnownTypeDouble {
   google.protobuf.DoubleValue id = 1;
 }
