@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package proto_boeuf.protobuf;
+
+message Timestamp {
+  // Seconds of UTC time since Unix epoch
+  int64 seconds = 1;
+
+  // Non-negative fractions of a second at nanosecond resolution
+  int32 nanos = 2;
+}
