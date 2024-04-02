@@ -502,6 +502,16 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 123456, instance.id.value
   end
 
+  def test_translate_known_type_string
+    data = ::HasKnownTypeString.encode(::HasKnownTypeString.new.tap { |x|
+      x.id = Google::Protobuf::StringValue.new(value: "foobar bif")
+    })
+
+    instance = HasKnownTypeString.decode(data)
+    assert_kind_of ::ProtoBoeuf::Protobuf::StringValue, instance.id
+    assert_equal "foobar bif", instance.id.value
+  end
+
   def test_encode_uint64
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
