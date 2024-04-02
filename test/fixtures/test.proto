@@ -220,3 +220,6 @@ message HasKnownTypeUInt64 {
 message HasKnownTypeDouble {
   google.protobuf.DoubleValue id = 1;
 }
+message HasKnownTypeString {
+  google.protobuf.StringValue id = 1;
+}

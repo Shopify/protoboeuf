@@ -707,6 +707,11 @@ ruby
           type = "ProtoBoeuf::Protobuf::DoubleValue"
         end
 
+        if type == "google.protobuf.StringValue"
+          @requires << "protoboeuf/protobuf/stringvalue"
+          type = "ProtoBoeuf::Protobuf::StringValue"
+        end
+
         "        ## PULL_MESSAGE\n" +
           pull_uint64("msg_len", "=") + "\n" +
           "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
