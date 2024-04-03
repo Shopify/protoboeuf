@@ -115,9 +115,9 @@ module ProtoBoeuf
         tag = (field.number << 3) | field.wire_type
         # False/zero is the default value, so the false case encodes nothing
         <<-eocode
-        ## encode the tag
         val = @#{field.name}
         if val == true
+          ## encode the tag
           buff << #{sprintf("%#04x", tag)}
           buff << 1
         elsif val == false
@@ -130,15 +130,18 @@ module ProtoBoeuf
 
       def encode_uint64(field)
         tag = (field.number << 3) | field.wire_type
+        # Zero is the default value, so it encodes zero bytes
         <<-eocode
-        ## encode the tag
-        buff << #{sprintf("%#04x", tag)}
         val = @#{field.name}
-        while val > 0
-          byte = val & 0x7F
-          val >>= 7
-          byte |= 0x80 if val > 0
-          buff << byte
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          while val > 0
+            byte = val & 0x7F
+            val >>= 7
+            byte |= 0x80 if val > 0
+            buff << byte
+          end
         end
         eocode
       end

@@ -606,14 +606,10 @@ message UInt64Value {
 
     m = Module.new { class_eval code.to_ruby }
 
-    # Should fit in one byte
-    actual = m::UInt64Value.encode m::UInt64Value.new(value: 12)
-    expected = ::Google::Protobuf::UInt64Value.encode(::Google::Protobuf::UInt64Value.new(value: 12))
-    assert_equal expected, actual
-
-    # Use more bytes
-    actual = m::UInt64Value.encode m::UInt64Value.new(value: 0xFF)
-    expected = ::Google::Protobuf::UInt64Value.encode(::Google::Protobuf::UInt64Value.new(value: 0xFF))
-    assert_equal expected, actual
+    [0, 12, 0xFF, 0xFFFF_FFFF_FFFF_FFFF].each do |n|
+      actual = m::UInt64Value.encode m::UInt64Value.new(value: n)
+      expected = ::Google::Protobuf::UInt64Value.encode(::Google::Protobuf::UInt64Value.new(value: n))
+      assert_equal expected, actual
+    end
   end
 end
