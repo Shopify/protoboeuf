@@ -573,6 +573,28 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 3337, instance.t.nanos
   end
 
+  def test_encode_bool
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
+
+message BoolValue {
+  bool value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    # False
+    actual = m::BoolValue.encode m::BoolValue.new(value: false)
+    expected = ::Google::Protobuf::BoolValue.encode(::Google::Protobuf::BoolValue.new(value: false))
+    assert_equal expected, actual
+
+    # True
+    actual = m::BoolValue.encode m::BoolValue.new(value: true)
+    expected = ::Google::Protobuf::BoolValue.encode(::Google::Protobuf::BoolValue.new(value: true))
+    assert_equal expected, actual
+  end
+
   def test_encode_uint64
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
