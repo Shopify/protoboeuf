@@ -595,6 +595,24 @@ message BoolValue {
     assert_equal expected, actual
   end
 
+  def test_encode_uint32
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
+
+message UInt32Value {
+  uint32 value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    [0, 12, 0xFF, 0xFFFF_FFFF].each do |n|
+      actual = m::UInt32Value.encode m::UInt32Value.new(value: n)
+      expected = ::Google::Protobuf::UInt32Value.encode(::Google::Protobuf::UInt32Value.new(value: n))
+      assert_equal expected, actual
+    end
+  end
+
   def test_encode_uint64
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
@@ -612,4 +630,6 @@ message UInt64Value {
       assert_equal expected, actual
     end
   end
+
+
 end

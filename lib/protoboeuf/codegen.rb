@@ -146,6 +146,10 @@ module ProtoBoeuf
         eocode
       end
 
+      # NOTE: should we be doing bounds checking somewhere?
+      # Ideally this should happen when setting the field value?
+      alias encode_uint32 encode_uint64
+
       def prelude
         <<-eoruby
   def self.decode(buff)
