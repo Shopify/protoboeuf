@@ -111,6 +111,23 @@ module ProtoBoeuf
         "\n  buff\nend\n"
       end
 
+      def encode_bool(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the false case encodes nothing
+        <<-eocode
+        ## encode the tag
+        val = @#{field.name}
+        if val == true
+          buff << #{sprintf("%#04x", tag)}
+          buff << 1
+        elsif val == false
+          # Default value, encode nothing
+        else
+          raise "bool values should be true or false"
+        end
+        eocode
+      end
+
       def encode_uint64(field)
         tag = (field.number << 3) | field.wire_type
         <<-eocode
