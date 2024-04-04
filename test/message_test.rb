@@ -668,5 +668,39 @@ message UInt64Value {
     end
   end
 
+  def test_encode_int64
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
 
+message Int64Value {
+  int64 value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    [0, 1, 0xFF, -1, -2, -9001, 9223372036854775807, -9223372036854775808].each do |n|
+      actual = m::Int64Value.encode m::Int64Value.new(value: n)
+      expected = ::Google::Protobuf::Int64Value.encode(::Google::Protobuf::Int64Value.new(value: n))
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_int32
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
+
+message Int32Value {
+  int32 value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    [0, 1, 0xFF, -1, -2, -9001, -2147483648, 2147483647].each do |n|
+      actual = m::Int32Value.encode m::Int32Value.new(value: n)
+      expected = ::Google::Protobuf::Int32Value.encode(::Google::Protobuf::Int32Value.new(value: n))
+      assert_equal expected, actual
+    end
+  end
 end
