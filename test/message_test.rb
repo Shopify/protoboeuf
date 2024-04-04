@@ -595,6 +595,25 @@ message BoolValue {
     assert_equal expected, actual
   end
 
+  def test_encode_bytes
+    code = ProtoBoeuf.parse_string <<-eoboeuf
+syntax = "proto3";
+
+message BytesValue {
+  bytes value = 1;
+}
+    eoboeuf
+
+    m = Module.new { class_eval code.to_ruby }
+
+    ["", "hello world", "foobar", "nöel", "some emoji 🎉👍❤️ and some math ∮𝛅x", "\x01\x02\x00\x01\x02"].each do |s|
+      s = s.b
+      actual = m::BytesValue.encode m::BytesValue.new(value: s)
+      expected = ::Google::Protobuf::BytesValue.encode(::Google::Protobuf::BytesValue.new(value: s))
+      assert_equal expected, actual, "Failed during encoding of #{s.inspect}"
+    end
+  end
+
   def test_encode_string
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
