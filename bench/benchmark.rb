@@ -141,14 +141,14 @@ bin_sizes = encoded_bins.map { |bin| bin.size }
 total_bin_size = bin_sizes.sum
 puts "total encoded size: #{total_bin_size} bytes"
 
-Benchmark.ips { |x|
+Benchmark.ips do |x|
   x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
   x.report("decode protoboeuf") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
-  x.compare!
-}
+  x.compare!(order: :baseline)
+end
 
-Benchmark.ips { |x|
+Benchmark.ips do |x|
   x.report("decode and read upstream")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
   x.report("decode and read protoboeuf") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
-  x.compare!
-}
+  x.compare!(order: :baseline)
+end
