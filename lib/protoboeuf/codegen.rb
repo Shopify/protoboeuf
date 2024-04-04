@@ -128,6 +128,26 @@ module ProtoBoeuf
         eocode
       end
 
+      def encode_bytes(field)
+        tag = (field.number << 3) | field.wire_type
+        # Empty bytes is default value, so encodes nothing
+        <<-eocode
+        val = @#{field.name}.b
+        if val.bytesize > 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          len = val.bytesize
+          while len > 0
+            byte = len & 0x7F
+            len >>= 7
+            byte |= 0x80 if len > 0
+            buff << byte
+          end
+          buff.concat(val)
+        end
+        eocode
+      end
+
       def encode_string(field)
         tag = (field.number << 3) | field.wire_type
         # Empty string is default value, so encodes nothing
