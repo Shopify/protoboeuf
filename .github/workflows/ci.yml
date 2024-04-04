@@ -15,6 +15,7 @@ jobs:
         include:
           - ruby: "3.3"
             ruby-opt: "--enable-frozen-string-literal --debug-frozen-string-literal"
+            os: "ubuntu"
 
     steps:
       - name: Install Protoc
