@@ -200,7 +200,7 @@ module ProtoBoeuf
         if val != 0
           ## encode the tag
           buff << #{sprintf("%#04x", tag)}
-          while val > 0
+          while val != 0
             byte = val & 0x7F
             val >>= 7
             byte |= 0x80 if val > 0
@@ -211,8 +211,36 @@ module ProtoBoeuf
       end
 
       # NOTE: should we be doing bounds checking somewhere?
-      # Ideally this should happen when setting the field value?
+      # Ideally this should happen when setting the field value
+      # rather than when doing the encoding
       alias encode_uint32 encode_uint64
+
+      def encode_int64(field)
+        tag = (field.number << 3) | field.wire_type
+        # Zero is the default value, so it encodes zero bytes
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          while val != 0
+            byte = val & 0x7F
+
+            val >>= 7
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
+            buff << byte
+          end
+        end
+        eocode
+      end
+
+      # The same encoding logic is used for int32 and int64
+      alias encode_int32 encode_int64
 
       def prelude
         <<-eoruby
