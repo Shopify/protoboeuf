@@ -105,7 +105,7 @@ module ProtoBoeuf
   MapType = Struct.new(:key_type, :value_type)
 
   # Qualifier is :optional, :required or :repeated
-  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos)
+  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos, :enum)
     def field?
       true
     end
@@ -113,6 +113,8 @@ module ProtoBoeuf
     def oneof?
       false
     end
+
+    alias :enum? :enum
 
     def map?
       MapType === type
@@ -162,6 +164,8 @@ module ProtoBoeuf
     def wire_type
       if repeated? && packed?
         LEN
+      elsif enum?
+        VARINT
       else
         case type
         when "string", "bytes"
