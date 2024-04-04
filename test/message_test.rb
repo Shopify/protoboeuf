@@ -595,6 +595,14 @@ message BoolValue {
     assert_equal expected, actual
   end
 
+  def test_encode_enum
+    [0, 1, 2, 3, 4, 5, 0x7FFFFFFF].each do |s|
+      actual = EnumEncoder.encode EnumEncoder.new(value: s)
+      expected = ::EnumEncoder.encode(::EnumEncoder.new(value: s))
+      assert_equal expected, actual, "Failed during encoding of #{s.inspect}"
+    end
+  end
+
   def test_encode_bytes
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";

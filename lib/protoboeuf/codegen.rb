@@ -101,10 +101,16 @@ module ProtoBoeuf
         # FIXME: we should probably sort fields by field number
         "def _encode\n  buff = ''.b\n" +
           fields.map { |field|
-          # FIXME: we need to support all types
-          next unless field.field? && field.scalar?
+          next unless field.field?
 
-          method = "encode_#{field.type}"
+          method = if field.scalar?
+            "encode_#{field.type}"
+          elsif enum?(field.type)
+            "encode_enum"
+          else
+            # FIXME: we need to support all types
+            next
+          end
 
           send(method, field) if respond_to?(method, true)
         }.compact.join("\n") +
@@ -144,6 +150,24 @@ module ProtoBoeuf
             buff << byte
           end
           buff.concat(val)
+        end
+        eocode
+      end
+
+      def encode_enum(field)
+        tag = (field.number << 3) | ProtoBoeuf::Field::VARINT
+        # Zero is default value for enums, so encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          while val > 0
+            byte = val & 0x7F
+            val >>= 7
+            byte |= 0x80 if val > 0
+            buff << byte
+          end
         end
         eocode
       end
