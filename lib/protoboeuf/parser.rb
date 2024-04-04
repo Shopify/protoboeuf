@@ -27,9 +27,9 @@ module ProtoBoeuf
 
     def to_s
       if @file_name
-        @file_name + "@" + @line_no.to_s + ":" + @col_no.to_s
+        "#{@file_name}@#{@line_no}:#{@col_no}"
       else
-        @line_no.to_s + ":" + @col_no.to_s
+        "#{@line_no}:#{@col_no}"
       end
     end
   end
@@ -42,7 +42,7 @@ module ProtoBoeuf
     end
 
     def to_s
-      @msg.to_s + "@" + @pos.to_s
+      "#{@msg}@#{@pos}"
     end
   end
 
@@ -92,10 +92,14 @@ module ProtoBoeuf
     end
   end
 
-  SCALAR_TYPES = %w{
+  PACKED_TYPES = %w{
     double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
-    sfixed32 sfixed64 bool string bytes
-  }
+    sfixed32 sfixed64 bool
+  }.to_set.freeze
+
+  SCALAR_TYPES = (PACKED_TYPES.to_a + %w{
+    string bytes
+  }).to_set.freeze
 
   # Represents the type of map<key_type, value_type>
   MapType = Struct.new(:key_type, :value_type)
@@ -142,7 +146,7 @@ module ProtoBoeuf
         # only scalar types that are not "string" or "bytes" are allowed
         # to be packed.
         # https://protobuf.dev/programming-guides/encoding/#packed
-        (SCALAR_TYPES - ["string", "bytes"]).include?(type)
+        PACKED_TYPES.include?(type)
       end
     end
 
@@ -196,10 +200,9 @@ module ProtoBoeuf
     names = Set.new
     enums.each do |enum|
       enum.constants.each do |const|
-        if names.include? const.name
+        unless names.add? const.name
           raise ParseError.new("duplicate enum constant name #{const.name}", const.pos)
         end
-        names.add(const.name)
       end
     end
   end
@@ -242,36 +245,31 @@ module ProtoBoeuf
         if mode != "proto3"
           raise ParseError.new("syntax mode must be proto3", pos)
         end
-      end
 
-      if ident == "package"
+      elsif ident == "package"
         if package != nil
           raise ParseError.new("only one package name can be specified", pos)
         end
         package = parse_package_name(input)
         input.expect ';'
-      end
 
       # Option
-      if ident == "option"
+      elsif ident == "option"
         options << parse_option(input, pos)
-      end
 
       # Import
-      if ident == "import"
+      elsif ident == "import"
         input.eat_ws
         import_path = input.read_string
         input.expect ';'
         imports << import_path
-      end
 
       # Message definition
-      if ident == "message"
+      elsif ident == "message"
         messages << parse_message(input, pos)
-      end
 
       # Enum definition
-      if ident == "enum"
+      elsif ident == "enum"
         enums << parse_enum(input, pos)
       end
     end
@@ -295,12 +293,8 @@ module ProtoBoeuf
     end
 
     type_name = ident
-    loop do
-      if input.match '.'
-        type_name += '.' + input.read_ident
-      else
-        break
-      end
+    while input.match '.'
+      type_name << '.' << input.read_ident
     end
 
     type_name
@@ -308,20 +302,16 @@ module ProtoBoeuf
 
   # Parse a package name, e.g. foo.bar.bif
   def self.parse_package_name(input)
-    name = ""
+    name = +""
 
     if input.match '.'
-      name += '.' + input.read_ident
+      name << '.' << input.read_ident
     else
-      name += input.read_ident
+      name << input.read_ident
     end
 
-    loop do
-      if input.match '.'
-        name += '.' + input.read_ident
-      else
-        break
-      end
+    while input.match '.'
+      name << '.' << input.read_ident
     end
 
     name
@@ -388,11 +378,7 @@ module ProtoBoeuf
 
     input.expect '{'
 
-    loop do
-      if input.match '}'
-        break
-      end
-
+    until input.match '}'
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
@@ -526,11 +512,7 @@ module ProtoBoeuf
     enum_name = input.read_ident
     input.expect '{'
 
-    loop do
-      if input.match '}'
-        break
-      end
-
+    until input.match '}'
       if input.match 'option'
         input.eat_ws
         option_name = input.read_ident
@@ -554,7 +536,7 @@ module ProtoBoeuf
         raise ParseError.new("enum constants should be uppercase identifiers", const_pos)
       end
 
-      if constants.size == 0 && number != 0
+      if constants.empty? && number != 0
         raise ParseError.new("the first enum constant should always have value 0", const_pos)
       end
 
@@ -665,12 +647,8 @@ module ProtoBoeuf
     end
 
     # Consume whitespace
-    def eat_ws()
-      loop do
-        if eof?
-          break
-        end
-
+    def eat_ws
+      until eof?
         # Single-line comment
         if match_exact("//")
           loop do
@@ -722,11 +700,7 @@ module ProtoBoeuf
     def read_ident
       name = +''
 
-      loop do
-        if eof?
-          break
-        end
-
+      until eof?
         ch = peek_ch
 
         if !ch.match(/[A-Za-z0-9_]/)
@@ -736,7 +710,7 @@ module ProtoBoeuf
         name << eat_ch
       end
 
-      if name.size == 0
+      if name.empty?
         raise ParseError.new("expected identifier", pos)
       end
 
@@ -810,11 +784,7 @@ module ProtoBoeuf
       end
 
       # For each digit
-      loop do
-        if eof?
-          break
-        end
-
+      until eof?
         ch = peek_ch
 
         if ch >= '0' && ch <= '9'
