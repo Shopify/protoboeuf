@@ -489,7 +489,7 @@ class MessageTest < ProtoBoeuf::Test
 
     instance = HasKnownTypeInt32.decode(data)
     assert_kind_of ::ProtoBoeuf::Protobuf::Int32Value, instance.id
-    assert_equal -123456, instance.id.value
+    assert_equal(-123456, instance.id.value)
   end
 
   def test_translate_known_type_int64
@@ -499,7 +499,7 @@ class MessageTest < ProtoBoeuf::Test
 
     instance = HasKnownTypeInt64.decode(data)
     assert_kind_of ::ProtoBoeuf::Protobuf::Int64Value, instance.id
-    assert_equal -123456, instance.id.value
+    assert_equal(-123456, instance.id.value)
   end
 
   def test_translate_known_type_uint32
