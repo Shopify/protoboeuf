@@ -242,6 +242,38 @@ module ProtoBoeuf
       # The same encoding logic is used for int32 and int64
       alias encode_int32 encode_int64
 
+      def encode_sint64(field)
+        tag = (field.number << 3) | field.wire_type
+
+        # Zero is the default value, so it encodes zero bytes
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+
+          # Zigzag encoding:
+          # Positive values encoded as 2 * n (even)
+          # Negative values encoded as 2 * |n| - 1 (odd)
+          val = if val >= 0
+            2 * val
+          else
+            (-2 * val) - 1
+          end
+
+          while val > 0
+            byte = val & 0x7F
+            val >>= 7
+            byte |= 0x80 if val > 0
+            buff << byte
+          end
+        end
+        eocode
+      end
+
+      # The same encoding logic is used for sint32 and sint64
+      alias encode_sint32 encode_sint64
+
       def prelude
         <<-eoruby
   def self.decode(buff)
