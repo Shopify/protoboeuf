@@ -57,6 +57,8 @@ module ProtoBoeuf
         @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
         @requires = Set.new
 
+        mark_enum_fields
+
         field_types = message.fields.group_by { |field|
           if field.field?
             field.qualifier || :required
@@ -85,6 +87,12 @@ module ProtoBoeuf
 
       private
 
+      def mark_enum_fields
+        message.fields.select { |field| field.field? && enum_field_types.key?(field.type) }.each do |field|
+          field.enum = true
+        end
+      end
+
       def class_body
         prelude +
           constants +
@@ -105,7 +113,7 @@ module ProtoBoeuf
 
           method = if field.scalar?
             "encode_#{field.type}"
-          elsif enum?(field.type)
+          elsif field.enum?
             "encode_enum"
           else
             # FIXME: we need to support all types
@@ -155,7 +163,7 @@ module ProtoBoeuf
       end
 
       def encode_enum(field)
-        tag = (field.number << 3) | ProtoBoeuf::Field::VARINT
+        tag = (field.number << 3) | field.wire_type
         # Zero is default value for enums, so encodes nothing
         <<-eocode
         val = @#{field.name}
@@ -310,12 +318,8 @@ module ProtoBoeuf
         required_readers + enum_readers + optional_readers + oneof_readers
       end
 
-      def enum?(field)
-        enum_field_types.key?(field)
-      end
-
       def enum_readers
-        fields = message.fields.select { |field| field.field? && enum?(field.type) }
+        fields = message.fields.select { |field| field.field? && field.enum? }
         "  # enum readers\n" +
           fields.map { |field|
             "def #{field.name}; #{field.type}.lookup(@#{field.name}) || @#{field.name}; end"
@@ -323,9 +327,7 @@ module ProtoBoeuf
       end
 
       def required_readers
-        fields = message.fields.select(&:field?).reject(&:optional?).reject { |field|
-          enum?(field.type)
-        }
+        fields = message.fields.select(&:field?).reject(&:optional?).reject(&:enum?)
         return "" unless fields.length > 0
 
         "  # required field readers\n" +
@@ -351,7 +353,7 @@ module ProtoBoeuf
       end
 
       def enum_writers
-        fields = message.fields.select { |field| field.field? && enum?(field.type) }
+        fields = message.fields.select { |field| field.field? && field.enum? }
         "  # enum writers\n" +
           fields.map { |field|
             "def #{field.name}=(v); @#{field.name} = #{field.type}.resolve(v) || v; end"
@@ -427,7 +429,7 @@ module ProtoBoeuf
       def initialize_field(field)
         if field.optional?
           initialize_optional_field(field)
-        elsif field.field? && enum?(field.type)
+        elsif field.field? && field.enum?
           initialize_enum_field(field)
         else
           initialize_required_field(field)
@@ -690,7 +692,7 @@ module ProtoBoeuf
         list = @<%= field.name %>
         while true
           break if index >= goal
-          <%= decode_subtype(field.type, "list", "<<") %>
+          <%= decode_subtype(field, field.type, "list", "<<") %>
         end
 ruby
 
@@ -712,7 +714,7 @@ ruby
           if field.repeated?
             "[]"
           else
-            if enum?(field.type)
+            if field.enum?
               0
             else
               case field.type
@@ -763,15 +765,15 @@ ruby
       end
 
       def wire_type(field)
-        if enum?(field.type)
+        if field.enum?
           ProtoBoeuf::Field::VARINT
         else
           field.wire_type
         end
       end
 
-      def decode_subtype(type, dest, operator)
-        if enum?(type)
+      def decode_subtype(field, type, dest, operator)
+        if field.enum?
           pull_int64(dest, operator)
         else
           case type
@@ -818,9 +820,9 @@ ruby
         "        while tag == #{tag_for_field(field, field.number)}\n" +
         pull_uint64("value", "=") + "\n" +
         "          index += 1\n" + # skip the tag, assume it's the key
-        decode_subtype(field.type.key_type, "key", "=") + "\n" +
+        decode_subtype(field, field.type.key_type, "key", "=") + "\n" +
         "          index += 1\n" + # skip the tag, assume it's the value
-        decode_subtype(field.type.value_type, "map[key]", "=") + "\n" +
+        decode_subtype(field, field.type.value_type, "map[key]", "=") + "\n" +
         "          return self if index >= len\n" +
         pull_tag + "\n" +
         "        end\n"
@@ -831,7 +833,7 @@ ruby
         ## DECODE REPEATED
         list = @#{field.name}
         while true
-          #{decode_subtype(field.type, "list", "<<")}
+          #{decode_subtype(field, field.type, "list", "<<")}
           #{pull_tag}
           break unless tag == #{tag_for_field(field, field.number)}
         end
@@ -956,7 +958,7 @@ ruby
           if field.type.is_a?(MapType)
             decode_map(field)
           else
-            decode_subtype(field.type, "@#{field.name}", "=")
+            decode_subtype(field, field.type, "@#{field.name}", "=")
           end
         end
       end
