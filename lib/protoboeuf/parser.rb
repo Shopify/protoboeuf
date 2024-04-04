@@ -92,10 +92,14 @@ module ProtoBoeuf
     end
   end
 
-  SCALAR_TYPES = %w{
+  PACKED_TYPES = %w{
     double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
-    sfixed32 sfixed64 bool string bytes
-  }
+    sfixed32 sfixed64 bool
+  }.to_set.freeze
+
+  SCALAR_TYPES = (PACKED_TYPES.to_a + %w{
+    string bytes
+  }).to_set.freeze
 
   # Represents the type of map<key_type, value_type>
   MapType = Struct.new(:key_type, :value_type)
@@ -142,7 +146,7 @@ module ProtoBoeuf
         # only scalar types that are not "string" or "bytes" are allowed
         # to be packed.
         # https://protobuf.dev/programming-guides/encoding/#packed
-        (SCALAR_TYPES - ["string", "bytes"]).include?(type)
+        PACKED_TYPES.include?(type)
       end
     end
 
