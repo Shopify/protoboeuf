@@ -719,7 +719,7 @@ module ProtoBoeuf
     # bar_bif
     # foo123
     def read_ident
-      name = ''
+      name = +''
 
       loop do
         if eof?
@@ -745,7 +745,7 @@ module ProtoBoeuf
     # Read a string constant, eg:
     # 'foobar'
     def read_string
-      str = ''
+      str = +''
 
       # The string must start with an opening quote
       expect '"'

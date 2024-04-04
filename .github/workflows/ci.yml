@@ -10,7 +10,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        ruby: [ head, 3.2 ]
+        ruby: [ head, '3.2', '3.3' ]
+        ruby-opt: [""]
+        include:
+          - ruby: "3.3"
+            ruby-opt: "--enable-frozen-string-literal --debug-frozen-string-literal"
 
     steps:
       - name: Install Protoc
@@ -24,5 +28,5 @@ jobs:
 
       - name: Install dependencies
         run: bundle install
-      - name: Run tests
-        run: bundle exec rake
+      - name: Run tests ${{ matrix.rubyopt }}
+        run: bundle exec rake RUBYOPT="${{ matrix.rubyopt }}"
