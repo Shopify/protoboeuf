@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Parser for the protobuf (proto3) language:
 # https://protobuf.dev/programming-guides/proto3/
 #
