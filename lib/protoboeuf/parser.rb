@@ -242,36 +242,31 @@ module ProtoBoeuf
         if mode != "proto3"
           raise ParseError.new("syntax mode must be proto3", pos)
         end
-      end
 
-      if ident == "package"
+      elsif ident == "package"
         if package != nil
           raise ParseError.new("only one package name can be specified", pos)
         end
         package = parse_package_name(input)
         input.expect ';'
-      end
 
       # Option
-      if ident == "option"
+      elsif ident == "option"
         options << parse_option(input, pos)
-      end
 
       # Import
-      if ident == "import"
+      elsif ident == "import"
         input.eat_ws
         import_path = input.read_string
         input.expect ';'
         imports << import_path
-      end
 
       # Message definition
-      if ident == "message"
+      elsif ident == "message"
         messages << parse_message(input, pos)
-      end
 
       # Enum definition
-      if ident == "enum"
+      elsif ident == "enum"
         enums << parse_enum(input, pos)
       end
     end
