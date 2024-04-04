@@ -42,7 +42,7 @@ module ProtoBoeuf
     end
 
     def to_s
-      "#{@msg}@#{@pos}"
+      "#{super}@#{@pos}"
     end
   end
 
