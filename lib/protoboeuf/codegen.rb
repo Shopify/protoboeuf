@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "erb"
+require "syntax_tree"
 
 module ProtoBoeuf
   class CodeGen
@@ -28,14 +29,14 @@ module ProtoBoeuf
       end
 
       def lookup
-        "def self.lookup(val) " +
+        "def self.lookup(val)\n" +
         "if " + enum.constants.map { |const|
           "val == #{const.number} then :#{const.name}"
         }.join(" elsif ") + " end; end"
       end
 
       def resolve
-        "def self.resolve(val) " +
+        "def self.resolve(val)\n" +
         "if " + enum.constants.map { |const|
           "val == :#{const.name} then #{const.number}"
         }.join(" elsif ") + " end; end"
@@ -128,56 +129,56 @@ module ProtoBoeuf
       def encode_bool(field)
         tag = (field.number << 3) | field.wire_type
         # False/zero is the default value, so the false case encodes nothing
-        <<-eocode
-        val = @#{field.name}
-        if val == true
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          buff << 1
-        elsif val == false
-          # Default value, encode nothing
-        else
-          raise "bool values should be true or false"
-        end
-        eocode
+        <<~RUBY
+          val = @#{field.name}
+          if val == true
+            ## encode the tag
+            buff << #{sprintf("%#04x", tag)}
+            buff << 1
+          elsif val == false
+            # Default value, encode nothing
+          else
+            raise "bool values should be true or false"
+          end
+        RUBY
       end
 
       def encode_bytes(field)
         tag = (field.number << 3) | field.wire_type
         # Empty bytes is default value, so encodes nothing
-        <<-eocode
-        val = @#{field.name}.b
-        if val.bytesize > 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          len = val.bytesize
-          while len > 0
-            byte = len & 0x7F
-            len >>= 7
-            byte |= 0x80 if len > 0
-            buff << byte
+        <<~RUBY
+          val = @#{field.name}.b
+          if val.bytesize > 0
+            ## encode the tag
+            buff << #{sprintf("%#04x", tag)}
+            len = val.bytesize
+            while len > 0
+              byte = len & 0x7F
+              len >>= 7
+              byte |= 0x80 if len > 0
+              buff << byte
+            end
+            buff.concat(val)
           end
-          buff.concat(val)
-        end
-        eocode
+        RUBY
       end
 
       def encode_enum(field)
         tag = (field.number << 3) | field.wire_type
         # Zero is default value for enums, so encodes nothing
-        <<-eocode
-        val = @#{field.name}
-        if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          while val > 0
-            byte = val & 0x7F
-            val >>= 7
-            byte |= 0x80 if val > 0
-            buff << byte
+        <<~RUBY
+          val = @#{field.name}
+          if val != 0
+            ## encode the tag
+            buff << #{sprintf("%#04x", tag)}
+            while val > 0
+              byte = val & 0x7F
+              val >>= 7
+              byte |= 0x80 if val > 0
+              buff << byte
+            end
           end
-        end
-        eocode
+        RUBY
       end
 
       def encode_string(field)
@@ -361,17 +362,16 @@ module ProtoBoeuf
       end
 
       def prelude
-        <<-eoruby
-  def self.decode(buff)
-    buff = buff.dup
-    buff.force_encoding(Encoding::UTF_8)
-    allocate.decode_from(buff, 0, buff.bytesize)
-  end
+        <<~RUBY
+          def self.decode(buff)
+            buff = buff.b
+            allocate.decode_from(buff, 0, buff.bytesize)
+          end
 
-  def self.encode(obj)
-    obj._encode
-  end
-        eoruby
+          def self.encode(obj)
+            obj._encode
+          end
+        RUBY
       end
 
       def enums
@@ -382,11 +382,11 @@ module ProtoBoeuf
 
       def constants
         (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
-          <<-eoruby
-  NONE = Object.new
-  private_constant :NONE
+          <<~RUBY
+            NONE = Object.new
+            private_constant :NONE
 
-          eoruby
+          RUBY
         else
           ""
         end) + message.messages.map { |x| self.class.new(x, enum_field_types).result }.join("\n")
@@ -398,6 +398,8 @@ module ProtoBoeuf
 
       def enum_readers
         fields = message.fields.select { |field| field.field? && field.enum? }
+        return "" if fields.empty?
+
         "  # enum readers\n" +
           fields.map { |field|
             "def #{field.name}; #{field.type}.lookup(@#{field.name}) || @#{field.name}; end"
@@ -406,24 +408,24 @@ module ProtoBoeuf
 
       def required_readers
         fields = message.fields.select(&:field?).reject(&:optional?).reject(&:enum?)
-        return "" unless fields.length > 0
+        return "" if fields.empty?
 
-        "  # required field readers\n" +
-        "  attr_accessor " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        "# required field readers\n" +
+        "attr_accessor " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
       end
 
       def optional_readers
         return "" unless optional_fields.length > 0
-        "  # optional field readers\n" +
-        "  attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        "# optional field readers\n" +
+        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
       end
 
       def oneof_readers
         return "" unless oneof_fields.length > 0
         fields = oneof_fields + oneof_fields.flat_map(&:fields)
 
-        "  # oneof field readers\n" +
-        "  attr_reader " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        "# oneof field readers\n" +
+        "attr_reader " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
       end
 
       def writers
@@ -432,10 +434,12 @@ module ProtoBoeuf
 
       def enum_writers
         fields = message.fields.select { |field| field.field? && field.enum? }
-        "  # enum writers\n" +
+        return "" if fields.empty?
+
+        "# enum writers\n" +
           fields.map { |field|
             "def #{field.name}=(v); @#{field.name} = #{field.type}.resolve(v) || v; end"
-          }.join("\n") + "\n"
+          }.join("\n") + "\n\n"
       end
 
       def required_writers
@@ -444,39 +448,39 @@ module ProtoBoeuf
       end
 
       def optional_writers
-        return "" unless optional_fields.length > 0
+        return "" if optional_fields.empty?
 
-        "  # BEGIN writers for optional fields\n" +
+        "# BEGIN writers for optional fields\n" +
         optional_fields.map { |field|
-          <<-eorb
-  def #{field.name}=(v)
-    #{set_bitmask(field)}
-    @#{field.name} = v
-  end
-          eorb
+          <<~RUBY
+            def #{field.name}=(v)
+              #{set_bitmask(field)}
+              @#{field.name} = v
+            end
+          RUBY
         }.join("\n") +
         "  # END writers for optional fields\n\n"
       end
 
       def oneof_writers
-        return "" unless oneof_fields.length > 0
+        return "" if oneof_fields.empty?
 
-        "  # BEGIN writers for oneof fields\n" +
+        "# BEGIN writers for oneof fields\n" +
         oneof_fields.map { |oneof|
           oneof.fields.map { |field|
-            <<-eorb
-  def #{field.name}=(v)
-    @#{oneof.name} = :#{field.name}
-    @#{field.name} = v
-  end
-            eorb
+            <<~RUBY
+              def #{field.name}=(v)
+                @#{oneof.name} = :#{field.name}
+                @#{field.name} = v
+              end
+            RUBY
           }.join("\n")
         }.join("\n") +
-        "  # END writers for oneof fields\n\n"
+        "# END writers for oneof fields\n\n"
       end
 
       def initialize_code
-        "  def initialize(" + initialize_signature + ")\n" +
+        "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
           fields.map { |field|
             if field.field?
@@ -484,23 +488,22 @@ module ProtoBoeuf
             elsif field.oneof?
               initialize_oneof(field)
             else
-              p field
-              raise
+              raise field.inspect
             end
-          }.join("\n") + "\n  end\n\n"
+          }.join("\n") + "\nend\n\n"
       end
 
       def initialize_oneof(oneof)
-        "    @#{oneof.name} = nil # oneof field\n" +
+        "@#{oneof.name} = nil # oneof field\n" +
           oneof.fields.map { |field|
-            <<-eoruby
-    if #{field.name} == NONE
-      @#{field.name} = #{default_for(field)}
-    else
-      @#{oneof.name} = :#{field.name}
-      @#{field.name} = #{field.name}
-    end
-            eoruby
+            <<~RUBY
+              if #{field.name} == NONE
+                @#{field.name} = #{default_for(field)}
+              else
+                @#{oneof.name} = :#{field.name}
+                @#{field.name} = #{field.name}
+              end
+            RUBY
           }.join("\n")
       end
 
@@ -515,22 +518,22 @@ module ProtoBoeuf
       end
 
       def initialize_optional_field(field)
-        <<-eoruby
-    if #{field.name} == NONE
-      @#{field.name} = #{default_for(field)}
-    else
-      #{set_bitmask(field)}
-      @#{field.name} = #{field.name}
-    end
-        eoruby
+        <<~RUBY
+          if #{field.name} == NONE
+            @#{field.name} = #{default_for(field)}
+          else
+            #{set_bitmask(field)}
+            @#{field.name} = #{field.name}
+          end
+        RUBY
       end
 
       def initialize_required_field(field)
-        "    @#{field.name} = #{field.name}"
+        "@#{field.name} = #{field.name}"
       end
 
       def initialize_enum_field(field)
-        "    @#{field.name} = #{field.type}.resolve(#{field.name}) || #{field.name}"
+        "@#{field.name} = #{field.type}.resolve(#{field.name}) || #{field.name}"
       end
 
       def extra_api
@@ -541,11 +544,11 @@ module ProtoBoeuf
         return "" unless optional_fields.length > 0
 
         optional_fields.map { |field|
-          <<-eoruby
-  def has_#{field.name}?
-    #{test_bitmask(field)}
-  end
-          eoruby
+          <<~RUBY
+            def has_#{field.name}?
+              #{test_bitmask(field)}
+            end
+          RUBY
         }.join("\n") + "\n"
       end
 
@@ -559,212 +562,196 @@ module ProtoBoeuf
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
-      PULL_VARINT = ERB.new(<<-ruby, trim_mode: '-')
-      if (byte0 = buff.getbyte(index)) < 0x80
-        index += 1
-        byte0
-      else
-        if (byte1 = buff.getbyte(index + 1)) < 0x80
+      PULL_VARINT = ERB.new(<<~ERB, trim_mode: '-')
+        if (byte0 = buff.getbyte(index)) < 0x80
+          index += 1
+          byte0
+        elsif (byte1 = buff.getbyte(index + 1)) < 0x80
           index += 2
           (byte1 << 7) | (byte0 & 0x7F)
-        else
-          if (byte2 = buff.getbyte(index + 2)) < 0x80
-            index += 3
-            (byte2 << 14) |
-                    ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-          else
-            if (byte3 = buff.getbyte(index + 3)) < 0x80
-              index += 4
-              (byte3 << 21) |
-                      ((byte2 & 0x7F) << 14) |
-                      ((byte1 & 0x7F) << 7) |
-                      (byte0 & 0x7F)
-            else
-              if (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) |
-                        ((byte3 & 0x7F) << 21) |
-                        ((byte2 & 0x7F) << 14) |
-                        ((byte1 & 0x7F) << 7) |
-                        (byte0 & 0x7F)
-              else
-                if (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) |
-                          ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) |
-                          ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) |
-                          (byte0 & 0x7F)
-                else
-                  if (byte6 = buff.getbyte(index + 6)) < 0x80
-                    index += 7
-                    (byte6 << 42) |
-                            ((byte5 & 0x7F) << 35) |
-                            ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) |
-                            ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) |
-                            (byte0 & 0x7F)
-                  else
-                    if (byte7 = buff.getbyte(index + 7)) < 0x80
-                      index += 8
-                      (byte7 << 49) |
-                              ((byte6 & 0x7F) << 42) |
-                              ((byte5 & 0x7F) << 35) |
-                              ((byte4 & 0x7F) << 28) |
-                              ((byte3 & 0x7F) << 21) |
-                              ((byte2 & 0x7F) << 14) |
-                              ((byte1 & 0x7F) << 7) |
-                              (byte0 & 0x7F)
-                    else
-                      if (byte8 = buff.getbyte(index + 8)) < 0x80
-                        index += 9
-                        (byte8 << 56) |
-                                ((byte7 & 0x7F) << 49) |
-                                ((byte6 & 0x7F) << 42) |
-                                ((byte5 & 0x7F) << 35) |
-                                ((byte4 & 0x7F) << 28) |
-                                ((byte3 & 0x7F) << 21) |
-                                ((byte2 & 0x7F) << 14) |
-                                ((byte1 & 0x7F) << 7) |
-                                (byte0 & 0x7F)
-                      else
-                        if (byte9 = buff.getbyte(index + 9)) < 0x80
-                          index += 10
+        elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+          index += 3
+          (byte2 << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+          index += 4
+          (byte3 << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+          index += 5
+          (byte4 << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+          index += 6
+          (byte5 << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+          index += 7
+          (byte6 << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+          index += 8
+          (byte7 << 49) |
+            ((byte6 & 0x7F) << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+          index += 9
+          (byte8 << 56) |
+            ((byte7 & 0x7F) << 49) |
+            ((byte6 & 0x7F) << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+        elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+          index += 10
 
-                          <%- if sign == :i64 -%>
-                          # Negative 32 bit integers are still encoded with 10 bytes
-                          # handle 2's complement negative numbers
-                          # If the top bit is 1, then it must be negative.
-                          -(((~((byte9 << 63) |
-                                  ((byte8 & 0x7F) << 56) |
-                                  ((byte7 & 0x7F) << 49) |
-                                  ((byte6 & 0x7F) << 42) |
-                                  ((byte5 & 0x7F) << 35) |
-                                  ((byte4 & 0x7F) << 28) |
-                                  ((byte3 & 0x7F) << 21) |
-                                  ((byte2 & 0x7F) << 14) |
-                                  ((byte1 & 0x7F) << 7) |
-                                  (byte0 & 0x7F))) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
-                          <%- end -%>
-                          <%- if sign == :i32 -%>
-                          # Negative 32 bit integers are still encoded with 10 bytes
-                          # handle 2's complement negative numbers
-                          # If the top bit is 1, then it must be negative.
-                          -(((~((byte9 << 63) |
-                                  ((byte8 & 0x7F) << 56) |
-                                  ((byte7 & 0x7F) << 49) |
-                                  ((byte6 & 0x7F) << 42) |
-                                  ((byte5 & 0x7F) << 35) |
-                                  ((byte4 & 0x7F) << 28) |
-                                  ((byte3 & 0x7F) << 21) |
-                                  ((byte2 & 0x7F) << 14) |
-                                  ((byte1 & 0x7F) << 7) |
-                                  (byte0 & 0x7F))) & 0xFFFF_FFFF) + 1)
-                          <%- end -%>
-                          <%- if sign == false -%>
-                          (byte9 << 63) |
-                                  ((byte8 & 0x7F) << 56) |
-                                  ((byte7 & 0x7F) << 49) |
-                                  ((byte6 & 0x7F) << 42) |
-                                  ((byte5 & 0x7F) << 35) |
-                                  ((byte4 & 0x7F) << 28) |
-                                  ((byte3 & 0x7F) << 21) |
-                                  ((byte2 & 0x7F) << 14) |
-                                  ((byte1 & 0x7F) << 7) |
-                                  (byte0 & 0x7F)
-                          <%- end -%>
-                        else
-                          raise "integer decoding error"
-                        end
-                      end
-                    end
-                  end
-                end
-              end
+          <%- if sign == :i64 -%>
+          # Negative 32 bit integers are still encoded with 10 bytes
+          # handle 2's complement negative numbers
+          # If the top bit is 1, then it must be negative.
+          -(((~((byte9 << 63) |
+            ((byte8 & 0x7F) << 56) |
+            ((byte7 & 0x7F) << 49) |
+            ((byte6 & 0x7F) << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F))) & 0xFFFF_FFFF_FFFF_FFFF) + 1)
+          <%- end -%>
+
+          <%- if sign == :i32 -%>
+          # Negative 32 bit integers are still encoded with 10 bytes
+          # handle 2's complement negative numbers
+          # If the top bit is 1, then it must be negative.
+          -(((~((byte9 << 63) |
+            ((byte8 & 0x7F) << 56) |
+            ((byte7 & 0x7F) << 49) |
+            ((byte6 & 0x7F) << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F))) & 0xFFFF_FFFF) + 1)
+          <%- end -%>
+
+          <%- if sign == false -%>
+          (byte9 << 63) |
+            ((byte8 & 0x7F) << 56) |
+            ((byte7 & 0x7F) << 49) |
+            ((byte6 & 0x7F) << 42) |
+            ((byte5 & 0x7F) << 35) |
+            ((byte4 & 0x7F) << 28) |
+            ((byte3 & 0x7F) << 21) |
+            ((byte2 & 0x7F) << 14) |
+            ((byte1 & 0x7F) << 7) |
+            (byte0 & 0x7F)
+          <%- end -%>
+        else
+          raise "integer decoding error"
+        end
+      ERB
+
+      PULL_STRING = ERB.new(<<~ERB, trim_mode: '-')
+        value = <%= pull_varint %>
+
+        <%= dest %> <%= operator %> buff.byteslice(index, value)
+        index += value
+      ERB
+
+      PULL_BYTES = ERB.new(<<~ERB, trim_mode: '-')
+        value = <%= pull_varint %>
+
+        <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
+        index += value
+      ERB
+
+      PULL_SINT32 = ERB.new(<<~ERB, trim_mode: '-')
+        ## PULL SINT32
+        value = <%= pull_varint %>
+
+        # If value is even, then it's positive
+        <%= dest %> <%= operator %> (if value.even?
+          value >> 1
+        else
+          -((value + 1) >> 1)
+        end)
+        ## END PULL SINT32
+      ERB
+
+      DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
+        def decode_from(buff, index, len)
+          <%= init_bitmask(message) %>
+          <%- for field in fields -%>
+            <%- if field.field? -%>
+            @<%= field.name %> = <%= default_for(field) %>
+            <%- else -%>
+            @<%= field.name %> = nil # oneof field
+              <%- for oneof_child in field.fields -%>
+            @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
+              <%- end -%>
+            <%- end -%>
+          <%- end -%>
+
+          <%- unless fields.empty? -%>
+          <%= pull_tag %>
+          <%- end -%>
+
+          while true
+            <%- fields.each do |field| -%>
+              <%- if field.field? -%>
+            if tag == <%= tag_for_field(field, field.number) %>
+              <%= decode_code(field) %>
+              <%= set_bitmask(field) if field.optional? %>
+              return self if index >= len
+              <%- if !field.reads_next_tag? -%>
+              <%= pull_tag %>
+              <%- end -%>
             end
+              <%- else -%>
+                <%- field.fields.each do |child| -%>
+            if tag == <%= tag_for_field(child, child.number) %>
+              <%= decode_code(child) %>
+              @<%= field.name %> = :<%= child.name %>
+              return self if index >= len
+              <%= pull_tag %>
+            end
+                <%- end -%>
+              <%- end -%>
+            <%- end -%>
+
+            return self if index >= len
+            raise NotImplementedError
           end
         end
-      end
-      ruby
+      ERB
 
-      PULL_STRING = ERB.new(<<-ruby, trim_mode: '-')
-      value = <%= pull_varint %>
-
-      <%= dest %> <%= operator %> buff.byteslice(index, value)
-      index += value
-      ruby
-
-      PULL_BYTES = ERB.new(<<-ruby, trim_mode: '-')
-      value = <%= pull_varint %>
-
-      <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
-      index += value
-      ruby
-
-      PULL_SINT32 = ERB.new(<<-ruby, trim_mode: '-')
-      ## PULL SINT32
-      value = <%= pull_varint %>
-
-      # If value is even, then it's positive
-      <%= dest %> <%= operator %> (if value.even?
-        value >> 1
-      else
-        -((value + 1) >> 1)
-      end)
-      ## END PULL SINT32
-      ruby
-
-      DECODE_METHOD = ERB.new(<<-ruby, trim_mode: '-')
-  def decode_from(buff, index, len)
-    <%= init_bitmask(message) %>
-    <%- for field in fields -%>
-      <%- if field.field? -%>
-      @<%= field.name %> = <%= default_for(field) %>
-      <%- else -%>
-      @<%= field.name %> = nil # oneof field
-        <%- for oneof_child in field.fields -%>
-      @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
-        <%- end -%>
-      <%- end -%>
-    <%- end -%>
-
-    <%- unless fields.empty? -%>
-    <%= pull_tag %>
-    <%- end -%>
-
-    while true
-      <%- fields.each do |field| -%>
-        <%- if field.field? -%>
-      if tag == <%= tag_for_field(field, field.number) %>
-        <%= decode_code(field) %>
-        <%= set_bitmask(field) if field.optional? %>
-        return self if index >= len
-        <%- if !field.reads_next_tag? -%>
-        <%= pull_tag %>
-        <%- end -%>
-      end
-        <%- else -%>
-          <%- field.fields.each do |child| -%>
-      if tag == <%= tag_for_field(child, child.number) %>
-        <%= decode_code(child) %>
-        @<%= field.name %> = :<%= child.name %>
-        return self if index >= len
-        <%= pull_tag %>
-      end
-          <%- end -%>
-        <%- end -%>
-      <%- end -%>
-
-      return self if index >= len
-      raise NotImplementedError
-    end
-  end
-      ruby
-
-      PACKED_REPEATED = ERB.new(<<ruby)
+      PACKED_REPEATED = ERB.new(<<~ERB)
         <%= pull_uint64("value", "=") %>
         goal = index + value
         list = @<%= field.name %>
@@ -772,16 +759,18 @@ module ProtoBoeuf
           break if index >= goal
           <%= decode_subtype(field, field.type, "list", "<<") %>
         end
-ruby
+      ERB
 
       def pull_tag
-        str = <<-eoruby
-        tag = buff.getbyte(index)
-        index += 1
-        eoruby
+        str = <<~RUBY
+          tag = buff.getbyte(index)
+          index += 1
+        RUBY
 
         if $DEBUG
-          str += "puts \"reading field \#{tag >> 3} type: \#{tag & 0x7} \#{tag}\"\n"
+          str += <<~'RUBY'
+            puts "reading field #{tag >> 3} type: #{tag & 0x7} #{tag}"
+          RUBY
         end
 
         str
@@ -895,30 +884,32 @@ ruby
       end
 
       def decode_map(field)
-        "        ## PULL_MAP\n" +
-        "        map = @#{field.name}\n" +
-        "        while tag == #{tag_for_field(field, field.number)}\n" +
-        pull_uint64("value", "=") + "\n" +
-        "          index += 1\n" + # skip the tag, assume it's the key
-        decode_subtype(field, field.type.key_type, "key", "=") + "\n" +
-        "          index += 1\n" + # skip the tag, assume it's the value
-        decode_subtype(field, field.type.value_type, "map[key]", "=") + "\n" +
-        "          return self if index >= len\n" +
-        pull_tag + "\n" +
-        "        end\n"
+        <<~RUBY
+          ## PULL_MAP
+          map = @#{field.name}
+          while tag == #{tag_for_field(field, field.number)}
+            #{pull_uint64("value", "=")}
+            index += 1 # skip the tag, assume it's the key
+            #{decode_subtype(field, field.type.key_type, "key", "=")}
+            index += 1 # skip the tag, assume it's the value
+            #{decode_subtype(field, field.type.value_type, "map[key]", "=")}
+            return self if index >= len
+            #{pull_tag}
+          end
+        RUBY
       end
 
       def decode_repeated(field)
-        <<-eoruby
-        ## DECODE REPEATED
-        list = @#{field.name}
-        while true
-          #{decode_subtype(field, field.type, "list", "<<")}
-          #{pull_tag}
-          break unless tag == #{tag_for_field(field, field.number)}
-        end
-        ## END DECODE REPEATED
-        eoruby
+        <<~RUBY
+          ## DECODE REPEATED
+          list = @#{field.name}
+          while true
+            #{decode_subtype(field, field.type, "list", "<<")}
+            #{pull_tag}
+            break unless tag == #{tag_for_field(field, field.number)}
+          end
+          ## END DECODE REPEATED
+        RUBY
       end
 
       def pull_message(type, dest, operator)
@@ -972,22 +963,28 @@ ruby
           type = "ProtoBoeuf::Protobuf::Timestamp"
         end
 
-        "        ## PULL_MESSAGE\n" +
-          pull_uint64("msg_len", "=") + "\n" +
-          "        #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)\n" +
-          "        ## END PULL_MESSAGE\n"
+        <<~RUBY
+          ## PULL_MESSAGE
+          #{pull_uint64("msg_len", "=")}
+          #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)
+          ## END PULL_MESSAGE
+        RUBY
       end
 
       def pull_int64(dest, operator)
-        "        ## PULL_INT64\n" +
-          "        #{dest} #{operator} #{pull_varint(sign: :i64)}\n" +
-          "        ## END PULL_INT64\n"
+        <<~RUBY
+          ## PULL_INT64
+          #{dest} #{operator} #{pull_varint(sign: :i64)}
+          ## END PULL_INT64
+        RUBY
       end
 
       def pull_int32(dest, operator)
-        "        ## PULL_INT32\n" +
-          "        #{dest} #{operator} #{pull_varint(sign: :i32)}\n" +
-          "        ## END PULL_INT32\n"
+        <<~RUBY
+          ## PULL_INT32
+          #{dest} #{operator} #{pull_varint(sign: :i32)}
+          ## END PULL_INT32
+        RUBY
       end
 
       def pull_sint32(dest, operator)
@@ -1001,30 +998,38 @@ ruby
       alias :pull_sint64 :pull_sint32
 
       def pull_string(dest, operator)
-        "        ## PULL_STRING\n" +
-          PULL_STRING.result(binding) +
-          "        ## END PULL_STRING\n"
+        <<~RUBY
+          ## PULL_STRING
+          #{PULL_STRING.result(binding)}
+          ## END PULL_STRING
+        RUBY
       end
 
       def pull_bytes(dest, operator)
-        "        ## PULL_BYTES\n" +
-          PULL_BYTES.result(binding) +
-          "        ## END PULL_BYTES\n"
+        <<~RUBY
+          ## PULL_BYTES
+          #{PULL_BYTES.result(binding)}
+          ## END PULL_BYTES
+        RUBY
       end
 
       def pull_uint64(dest, operator)
-        "        ## PULL_UINT64\n" +
-          "        #{dest} #{operator} #{pull_varint}\n" +
-          "        ## END PULL_UINT64\n"
+        <<~RUBY
+          ## PULL_UINT64
+          #{dest} #{operator} #{pull_varint}
+          ## END PULL_UINT64
+        RUBY
       end
 
       alias :pull_uint32 :pull_uint64
 
       def pull_boolean(dest, operator)
-        "        ## PULL BOOLEAN\n" +
-          "        #{dest} #{operator} (buff.getbyte(index) == 1)\n" +
-          "        index += 1\n" +
-          "        ## END PULL BOOLEAN\n"
+        <<~RUBY
+          ## PULL BOOLEAN
+          #{dest} #{operator} (buff.getbyte(index) == 1)
+          index += 1
+          ## END PULL BOOLEAN
+        RUBY
       end
 
       def decode_code(field)
@@ -1073,25 +1078,17 @@ ruby
     end
 
     def to_ruby
-      # This is a poorman's indent prettier.
-      # TODO: We really should build a ruby AST and then apply a ruby serializer that pretties appropriately
-
-      indent_level = 0
-      indent = -> { "  " * ((indent_level += 1) - 1) }
-      unindent = -> { "  " * (indent_level -= 1) }
-      indent_lines = ->(body) { body.split("\n").map { |line| ("  " * indent_level) + line }.join("\n") }
-
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# frozen_string_literal: true\n\n"
-      head += packages.map { |m| indent.call + "module " + m.split("_").map(&:capitalize).join + "\n" }.join
+      head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
-      body = indent_lines.call(@ast.enums.map { |enum| EnumCompiler.result(enum) }.join) + "\n"
-      body += indent_lines.call(@ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join)
+      body = @ast.enums.map { |enum| EnumCompiler.result(enum) }.join + "\n"
+      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join
 
-      tail = "\n" + packages.map { unindent.call + "end" }.join("\n")
+      tail = "\n" + packages.map { "end" }.join("\n")
 
-      (head + body + tail).gsub(/[ ]*(?=$)/, '')
+      SyntaxTree.format(head + body + tail)
     end
   end
 end

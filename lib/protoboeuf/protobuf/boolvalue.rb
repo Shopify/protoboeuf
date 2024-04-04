@@ -2,11 +2,9 @@
 
 module ProtoBoeuf
   module Protobuf
-
     class BoolValue
       def self.decode(buff)
-        buff = buff.dup
-        buff.force_encoding(Encoding::UTF_8)
+        buff = buff.b
         allocate.decode_from(buff, 0, buff.bytesize)
       end
 
@@ -16,45 +14,47 @@ module ProtoBoeuf
       # required field readers
       attr_accessor :value
 
-      # enum readers
-
-      # enum writers
-
       def initialize(value: false)
         @value = value
       end
 
       def decode_from(buff, index, len)
+        @value = false
 
-          @value = false
-
-                tag = buff.getbyte(index)
-            index += 1
-
+        tag = buff.getbyte(index)
+        index += 1
 
         while true
           if tag == 0x8
-                    ## PULL BOOLEAN
+            ## PULL BOOLEAN
             @value = (buff.getbyte(index) == 1)
             index += 1
             ## END PULL BOOLEAN
 
-
             return self if index >= len
-                    tag = buff.getbyte(index)
+            tag = buff.getbyte(index)
             index += 1
-
           end
 
           return self if index >= len
           raise NotImplementedError
         end
       end
-    def _encode
-      buff = ''.b
+      def _encode
+        buff = "".b
+        val = @value
+        if val == true
+          ## encode the tag
+          buff << 0x08
+          buff << 1
+        elsif val == false
+          # Default value, encode nothing
+        else
+          raise "bool values should be true or false"
+        end
 
-      buff
-    end
+        buff
+      end
     end
   end
 end
