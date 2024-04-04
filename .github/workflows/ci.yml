@@ -15,12 +15,13 @@ jobs:
         include:
           - ruby: "3.3"
             ruby-opt: "--enable-frozen-string-literal --debug-frozen-string-literal"
+            os: "ubuntu"
 
     steps:
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
