@@ -241,3 +241,15 @@ message HasKnownTypeBytes {
 message HasKnownTypeTimestamp {
   google.protobuf.Timestamp t = 1;
 }
+
+message EnumEncoder {
+  enum Enum {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+    INT_MAX = 0x7FFFFFFF;
+  }
+
+  Enum value = 1;
+}
