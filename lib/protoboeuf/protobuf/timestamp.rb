@@ -6,7 +6,7 @@ module ProtoBoeuf
     class Timestamp
       def self.decode(buff)
         buff = buff.dup
-        buff.force_encoding("UTF-8")
+        buff.force_encoding(Encoding::UTF_8)
         allocate.decode_from(buff, 0, buff.bytesize)
       end
 
