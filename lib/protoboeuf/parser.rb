@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Parser for the protobuf (proto3) language:
 # https://protobuf.dev/programming-guides/proto3/
 #
@@ -719,7 +720,7 @@ module ProtoBoeuf
     # bar_bif
     # foo123
     def read_ident
-      name = ''
+      name = +''
 
       loop do
         if eof?
@@ -745,7 +746,7 @@ module ProtoBoeuf
     # Read a string constant, eg:
     # 'foobar'
     def read_string
-      str = ''
+      str = +''
 
       # The string must start with an opening quote
       expect '"'
