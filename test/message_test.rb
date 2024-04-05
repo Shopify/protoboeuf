@@ -773,4 +773,16 @@ message Int32Value {
       assert_equal expected, actual
     end
   end
+
+  def test_encode_two_fields
+    [[0, 0], [0, 1], [1, 0], [1, -1], [0, 9000], [9000, -9000]].each do |a, b|
+      # TestTwoFields is defined in test.proto
+      actual = TestTwoFields.encode(TestTwoFields.new(a: a, b: b))
+
+      # This is the Google protobuf class
+      expected = ::TestTwoFields.encode(::TestTwoFields.new(a: a, b: b))
+
+      assert_equal expected, actual
+    end
+  end
 end
