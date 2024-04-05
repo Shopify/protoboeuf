@@ -282,6 +282,32 @@ module ProtoBoeuf
       # The same encoding logic is used for sint32 and sint64
       alias encode_sint32 encode_sint64
 
+      def encode_double(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('D')
+        end
+        eocode
+      end
+
+      def encode_float(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('F')
+        end
+        eocode
+      end
+
       def prelude
         <<-eoruby
   def self.decode(buff)
