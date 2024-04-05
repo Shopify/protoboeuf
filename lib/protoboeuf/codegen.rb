@@ -308,6 +308,58 @@ module ProtoBoeuf
         eocode
       end
 
+      def encode_fixed64(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('Q<')
+        end
+        eocode
+      end
+
+      def encode_sfixed64(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('q<')
+        end
+        eocode
+      end
+
+      def encode_fixed32(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('L<')
+        end
+        eocode
+      end
+
+      def encode_sfixed32(field)
+        tag = (field.number << 3) | field.wire_type
+        # False/zero is the default value, so the zero case encodes nothing
+        <<-eocode
+        val = @#{field.name}
+        if val != 0
+          ## encode the tag
+          buff << #{sprintf("%#04x", tag)}
+          buff << [val].pack('l<')
+        end
+        eocode
+      end
+
       def prelude
         <<-eoruby
   def self.decode(buff)
@@ -746,7 +798,7 @@ ruby
               case field.type
               when "string", "bytes"
                 '""'
-              when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32"
+              when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32", "sfixed64", "sfixed32"
                 0
               when "double", "float"
                 0.0
@@ -815,6 +867,8 @@ ruby
           when "double" then pull_double(dest, operator)
           when "fixed64" then pull_fixed_int64(dest, operator)
           when "fixed32" then pull_fixed_int32(dest, operator)
+          when "sfixed64" then pull_fixed_int64(dest, operator)
+          when "sfixed32" then pull_fixed_int32(dest, operator)
           when "float" then pull_float(dest, operator)
           when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
             pull_message(type, dest, operator)
