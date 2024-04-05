@@ -90,6 +90,22 @@ message TestSInt32 {
   sint32 value = 1;
 }
 
+message TestFixed64 {
+  fixed64 value = 1;
+}
+
+message TestSFixed64 {
+  sfixed64 value = 1;
+}
+
+message TestFixed32 {
+  fixed32 value = 1;
+}
+
+message TestSFixed32 {
+  sfixed32 value = 1;
+}
+
 message TestDouble {
   double value = 1;
 }

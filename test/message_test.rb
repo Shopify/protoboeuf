@@ -750,6 +750,58 @@ message Int32Value {
     end
   end
 
+  def test_encode_fixed64
+    [0, 1, 0xFF, 0xFFFF_FFFF_FFFF_FFFF].each do |n|
+      # TestFixed64 is defined in test.proto
+      # This is our implementation
+      actual = TestFixed64.encode(TestFixed64.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestFixed64.encode(::TestFixed64.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_sfixed64
+    [0, 1, 0xFF, -1, -9000, 9223372036854775807, -9223372036854775808].each do |n|
+      # TestSFixed64 is defined in test.proto
+      # This is our implementation
+      actual = TestSFixed64.encode(TestSFixed64.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestSFixed64.encode(::TestSFixed64.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_fixed32
+    [0, 1, 0xFF, 0xFFFF_FFFF].each do |n|
+      # TestFixed32 is defined in test.proto
+      # This is our implementation
+      actual = TestFixed32.encode(TestFixed32.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestFixed32.encode(::TestFixed32.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_sfixed32
+    [0, 1, 0xFF, -1, -9000, -2147483648, 2147483647].each do |n|
+      # TestSFixed32 is defined in test.proto
+      # This is our implementation
+      actual = TestSFixed32.encode(TestSFixed32.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestSFixed32.encode(::TestSFixed32.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
   def test_encode_double
     [0, 1, 0.5].each do |n|
       # TestDouble is defined in test.proto
