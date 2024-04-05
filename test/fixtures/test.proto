@@ -82,6 +82,14 @@ message TestSint64 {
   sint64 sint_64 = 1;
 }
 
+message TestSInt64 {
+  sint64 value = 1;
+}
+
+message TestSInt32 {
+  sint32 value = 1;
+}
+
 message TestMsgGoogleTypes {
   int64 int_64 = 4;
   google.protobuf.UInt64Value a_id = 1;
