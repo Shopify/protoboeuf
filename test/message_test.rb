@@ -573,6 +573,18 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 3337, instance.t.nanos
   end
 
+  def test_encode_empty_msg
+    [0, 1, 0.5].each do |n|
+      # NoFieldsLol is defined in test.proto
+      actual = NoFieldsLol.encode(NoFieldsLol.new())
+
+      # This is the Google protobuf class
+      expected = ::NoFieldsLol.encode(::NoFieldsLol.new())
+
+      assert_equal expected, actual
+    end
+  end
+
   def test_encode_bool
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
@@ -718,7 +730,7 @@ message Int32Value {
       # This is our implementation
       actual = TestSInt64.encode(TestSInt64.new(value: n))
 
-      # This is the Google class
+      # This is the Google protobuf class
       expected = ::TestSInt64.encode(::TestSInt64.new(value: n))
 
       assert_equal expected, actual
@@ -731,8 +743,32 @@ message Int32Value {
       # This is our implementation
       actual = TestSInt32.encode(TestSInt32.new(value: n))
 
-      # This is the Google class
+      # This is the Google protobuf class
       expected = ::TestSInt32.encode(::TestSInt32.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_double
+    [0, 1, 0.5].each do |n|
+      # TestDouble is defined in test.proto
+      actual = TestDouble.encode(TestDouble.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestDouble.encode(::TestDouble.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_float
+    [0, 1, 0.5].each do |n|
+      # TestFloat is defined in test.proto
+      actual = TestFloat.encode(TestFloat.new(value: n))
+
+      # This is the Google protobuf class
+      expected = ::TestFloat.encode(::TestFloat.new(value: n))
 
       assert_equal expected, actual
     end

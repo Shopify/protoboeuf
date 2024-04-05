@@ -90,6 +90,14 @@ message TestSInt32 {
   sint32 value = 1;
 }
 
+message TestDouble {
+  double value = 1;
+}
+
+message TestFloat {
+  float value = 1;
+}
+
 message TestMsgGoogleTypes {
   int64 int_64 = 4;
   google.protobuf.UInt64Value a_id = 1;
