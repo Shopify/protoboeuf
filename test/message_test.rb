@@ -711,4 +711,30 @@ message Int32Value {
       assert_equal expected, actual
     end
   end
+
+  def test_encode_sint64
+    [0, 1, 0xFF, -1, -2, -9001, 9223372036854775807, -9223372036854775808].each do |n|
+      # TestSInt64 is defined in test.proto
+      # This is our implementation
+      actual = TestSInt64.encode(TestSInt64.new(value: n))
+
+      # This is the Google class
+      expected = ::TestSInt64.encode(::TestSInt64.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
+
+  def test_encode_sint32
+    [0, 1, 0xFF, -1, -2, -9001, -2147483648, 2147483647].each do |n|
+      # TestSInt64 is defined in test.proto
+      # This is our implementation
+      actual = TestSInt32.encode(TestSInt32.new(value: n))
+
+      # This is the Google class
+      expected = ::TestSInt32.encode(::TestSInt32.new(value: n))
+
+      assert_equal expected, actual
+    end
+  end
 end
