@@ -290,3 +290,9 @@ message EnumEncoder {
 
   Enum value = 1;
 }
+
+message RepeatedEncoder {
+  repeated uint32 intValues = 1;
+  repeated uint32 looseIntValues = 2 [packed = false];
+  repeated string stringValues = 3;
+}
