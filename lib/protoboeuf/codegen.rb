@@ -103,7 +103,18 @@ module ProtoBoeuf
           initialize_code +
           extra_api +
           decode +
-          encode
+          encode +
+          conversion
+      end
+
+      def conversion
+        <<~RUBY
+          def to_h
+            result = {}
+            #{fields.map { |field| "result['#{field.name}'.to_sym] = @#{field.name}" }.join("\n")}
+            result
+          end
+        RUBY
       end
 
       def encode
