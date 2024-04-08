@@ -156,6 +156,12 @@ module ProtoBoeuf
       SCALAR_TYPES.include?(type)
     end
 
+    def item_field
+      raise "not a repeated field" unless repeated?
+
+      @item_field ||= self.dup.tap { |f| f.qualifier = nil }
+    end
+
     VARINT = 0
     I64 = 1
     LEN = 2

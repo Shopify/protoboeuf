@@ -109,31 +109,58 @@ module ProtoBoeuf
       def encode
         # FIXME: we should probably sort fields by field number
         "def _encode\n  buff = ''.b\n" +
-          fields.map { |field|
-          next unless field.field?
-
-          method = if field.scalar?
-            "encode_#{field.type}"
-          elsif field.enum?
-            "encode_enum"
-          else
-            # FIXME: we need to support all types
-            next
-          end
-
-          send(method, field) if respond_to?(method, true)
-        }.compact.join("\n") +
+          fields.map { |field| encode_subtype(field) }.compact.join("\n") +
         "\n  buff\nend\n"
       end
 
-      def encode_bool(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
+        return unless field.field?
+
+        method = if field.repeated?
+          "encode_repeated"
+        elsif field.enum?
+          "encode_enum"
+        elsif field.scalar?
+          "encode_#{field.type}"
+        else
+          # FIXME: we need to support all types
+          return
+        end
+
+        send(method, field, value_expr, tagged) if respond_to?(method, true)
+      end
+
+      def encode_tag_and_length(field, tagged, len_expr = false)
+        result = +""
+
+        if tagged
+          tag = (field.number << 3) | field.wire_type
+          result << "buff << #{sprintf("%#04x", tag)}\n"
+
+          if field.wire_type == ProtoBoeuf::Field::LEN
+            raise "length encoded fields must have a length expression" unless len_expr
+
+            result << <<~RUBY
+              len = #{len_expr}
+              while len > 0
+                byte = len & 0x7F
+                len >>= 7
+                byte |= 0x80 if len > 0
+                buff << byte
+              end
+            RUBY
+          end
+        end
+
+        result
+      end
+
+      def encode_bool(field, value_expr, tagged)
         # False/zero is the default value, so the false case encodes nothing
         <<~RUBY
-          val = @#{field.name}
+          val = #{value_expr}
           if val == true
-            ## encode the tag
-            buff << #{sprintf("%#04x", tag)}
+\            #{encode_tag_and_length(field, tagged)}
             buff << 1
           elsif val == false
             # Default value, encode nothing
@@ -143,34 +170,23 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_bytes(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_bytes(field, value_expr, tagged)
         # Empty bytes is default value, so encodes nothing
         <<~RUBY
-          val = @#{field.name}.b
+          val = #{value_expr}.b
           if val.bytesize > 0
-            ## encode the tag
-            buff << #{sprintf("%#04x", tag)}
-            len = val.bytesize
-            while len > 0
-              byte = len & 0x7F
-              len >>= 7
-              byte |= 0x80 if len > 0
-              buff << byte
-            end
+            #{encode_tag_and_length(field, tagged, "val.bytesize")}
             buff.concat(val)
           end
         RUBY
       end
 
-      def encode_enum(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_enum(field, value_expr, tagged)
         # Zero is default value for enums, so encodes nothing
         <<~RUBY
-          val = @#{field.name}
+          val = #{value_expr}
           if val != 0
-            ## encode the tag
-            buff << #{sprintf("%#04x", tag)}
+            #{encode_tag_and_length(field, tagged)}
             while val > 0
               byte = val & 0x7F
               val >>= 7
@@ -181,42 +197,43 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_string(field)
-        tag = (field.number << 3) | field.wire_type
-        # Empty string is default value, so encodes nothing
-        <<-eocode
-        val = @#{field.name}.encode(Encoding::UTF_8).force_encoding(Encoding::ASCII_8BIT)
-        if val.bytesize > 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          len = val.bytesize
-          while len > 0
-            byte = len & 0x7F
-            len >>= 7
-            byte |= 0x80 if len > 0
-            buff << byte
+      def encode_repeated(field, value_expr, tagged)
+        <<~RUBY
+          list = #{value_expr}
+          if list.size > 0
+            #{encode_tag_and_length(field, field.packed?, "list.size")}
+            list.each do |item|
+              #{encode_subtype(field.item_field, "item", !field.packed?)}
+            end
           end
-          buff.concat(val)
-        end
-        eocode
+        RUBY
       end
 
-      def encode_uint64(field)
-        tag = (field.number << 3) | field.wire_type
-        # Zero is the default value, so it encodes zero bytes
-        <<-eocode
-        val = @#{field.name}
-        if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          while val != 0
-            byte = val & 0x7F
-            val >>= 7
-            byte |= 0x80 if val > 0
-            buff << byte
+      def encode_string(field, value_expr, tagged)
+        # Empty string is default value, so encodes nothing
+        <<~RUBY
+          val = #{value_expr}.encode(Encoding::UTF_8).b
+          if val.bytesize > 0
+            #{encode_tag_and_length(field, tagged, "val.bytesize")}
+            buff.concat(val)
           end
-        end
-        eocode
+        RUBY
+      end
+
+      def encode_uint64(field, value_expr, tagged)
+        # Zero is the default value, so it encodes zero bytes
+        <<~RUBY
+          val = #{value_expr}
+          if val != 0
+            #{encode_tag_and_length(field, tagged)}
+            while val != 0
+              byte = val & 0x7F
+              val >>= 7
+              byte |= 0x80 if val > 0
+              buff << byte
+            end
+          end
+        RUBY
       end
 
       # NOTE: should we be doing bounds checking somewhere?
@@ -224,42 +241,37 @@ module ProtoBoeuf
       # rather than when doing the encoding
       alias encode_uint32 encode_uint64
 
-      def encode_int64(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_int64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
-        <<-eocode
-        val = @#{field.name}
-        if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
-          while val != 0
-            byte = val & 0x7F
+        <<~RUBY
+          val = #{value_expr}
+          if val != 0
+            #{encode_tag_and_length(field, tagged)}
+            while val != 0
+              byte = val & 0x7F
 
-            val >>= 7
-            # This drops the top bits,
-            # Otherwise, with a signed right shift,
-            # we get infinity one bits at the top
-            val &= (1 << 57) - 1
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
 
-            byte |= 0x80 if val != 0
-            buff << byte
+              byte |= 0x80 if val != 0
+              buff << byte
+            end
           end
-        end
-        eocode
+        RUBY
       end
 
       # The same encoding logic is used for int32 and int64
       alias encode_int32 encode_int64
 
-      def encode_sint64(field)
-        tag = (field.number << 3) | field.wire_type
-
+      def encode_sint64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
 
           # Zigzag encoding:
           # Positive values encoded as 2 * n (even)
@@ -283,79 +295,67 @@ module ProtoBoeuf
       # The same encoding logic is used for sint32 and sint64
       alias encode_sint32 encode_sint64
 
-      def encode_double(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_double(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('D')
         end
         eocode
       end
 
-      def encode_float(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_float(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('F')
         end
         eocode
       end
 
-      def encode_fixed64(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_fixed64(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('Q<')
         end
         eocode
       end
 
-      def encode_sfixed64(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_sfixed64(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('q<')
         end
         eocode
       end
 
-      def encode_fixed32(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_fixed32(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('L<')
         end
         eocode
       end
 
-      def encode_sfixed32(field)
-        tag = (field.number << 3) | field.wire_type
+      def encode_sfixed32(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
-        val = @#{field.name}
+        val = #{value_expr}
         if val != 0
-          ## encode the tag
-          buff << #{sprintf("%#04x", tag)}
+          #{encode_tag_and_length(field, tagged)}
           buff << [val].pack('l<')
         end
         eocode

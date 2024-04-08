@@ -634,6 +634,24 @@ message BytesValue {
     end
   end
 
+  def test_encode_repeated
+    actual = RepeatedEncoder.encode(
+      RepeatedEncoder.new(
+        intValues: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        looseIntValues: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        stringValues: ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+      )
+    )
+    expected = ::RepeatedEncoder.encode(
+      ::RepeatedEncoder.new(
+        intValues: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        looseIntValues: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        stringValues: ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+      )
+    )
+    assert_equal expected, actual
+  end
+
   def test_encode_string
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";
