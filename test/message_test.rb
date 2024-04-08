@@ -681,6 +681,18 @@ message StringValue {
     end
   end
 
+  def test_encode_submessage
+    actual = SubmessageEncoder.new(
+      value: SubmessageEncoder::Submessage.new(
+        value: 1234,
+        strValue: "hello world"
+      ),
+    )
+    expected = ::SubmessageEncoder.decode(SubmessageEncoder.encode(actual))
+
+    assert_equal expected.to_h, actual.to_h
+  end
+
   def test_encode_uint32
     code = ProtoBoeuf.parse_string <<-eoboeuf
 syntax = "proto3";

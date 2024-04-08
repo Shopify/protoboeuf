@@ -111,10 +111,18 @@ module ProtoBoeuf
         <<~RUBY
           def to_h
             result = {}
-            #{fields.map { |field| "result['#{field.name}'.to_sym] = @#{field.name}" }.join("\n")}
+            #{fields.map { |field| "result['#{field.name}'.to_sym] = #{convert_field(field)}" }.join("\n")}
             result
           end
         RUBY
+      end
+
+      def convert_field(field)
+        if field.field? && (field.repeated? || field.enum? || field.scalar? || field.map?)
+          "@#{field.name}"
+        else
+          "@#{field.name}.to_h"
+        end
       end
 
       def encode
@@ -136,8 +144,7 @@ module ProtoBoeuf
         elsif field.map?
           "encode_map"
         else
-          # FIXME: we need to support all types
-          return
+          "encode_submessage"
         end
 
         send(method, field, value_expr, tagged) if respond_to?(method, true)
@@ -173,7 +180,7 @@ module ProtoBoeuf
         <<~RUBY
           val = #{value_expr}
           if val == true
-\            #{encode_tag_and_length(field, tagged)}
+            #{encode_tag_and_length(field, tagged)}
             buff << 1
           elsif val == false
             # Default value, encode nothing
@@ -246,6 +253,17 @@ module ProtoBoeuf
           if val.bytesize > 0
             #{encode_tag_and_length(field, tagged, "val.bytesize")}
             buff.concat(val)
+          end
+        RUBY
+      end
+
+      def encode_submessage(field, value_expr, tagged)
+        <<~RUBY
+          val = #{value_expr}
+          if val
+            encoded = val._encode
+            #{encode_tag_and_length(field, true, "encoded.bytesize")}
+            buff.concat(encoded)
           end
         RUBY
       end
