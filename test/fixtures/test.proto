@@ -296,3 +296,9 @@ message RepeatedEncoder {
   repeated uint32 looseIntValues = 2 [packed = false];
   repeated string stringValues = 3;
 }
+
+message MapEncoder {
+  map<int32, int32> intIntMap = 1;
+  map<string, uint32> stringIntMap = 2;
+  map<string, string> stringStringMap = 3;
+}
