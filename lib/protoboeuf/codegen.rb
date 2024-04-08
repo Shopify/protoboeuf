@@ -103,7 +103,18 @@ module ProtoBoeuf
           initialize_code +
           extra_api +
           decode +
-          encode
+          encode +
+          conversion
+      end
+
+      def conversion
+        <<~RUBY
+          def to_h
+            result = {}
+            #{fields.map { |field| "result['#{field.name}'.to_sym] = @#{field.name}" }.join("\n")}
+            result
+          end
+        RUBY
       end
 
       def encode
@@ -122,6 +133,8 @@ module ProtoBoeuf
           "encode_enum"
         elsif field.scalar?
           "encode_#{field.type}"
+        elsif field.map?
+          "encode_map"
         else
           # FIXME: we need to support all types
           return
@@ -192,6 +205,23 @@ module ProtoBoeuf
               val >>= 7
               byte |= 0x80 if val > 0
               buff << byte
+            end
+          end
+        RUBY
+      end
+
+      def encode_map(field, value_expr, tagged)
+        <<~RUBY
+          map = #{value_expr}
+          if map.size > 0
+            old_buff = buff
+            map.each do |key, value|
+              buff = new_buffer = ''.b
+              #{encode_subtype(field.key_field, "key", true)}
+              #{encode_subtype(field.value_field, "value", true)}
+              buff = old_buff
+              #{encode_tag_and_length(field, true, "new_buffer.bytesize")}
+              old_buff.concat(new_buffer)
             end
           end
         RUBY

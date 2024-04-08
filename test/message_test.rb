@@ -634,6 +634,17 @@ message BytesValue {
     end
   end
 
+  def test_encode_map
+    actual = MapEncoder.new(
+      intIntMap: { 1 => 2, 3 => 4, 5 => 6 },
+      stringIntMap: { "a" => 1, "b" => 2, "c" => 3 },
+      stringStringMap: { "a" => "b", "c" => "d", "e" => "f" },
+    )
+    expected = ::MapEncoder.decode(MapEncoder.encode(actual))
+
+    assert_equal expected.to_h, actual.to_h
+  end
+
   def test_encode_repeated
     actual = RepeatedEncoder.encode(
       RepeatedEncoder.new(

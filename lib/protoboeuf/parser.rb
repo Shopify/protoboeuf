@@ -162,6 +162,18 @@ module ProtoBoeuf
       @item_field ||= self.dup.tap { |f| f.qualifier = nil }
     end
 
+    def key_field
+      raise "not a map field" unless map?
+
+      @key_field ||= Field.new(nil, type.key_type, "key", 1, {}, pos)
+    end
+
+    def value_field
+      raise "not a map field" unless map?
+
+      @value_field ||= Field.new(nil, type.value_type, "value", 2, {}, pos)
+    end
+
     VARINT = 0
     I64 = 1
     LEN = 2
