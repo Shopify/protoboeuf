@@ -129,9 +129,9 @@ module ProtoBoeuf
 
       def encode
         # FIXME: we should probably sort fields by field number
-        "def _encode\n  buff = ''.b\n" +
+        "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-          "\n  buff.force_encoding(Encoding::ASCII_8BIT)\nend\n"
+          "\nbuff\n end\n"
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
@@ -161,16 +161,11 @@ module ProtoBoeuf
 
           if field.wire_type == ProtoBoeuf::Field::LEN
             raise "length encoded fields must have a length expression" unless len_expr
+            if len_expr != "len"
+              result << "len = #{len_expr}\n"
+            end
 
-            result << <<~RUBY
-              len = #{len_expr}
-              while len > 0
-                byte = len & 0x7F
-                len >>= 7
-                byte |= 0x80 if len > 0
-                buff << byte
-              end
-            RUBY
+            result << uint64_code("len")
           end
         end
 
@@ -209,12 +204,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if val != 0
             #{encode_tag_and_length(field, tagged)}
-            while val > 0
-              byte = val & 0x7F
-              val >>= 7
-              byte |= 0x80 if val > 0
-              buff << byte
-            end
+            #{uint64_code("val")}
           end
         RUBY
       end
@@ -262,8 +252,8 @@ module ProtoBoeuf
         # Empty string is default value, so encodes nothing
         <<~RUBY
           val = #{value_expr}
-          if val.bytesize > 0
-            #{encode_tag_and_length(field, tagged, "val.bytesize")}
+          if((len = val.bytesize) > 0)
+            #{encode_tag_and_length(field, tagged, "len")}
             buff << val
           end
         RUBY
@@ -273,10 +263,21 @@ module ProtoBoeuf
         <<~RUBY
           val = #{value_expr}
           if val
-            encoded = val._encode
+            encoded = val._encode("".b)
             #{encode_tag_and_length(field, true, "encoded.bytesize")}
-            buff.concat(encoded)
+            buff << encoded
           end
+        RUBY
+      end
+
+      def uint64_code(local)
+        <<~RUBY
+            while #{local} != 0
+              byte = #{local} & 0x7F
+              #{local} >>= 7
+              byte |= 0x80 if #{local} > 0
+              buff << byte
+            end
         RUBY
       end
 
@@ -286,12 +287,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if val != 0
             #{encode_tag_and_length(field, tagged)}
-            while val != 0
-              byte = val & 0x7F
-              val >>= 7
-              byte |= 0x80 if val > 0
-              buff << byte
-            end
+            #{uint64_code("val")}
           end
         RUBY
       end
@@ -342,12 +338,7 @@ module ProtoBoeuf
             (-2 * val) - 1
           end
 
-          while val > 0
-            byte = val & 0x7F
-            val >>= 7
-            byte |= 0x80 if val > 0
-            buff << byte
-          end
+          #{uint64_code("val")}
         end
         eocode
       end
@@ -429,7 +420,8 @@ module ProtoBoeuf
           end
 
           def self.encode(obj)
-            obj._encode
+            buff = obj._encode "".b
+            buff.force_encoding(Encoding::ASCII_8BIT)
           end
         RUBY
       end
