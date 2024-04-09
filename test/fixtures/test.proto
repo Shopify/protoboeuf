@@ -302,3 +302,12 @@ message MapEncoder {
   map<string, uint32> stringIntMap = 2;
   map<string, string> stringStringMap = 3;
 }
+
+message SubmessageEncoder {
+  message Submessage {
+    uint32 value = 1;
+    string strValue = 2;
+  }
+
+  Submessage value = 1;
+}
