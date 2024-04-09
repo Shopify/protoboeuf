@@ -37,6 +37,13 @@ message TestMessage {
   bytes uuid = 4;
 }
 
+// Field numbers not in increasing order
+message TestOutOfOrder {
+  uint32 a = 1;
+  uint32 b = 3;
+  uint32 c = 2;
+}
+
 /*
 Multi-line comment
 Heyyy

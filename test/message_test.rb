@@ -891,4 +891,18 @@ message Int32Value {
       assert_equal expected, actual
     end
   end
+
+  def test_encode_decode_out_of_order
+    # The fields numbers in TestOutOfOrder are not defined in increasing order
+    data = TestOutOfOrder.encode(TestOutOfOrder.new(a: 77, b: 88, c: 99))
+    obj = TestOutOfOrder.decode data
+    assert_equal(obj.a, 77)
+    assert_equal(obj.b, 88)
+    assert_equal(obj.c, 99)
+
+    # FIXME: this isn't yet working
+    # Our decode method fails with the out of order fields encoded by protobuf
+    data = ::TestOutOfOrder.encode(::TestOutOfOrder.new(a: 77, b: 88, c: 99))
+    #obj = TestOutOfOrder.decode data
+  end
 end
