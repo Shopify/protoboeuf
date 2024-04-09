@@ -143,7 +143,7 @@ puts "total encoded size: #{total_bin_size} bytes"
 
 # Decode the messages using protoboeuf so we can re-encode them for the encoding benchmark
 # We do this because ProtoBoeuf can't directly encode Google's protobuf message classes
-decoded_msgs_proto = encoded_bins.map { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) }
+decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeuf::ParkingLot.decode bin }
 
 Benchmark.ips do |x|
   x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
