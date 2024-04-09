@@ -645,6 +645,20 @@ message BytesValue {
     assert_equal expected.to_h, actual.to_h
   end
 
+  def test_encode_oneof
+    actual = OneOfEncoder.new(
+      id: "abcd",
+      shop_id: 5678,
+      oneof_msg: OneOfEncoder::TestEmbeddee.new(value: 42),
+      oneof_str: "hello world",
+      boolean: true,
+    )
+    expected = ::OneOfEncoder.decode(OneOfEncoder.encode(actual))
+
+    binding.irb
+    assert_equal expected.to_h, actual.to_h
+  end
+
   def test_encode_repeated
     actual = RepeatedEncoder.encode(
       RepeatedEncoder.new(

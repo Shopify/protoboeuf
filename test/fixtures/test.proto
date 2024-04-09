@@ -311,3 +311,20 @@ message SubmessageEncoder {
 
   Submessage value = 1;
 }
+
+message OneOfEncoder {
+  string id = 1;
+  uint64 shop_id = 2;
+
+  message TestEmbeddee {
+    uint64 value = 1;
+  }
+
+  oneof oneof_field {
+    uint32 oneof_u32 = 5;
+    TestEmbeddee oneof_msg = 6;
+    string oneof_str = 7;
+  }
+
+  bool boolean = 3;
+}
