@@ -131,7 +131,7 @@ module ProtoBoeuf
         # FIXME: we should probably sort fields by field number
         "def _encode\n  buff = ''.b\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-        "\n  buff\nend\n"
+          "\n  buff.force_encoding(Encoding::ASCII_8BIT)\nend\n"
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
@@ -261,10 +261,10 @@ module ProtoBoeuf
       def encode_string(field, value_expr, tagged)
         # Empty string is default value, so encodes nothing
         <<~RUBY
-          val = #{value_expr}.encode(Encoding::UTF_8).b
+          val = #{value_expr}
           if val.bytesize > 0
             #{encode_tag_and_length(field, tagged, "val.bytesize")}
-            buff.concat(val)
+            buff << val
           end
         RUBY
       end
