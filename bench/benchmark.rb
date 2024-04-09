@@ -141,6 +141,10 @@ bin_sizes = encoded_bins.map { |bin| bin.size }
 total_bin_size = bin_sizes.sum
 puts "total encoded size: #{total_bin_size} bytes"
 
+# Decode the messages using protoboeuf so we can re-encode them for the encoding benchmark
+# We do this because ProtoBoeuf can't directly encode Google's protobuf message classes
+decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeuf::ParkingLot.decode bin }
+
 Benchmark.ips do |x|
   x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
   x.report("decode protoboeuf") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
@@ -150,5 +154,11 @@ end
 Benchmark.ips do |x|
   x.report("decode and read upstream")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
   x.report("decode and read protoboeuf") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
+  x.compare!(order: :baseline)
+end
+
+Benchmark.ips do |x|
+  x.report("encode upstream")  { fake_msgs.map { |msg| Upstream::ParkingLot.encode(msg) } }
+  x.report("encode protoboeuf") { decoded_msgs_proto.map { |msg| ProtoBoeuf::ParkingLot.encode(msg) } }
   x.compare!(order: :baseline)
 end
