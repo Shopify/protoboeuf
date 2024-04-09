@@ -111,17 +111,19 @@ module ProtoBoeuf
         <<~RUBY
           def to_h
             result = {}
-            #{fields.map { |field| "result['#{field.name}'.to_sym] = #{convert_field(field)}" }.join("\n")}
+            #{fields.map { |field| convert_field(field) }.join("\n")}
             result
           end
         RUBY
       end
 
       def convert_field(field)
-        if field.field? && (field.repeated? || field.enum? || field.scalar? || field.map?)
-          "@#{field.name}"
+        if field.oneof?
+          "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
+        elsif field.repeated? || field.enum? || field.scalar? || field.map?
+          "result['#{field.name}'.to_sym] = @#{field.name}"
         else
-          "@#{field.name}.to_h"
+          "result['#{field.name}'.to_sym] = @#{field.name}.to_h"
         end
       end
 
@@ -133,9 +135,9 @@ module ProtoBoeuf
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
-        return unless field.field?
-
-        method = if field.repeated?
+        method = if field.oneof?
+          "encode_oneof"
+        elsif field.repeated?
           "encode_repeated"
         elsif field.enum?
           "encode_enum"
@@ -232,6 +234,16 @@ module ProtoBoeuf
             end
           end
         RUBY
+      end
+
+      def encode_oneof(field, value_expr, tagged)
+        field.fields.map do |f|
+          <<~RUBY
+            if @#{field.name} == :"#{f.name}"
+              #{encode_subtype(f, "@#{f.name}")}
+            end
+          RUBY
+        end.join("\n")
       end
 
       def encode_repeated(field, value_expr, tagged)
