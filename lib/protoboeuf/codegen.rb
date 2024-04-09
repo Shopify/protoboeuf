@@ -165,14 +165,7 @@ module ProtoBoeuf
               result << "len = #{len_expr}\n"
             end
 
-            result << <<~RUBY
-              while len > 0
-                byte = len & 0x7F
-                len >>= 7
-                byte |= 0x80 if len > 0
-                buff << byte
-              end
-            RUBY
+            result << uint64_code("len")
           end
         end
 
@@ -211,12 +204,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if val != 0
             #{encode_tag_and_length(field, tagged)}
-            while val > 0
-              byte = val & 0x7F
-              val >>= 7
-              byte |= 0x80 if val > 0
-              buff << byte
-            end
+            #{uint64_code("val")}
           end
         RUBY
       end
@@ -282,18 +270,24 @@ module ProtoBoeuf
         RUBY
       end
 
+      def uint64_code(local)
+        <<~RUBY
+            while #{local} != 0
+              byte = #{local} & 0x7F
+              #{local} >>= 7
+              byte |= 0x80 if #{local} > 0
+              buff << byte
+            end
+        RUBY
+      end
+
       def encode_uint64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
         <<~RUBY
           val = #{value_expr}
           if val != 0
             #{encode_tag_and_length(field, tagged)}
-            while val != 0
-              byte = val & 0x7F
-              val >>= 7
-              byte |= 0x80 if val > 0
-              buff << byte
-            end
+            #{uint64_code("val")}
           end
         RUBY
       end
@@ -344,12 +338,7 @@ module ProtoBoeuf
             (-2 * val) - 1
           end
 
-          while val > 0
-            byte = val & 0x7F
-            val >>= 7
-            byte |= 0x80 if val > 0
-            buff << byte
-          end
+          #{uint64_code("val")}
         end
         eocode
       end
