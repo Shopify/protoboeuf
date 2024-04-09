@@ -690,6 +690,7 @@ message StringValue {
     ["", "hello world", "foobar", "nöel", "some emoji 🎉👍❤️ and some math ∮𝛅x"].each do |s|
       actual = m::StringValue.encode m::StringValue.new(value: s)
       expected = ::Google::Protobuf::StringValue.encode(::Google::Protobuf::StringValue.new(value: s))
+      assert_equal Encoding::ASCII_8BIT, actual.encoding
       assert_equal expected, actual, "Failed during encoding of #{s.inspect}"
     end
   end
