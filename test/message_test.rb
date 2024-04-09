@@ -655,7 +655,6 @@ message BytesValue {
     )
     expected = ::OneOfEncoder.decode(OneOfEncoder.encode(actual))
 
-    binding.irb
     assert_equal expected.to_h, actual.to_h
   end
 
