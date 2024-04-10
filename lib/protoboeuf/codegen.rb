@@ -798,7 +798,6 @@ module ProtoBoeuf
             <%- end -%>
 
             return self if index >= len
-            raise NotImplementedError
           end
         end
       ERB
