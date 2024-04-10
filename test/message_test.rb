@@ -904,6 +904,9 @@ message Int32Value {
     # FIXME: this isn't yet working
     # Our decode method fails with the out of order fields encoded by protobuf
     data = ::TestOutOfOrder.encode(::TestOutOfOrder.new(a: 77, b: 88, c: 99))
-    #obj = TestOutOfOrder.decode data
+    obj = TestOutOfOrder.decode data
+    assert_equal(obj.a, 77)
+    assert_equal(obj.b, 88)
+    assert_equal(obj.c, 99)
   end
 end
