@@ -3,6 +3,9 @@ require "rake/clean"
 
 BASE_DIR = File.dirname __FILE__
 proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
+sig_proto_files = File.join(BASE_DIR, "test/fixtures/sigstore/*.proto")
+proto_files.add(sig_proto_files)
+
 rb_files = proto_files.pathmap("#{BASE_DIR}/lib/proto/test/fixtures/%n_pb.rb")
 
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
