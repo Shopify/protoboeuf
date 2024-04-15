@@ -1,0 +1,159 @@
+// Copyright 2022 The Sigstore Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+package dev.sigstore.verification.v1;
+
+import "sigstore_common.proto";
+import "sigstore_trustroot.proto";
+import "sigstore_bundle.proto";
+
+option go_package = "github.com/sigstore/protobuf-specs/gen/pb-go/verification/v1";
+option java_package = "dev.sigstore.proto.verification.v1";
+option java_multiple_files = true;
+option java_outer_classname = "VerificationProto";
+option ruby_package = "Sigstore::Verification::V1";
+
+// The identity of a X.509 Certificate signer.
+message CertificateIdentity {
+        // The X.509v3 issuer extension (OID 1.3.6.1.4.1.57264.1.1)
+        string issuer = 1;
+        dev.sigstore.common.v1.SubjectAlternativeName san = 2;
+        // An unordered list of OIDs that must be verified.
+        // All OID/values provided in this list MUST exactly match against
+        // the values in the certificate for verification to be successful.
+        repeated dev.sigstore.common.v1.ObjectIdentifierValuePair oids = 3;
+}
+
+message CertificateIdentities {
+        repeated CertificateIdentity identities = 1;
+}
+
+message PublicKeyIdentities {
+        repeated dev.sigstore.common.v1.PublicKey public_keys = 1;
+}
+
+// A light-weight set of options/policies for identifying trusted signers,
+// used during verification of a single artifact.
+message ArtifactVerificationOptions {
+        message TlogOptions {
+                // Number of transparency logs the entry must appear on.
+                int32 threshold = 1;
+                // Perform an online inclusion proof.
+                bool perform_online_verification = 2;
+                // Disable verification for transparency logs.
+                bool disable = 3;
+        }
+        message CtlogOptions {
+                // The number of ct transparency logs the certificate must
+                // appear on.
+                int32 threshold = 1;
+                reserved 2; // Deprecated: Support for detached SCTs
+                // Disable ct transparency log verification
+                bool disable = 3;
+        }
+        message TimestampAuthorityOptions {
+                // The number of signed timestamps that are expected.
+                int32 threshold = 1;
+                // Disable signed timestamp verification.
+                bool disable = 2;
+        }
+        message TlogIntegratedTimestampOptions{
+                // The number of integrated timestamps that are expected.
+                int32 threshold = 1;
+                // Disable integrated timestamp verification.
+                bool disable = 2;
+        }
+        message ObserverTimestampOptions {
+                // The number of external observers of the timestamp.
+                // This is a union of RFC3161 signed timestamps, and
+                // integrated timestamps from a transparency log, that
+                // could include additional timestamp sources in the
+                // future.
+                int32 threshold = 1;
+                // Disable observer timestamp verification.
+                bool disable = 2;
+        }
+
+        // At least one identity MUST be provided. Providing zero identities
+        // is an error. If at least one provided identity is found as a
+        // signer, the verification is considered successful.
+        oneof signers {
+                CertificateIdentities certificate_identities = 1;
+                // To simplify verification implementation, the logic for
+                // bundle verification should be implemented as a
+                // higher-order function, where one of argument should be an
+                // interface over the set of trusted public keys, like this:
+                // `Verify(bytes artifact, bytes signature, string key_id)`.
+                // This way the caller is in full control of mapping the
+                // identified (or hinted) key in the bundle to one of the
+                // trusted keys, as this process is inherently application
+                // specific.
+                PublicKeyIdentities public_keys = 2;
+        }
+        // Optional options for artifact transparency log verification.
+        // If none is provided, the default verification options are:
+        // Threshold: 1
+        // Online verification: false
+        // Disable: false
+        optional TlogOptions tlog_options = 3;
+        // Optional options for certificate transparency log verification.
+        // If none is provided, the default verification options are:
+        // Threshold: 1
+        // Disable: false
+        optional CtlogOptions ctlog_options = 4;
+        // Optional options for certificate signed timestamp verification.
+        // If none is provided, the default verification options are:
+        // Threshold: 0
+        // Disable: true
+        optional TimestampAuthorityOptions tsa_options = 5;
+        // Optional options for integrated timestamp verification.
+        // If none is provided, the default verification options are:
+        // Threshold: 0
+        // Disable: true
+        optional TlogIntegratedTimestampOptions integrated_ts_options = 6;
+        // Optional options for observed timestamp verification.
+        // If none is provided, the default verification options are:
+        // Threshold 1
+        // Disable: false
+        optional ObserverTimestampOptions observer_options = 7;
+}
+
+message Artifact {
+        oneof data {
+                // Location of the artifact
+                string artifact_uri = 1;
+                // The raw bytes of the artifact
+                bytes artifact = 2;
+        }
+}
+
+// Input captures all that is needed to call the bundle verification method,
+// to verify a single artifact referenced by the bundle.
+message Input {
+        // The verification materials provided during a bundle verification.
+        // The running process is usually preloaded with a "global"
+        // dev.sisgtore.trustroot.TrustedRoot.v1 instance. Prior to
+        // verifying an artifact (i.e a bundle), and/or based on current
+        // policy, some selection is expected to happen, to filter out the
+        // exact certificate authority to use, which transparency logs are
+        // relevant etc. The result should b ecaptured in the
+        // `artifact_trust_root`.
+        dev.sigstore.trustroot.v1.TrustedRoot artifact_trust_root = 1;
+        ArtifactVerificationOptions artifact_verification_options = 2;
+        dev.sigstore.bundle.v1.Bundle bundle = 3;
+        // If the bundle contains a message signature, the artifact must be
+        // provided.
+        optional Artifact artifact = 4;
+}
