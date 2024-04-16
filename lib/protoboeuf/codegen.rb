@@ -1139,8 +1139,7 @@ module ProtoBoeuf
 
       tail = "\n" + packages.map { "end" }.join("\n")
 
-      #SyntaxTree.format(head + body + tail)
-      head + body + tail
+      SyntaxTree.format(head + body + tail)
     end
   end
 end
