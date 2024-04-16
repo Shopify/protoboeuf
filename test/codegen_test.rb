@@ -31,5 +31,29 @@ module ProtoBoeuf
 
       assert_equal [], klass::TestRepeatedField.new.e
     end
+
+    def test_fields_keyword_end
+      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 end = 1; }')
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      obj = klass::Test1.new(end: 1234)
+      assert_equal 1234, obj.end
+    end
+
+    def test_fields_keyword_class
+      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 class = 1; }')
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      obj = klass::Test1.new(class: 1234)
+      assert_equal 1234, obj.class
+    end
+
+    def test_fields_keyword_nil
+      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 nil = 1; }')
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      obj = klass::Test1.new(nil: 1234)
+      assert_equal 1234, obj.nil
+    end
   end
 end

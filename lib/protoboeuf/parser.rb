@@ -116,6 +116,30 @@ module ProtoBoeuf
 
     alias :enum? :enum
 
+    # Return a local variable name for use in generated code
+    def lvar_name
+      name
+    end
+
+    RUBY_KEYWORDS = %w{ __ENCODING__ __LINE__ __FILE__ BEGIN END alias and
+    begin break case class def defined?  do else elsif end ensure false for if
+    in module next nil not or redo rescue retry return self super then true
+    undef unless until when while yield }.to_set
+
+    # Return code for reading the local variable returned by `lvar_name`
+    def lvar_read
+      if RUBY_KEYWORDS.include?(name)
+        "binding.local_variable_get(:#{name})"
+      else
+        name
+      end
+    end
+
+    # Return an instance variable name for use in generated code
+    def iv_name
+      "@#{name}"
+    end
+
     def map?
       MapType === type
     end

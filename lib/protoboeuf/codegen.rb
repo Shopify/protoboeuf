@@ -549,11 +549,11 @@ module ProtoBoeuf
         "@#{oneof.name} = nil # oneof field\n" +
           oneof.fields.map { |field|
             <<~RUBY
-              if #{field.name} == NONE
-                @#{field.name} = #{default_for(field)}
+              if #{field.lvar_read} == NONE
+                #{field.iv_name} = #{default_for(field)}
               else
                 @#{oneof.name} = :#{field.name}
-                @#{field.name} = #{field.name}
+                #{field.iv_name} = #{field.lvar_read}
               end
             RUBY
           }.join("\n")
@@ -571,11 +571,11 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          if #{field.name} == NONE
-            @#{field.name} = #{default_for(field)}
+          if #{field.lvar_read} == NONE
+            #{field.iv_name} = #{default_for(field)}
           else
             #{set_bitmask(field)}
-            @#{field.name} = #{field.name}
+            #{field.iv_name} = #{field.lvar_read}
           end
         RUBY
       end
@@ -864,13 +864,13 @@ module ProtoBoeuf
         self.fields.flat_map { |f|
           if f.field?
             if f.optional?
-              "#{f.name}: NONE"
+              "#{f.lvar_name}: NONE"
             else
-              "#{f.name}: #{default_for(f)}"
+              "#{f.lvar_name}: #{default_for(f)}"
             end
           elsif f.oneof?
             f.fields.map { |child|
-              "#{child.name}: NONE"
+              "#{child.lvar_name}: NONE"
             }
           else
             raise NotImplementedError
@@ -1139,7 +1139,8 @@ module ProtoBoeuf
 
       tail = "\n" + packages.map { "end" }.join("\n")
 
-      SyntaxTree.format(head + body + tail)
+      #SyntaxTree.format(head + body + tail)
+      head + body + tail
     end
   end
 end
