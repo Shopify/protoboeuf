@@ -91,10 +91,11 @@ message VerificationMaterial {
         // When used in a `0.3` bundle with the PGI and "keyless" signing,
         // form (3) MUST be used.
         oneof content {
-                dev.sigstore.common.v1.PublicKeyIdentifier public_key = 1 [(google.api.field_behavior) = REQUIRED];
-                dev.sigstore.common.v1.X509CertificateChain x509_certificate_chain = 2 [(google.api.field_behavior) = REQUIRED];
-                dev.sigstore.common.v1.X509Certificate certificate = 5 [(google.api.field_behavior) = REQUIRED];
+                //dev.sigstore.common.v1.PublicKeyIdentifier public_key = 1 [(google.api.field_behavior) = REQUIRED];
+                //dev.sigstore.common.v1.X509CertificateChain x509_certificate_chain = 2 [(google.api.field_behavior) = REQUIRED];
+                //dev.sigstore.common.v1.X509Certificate certificate = 5 [(google.api.field_behavior) = REQUIRED];
         }
+
         // An inclusion proof and an optional signed timestamp from the log.
         // Client verification libraries MAY provide an option to support v0.1
         // bundles for backwards compatibility, which may contain an inclusion
@@ -103,6 +104,7 @@ message VerificationMaterial {
         // Verifiers SHOULD NOT allow v0.1 bundles if they're used in an
         // ecosystem which never produced them.
         repeated dev.sigstore.rekor.v1.TransparencyLogEntry tlog_entries = 3;
+
         // Timestamp may also come from
         // tlog_entries.inclusion_promise.signed_entry_timestamp.
         TimestampVerificationData timestamp_verification_data = 4;
@@ -126,16 +128,19 @@ message Bundle {
         // (key hint) and the `content` is a DSSE envelope, the key hints
         // MUST be exactly the same in the verification material and in the
         // DSSE envelope.
-        VerificationMaterial verification_material = 2 [(google.api.field_behavior) = REQUIRED];
+        //VerificationMaterial verification_material = 2 [(google.api.field_behavior) = REQUIRED];
+
         oneof content {
-                dev.sigstore.common.v1.MessageSignature message_signature = 3 [(google.api.field_behavior) = REQUIRED];
+                //dev.sigstore.common.v1.MessageSignature message_signature = 3 [(google.api.field_behavior) = REQUIRED];
+
                 // A DSSE envelope can contain arbitrary payloads.
                 // Verifiers must verify that the payload type is a
                 // supported and expected type. This is part of the DSSE
                 // protocol which is defined here:
                 // <https://github.com/secure-systems-lab/dsse/blob/master/protocol.md>
-                io.intoto.Envelope dsse_envelope = 4 [(google.api.field_behavior) = REQUIRED];
+                //io.intoto.Envelope dsse_envelope = 4 [(google.api.field_behavior) = REQUIRED];
         }
+
         // Reserved for future additions of artifact types.
-        reserved 5 to 50;
+        //reserved 5 to 50;
 }
