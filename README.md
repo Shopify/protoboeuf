@@ -2,6 +2,9 @@
 
 Repository for an *experimental* version of a pure-Ruby protobuf encoder / decoder supporting `proto3`.
 This Ruby gem is aimed at Shopify-internal use cases, and currently comes with limited support.
+Protoboeuf is a work in progress. This software is not in a mature state, and is likely to contain
+bugs, lack certain features, and not be fully conformant to the protobuf specification. We currently
+are not looking for open source contributors.
 
 ## Getting started
 
@@ -18,6 +21,16 @@ Then run `bundle` to install dependencies:
 ```
 $ bundle
 ```
+
+## Compiling .proto Files
+
+You can compile your own `.proto` files to generate importable `.rb` files:
+
+```
+bin/protoboeuf test.proto >> test.rb
+```
+
+The above will produce a `.rb` file with Ruby classes representing each message type.
 
 ## Running tests
 
