@@ -102,7 +102,7 @@ enum PublicKeyDetails {
         LMOTS_SHA256 = 15;
 
         // Reserved for future additions of public key/signature algorithm types.
-        reserved 19 to 50;
+        //reserved 19 to 50;
 }
 
 // HashOutput captures a digest of a 'message' (generic octet sequence)
@@ -120,6 +120,7 @@ message MessageSignature {
         // Clients MUST NOT attempt to use this digest to verify the associated
         // signature; it is intended solely for identification.
         HashOutput message_digest = 1;
+
         // The raw bytes as returned from the signature algorithm.
         // The signature algorithm (and so the format of the signature bytes)
         // are determined by the contents of the 'verification_material',
@@ -128,20 +129,26 @@ message MessageSignature {
         // algorithm.
         // When using a key pair, the algorithm MUST be part of the public
         // key, which MUST be communicated out-of-band.
-        bytes signature = 2 [(google.api.field_behavior) = REQUIRED];
+
+        // FIXME:
+        //bytes signature = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 // LogId captures the identity of a transparency log.
 message LogId {
+
+        // FIXME:
         // The unique identity of the log, represented by its public key.
-        bytes key_id = 1 [(google.api.field_behavior) = REQUIRED];
+        //bytes key_id = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // This message holds a RFC 3161 timestamp.
 message RFC3161SignedTimestamp {
+
+        // FIXME:
         // Signed timestamp is the DER encoded TimeStampResponse.
         // See https://www.rfc-editor.org/rfc/rfc3161.html#section-2.4.2
-        bytes signed_timestamp = 1 [(google.api.field_behavior) = REQUIRED];
+        //bytes signed_timestamp = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 message PublicKey {
@@ -171,7 +178,8 @@ message PublicKeyIdentifier {
 
 // An ASN.1 OBJECT IDENTIFIER
 message ObjectIdentifier {
-        repeated int32 id = 1 [(google.api.field_behavior) = REQUIRED];
+        // FIXME:
+        //repeated int32 id = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 // An OID and the corresponding (byte) value.
@@ -187,7 +195,7 @@ message DistinguishedName {
 
 message X509Certificate {
         // DER-encoded X.509 certificate.
-        bytes raw_bytes = 1 [(google.api.field_behavior) = REQUIRED];
+        //bytes raw_bytes = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 enum SubjectAlternativeNameType {
@@ -231,5 +239,7 @@ message X509CertificateChain {
 // has no known end.
 message TimeRange {
         google.protobuf.Timestamp start = 1;
-        optional google.protobuf.Timestamp end = 2;
+
+        // FIXME: codegen chokes on "end" field
+        //optional google.protobuf.Timestamp end = 2;
 }
