@@ -3,7 +3,7 @@ require "rake/clean"
 
 BASE_DIR = File.dirname __FILE__
 proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
-rb_files = proto_files.pathmap("#{BASE_DIR}/lib/proto/test/fixtures/%n_pb.rb")
+rb_files = proto_files.pathmap("#{BASE_DIR}/test/fixtures/%n_pb.rb")
 
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
@@ -29,9 +29,8 @@ task :well_known_types => well_known_types.pathmap("%X.rb")
 
 # Makefile-like rule to generate "_pb.rb"
 rule "_pb.rb" => "test/fixtures/%{_pb,}n.proto" do |task|
-  mkdir_p "lib/proto"
   begin
-    sh "protoc #{task.source} --ruby_out=lib/proto"
+    sh "protoc #{task.source} --ruby_out=."
   rescue
     $stderr.puts "#" * 80
     $stderr.puts "Make sure protobuf is installed"
