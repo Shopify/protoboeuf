@@ -635,12 +635,12 @@ message BytesValue {
   end
 
   def test_encode_map
-    actual = MapEncoder.new(
+    expected = MapEncoder.new(
       intIntMap: { 1 => 2, 3 => 4, 5 => 6 },
       stringIntMap: { "a" => 1, "b" => 2, "c" => 3 },
       stringStringMap: { "a" => "b", "c" => "d", "e" => "f" },
     )
-    expected = ::MapEncoder.decode(MapEncoder.encode(actual))
+    actual = ::MapEncoder.decode(MapEncoder.encode(expected))
 
     assert_equal expected.to_h, actual.to_h
   end
@@ -757,7 +757,7 @@ message Int64Value {
     [0, 1, 0xFF, -1, -2, -9001, 9223372036854775807, -9223372036854775808].each do |n|
       actual = m::Int64Value.encode m::Int64Value.new(value: n)
       expected = ::Google::Protobuf::Int64Value.encode(::Google::Protobuf::Int64Value.new(value: n))
-      assert_equal expected, actual
+      assert_equal expected, actual, "Failed during encoding of #{n.inspect}"
     end
   end
 
@@ -775,7 +775,7 @@ message Int32Value {
     [0, 1, 0xFF, -1, -2, -9001, -2147483648, 2147483647].each do |n|
       actual = m::Int32Value.encode m::Int32Value.new(value: n)
       expected = ::Google::Protobuf::Int32Value.encode(::Google::Protobuf::Int32Value.new(value: n))
-      assert_equal expected, actual
+      assert_equal expected, actual, "Failed during encoding of #{n.inspect}"
     end
   end
 

@@ -129,9 +129,13 @@ module ProtoBoeuf
 
       def encode
         # FIXME: we should probably sort fields by field number
-        "def _encode(buff)\n" +
-          fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-          "\nbuff\n end\n"
+        <<~RUBY
+          def _encode(buff = IO::Buffer.new(256))
+            offset = 0
+            #{fields.map { |field| encode_subtype(field) }.compact.join("\n")}
+            buff.get_string(0, offset)
+          end
+        RUBY
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
@@ -157,7 +161,7 @@ module ProtoBoeuf
 
         if tagged
           tag = (field.number << 3) | field.wire_type
-          result << "buff << #{sprintf("%#04x", tag)}\n"
+          result << "offset = buff.set_value(:U8, offset, #{sprintf("%#04x", tag)})\n"
 
           if field.wire_type == ProtoBoeuf::Field::LEN
             raise "length encoded fields must have a length expression" unless len_expr
@@ -178,7 +182,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if val == true
             #{encode_tag_and_length(field, tagged)}
-            buff << 1
+            offset = buff.set_value(:U8, offset, 1)
           elsif val == false
             # Default value, encode nothing
           else
@@ -191,9 +195,9 @@ module ProtoBoeuf
         # Empty bytes is default value, so encodes nothing
         <<~RUBY
           val = #{value_expr}.b
-          if val.bytesize > 0
-            #{encode_tag_and_length(field, tagged, "val.bytesize")}
-            buff.concat(val)
+          if ((len = val.bytesize) > 0)
+            #{encode_tag_and_length(field, tagged, "len")}
+            offset += buff.set_string(val, offset)
           end
         RUBY
       end
@@ -215,12 +219,16 @@ module ProtoBoeuf
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
-              buff = new_buffer = ''.b
+              buff = new_buffer = IO::Buffer.new(10000)
+              old_offset = offset
+              offset = 0
               #{encode_subtype(field.key_field, "key", true)}
               #{encode_subtype(field.value_field, "value", true)}
               buff = old_buff
-              #{encode_tag_and_length(field, true, "new_buffer.bytesize")}
-              old_buff.concat(new_buffer)
+              length = offset
+              offset = old_offset
+              #{encode_tag_and_length(field, true, "length")}
+              offset += buff.copy(new_buffer, offset, length)
             end
           end
         RUBY
@@ -254,7 +262,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if((len = val.bytesize) > 0)
             #{encode_tag_and_length(field, tagged, "len")}
-            buff << val
+            offset += buff.set_string(val, offset)
           end
         RUBY
       end
@@ -263,9 +271,9 @@ module ProtoBoeuf
         <<~RUBY
           val = #{value_expr}
           if val
-            encoded = val._encode("".b)
+            encoded = val._encode
             #{encode_tag_and_length(field, true, "encoded.bytesize")}
-            buff << encoded
+            offset += buff.set_string(encoded, offset)
           end
         RUBY
       end
@@ -276,7 +284,7 @@ module ProtoBoeuf
               byte = #{local} & 0x7F
               #{local} >>= 7
               byte |= 0x80 if #{local} > 0
-              buff << byte
+              offset = buff.set_value(:U8, offset, byte)
             end
         RUBY
       end
@@ -313,7 +321,7 @@ module ProtoBoeuf
               val &= (1 << 57) - 1
 
               byte |= 0x80 if val != 0
-              buff << byte
+              offset = buff.set_value(:U8, offset, byte)
             end
           end
         RUBY
@@ -352,7 +360,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('D')
+          offset += buff.set_string([val].pack('D'), offset)
         end
         eocode
       end
@@ -363,7 +371,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('F')
+          offset += buff.set_string([val].pack('F'), offset)
         end
         eocode
       end
@@ -374,7 +382,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('Q<')
+          offset += buff.set_string([val].pack('Q<'), offset)
         end
         eocode
       end
@@ -385,7 +393,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('q<')
+          offset += buff.set_string([val].pack('q<'), offset)
         end
         eocode
       end
@@ -396,7 +404,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('L<')
+          offset += buff.set_string([val].pack('L<'), offset)
         end
         eocode
       end
@@ -407,7 +415,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('l<')
+          offset += buff.set_string([val].pack('l<'), offset)
         end
         eocode
       end
@@ -420,7 +428,7 @@ module ProtoBoeuf
           end
 
           def self.encode(obj)
-            buff = obj._encode "".b
+            buff = obj._encode
             buff.force_encoding(Encoding::ASCII_8BIT)
           end
         RUBY
