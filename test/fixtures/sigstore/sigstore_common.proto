@@ -232,7 +232,5 @@ message X509CertificateChain {
 // has no known end.
 message TimeRange {
         google.protobuf.Timestamp start = 1;
-
-        // FIXME: codegen chokes on "end" field
         optional google.protobuf.Timestamp end = 2;
 }
