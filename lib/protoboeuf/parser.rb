@@ -346,7 +346,7 @@ module ProtoBoeuf
     type_name
   end
 
-  # Parse a package name, e.g. foo.bar.bif
+  # Parse a package name, e.g. .foo.bar.bif
   def self.parse_package_name(input)
     name = +""
 
@@ -363,6 +363,16 @@ module ProtoBoeuf
     name
   end
 
+  # Parse a composite name, e.g. foo.bar.bif
+  def self.parse_composite_name(input)
+    name = +""
+    name << input.read_ident
+    while input.match '.'
+      name << '.' << input.read_ident
+    end
+    name
+  end
+
   def self.parse_option_value(input)
     input.eat_ws
     ch = input.peek_ch
@@ -375,6 +385,8 @@ module ProtoBoeuf
       return true
     elsif input.match "false"
       return false
+    else
+      return input.read_ident
     end
 
     raise ParseError.new("unknown option value type", input.pos)
@@ -400,7 +412,16 @@ module ProtoBoeuf
 
     loop do
       input.eat_ws
-      opt_name = input.read_ident
+
+      # Extension options are in parentheses, e.g.
+      # uint32 key = 1 [(google.api.field_behavior) = REQUIRED];
+      if input.match '('
+        opt_name = parse_composite_name(input)
+        input.expect ')'
+      else
+        opt_name = parse_composite_name(input)
+      end
+
       input.expect '='
       opt_value = parse_option_value(input)
       options[opt_name.to_sym] = opt_value

@@ -44,6 +44,7 @@ message TransparencyLogInstance {
         // SubjectPublicKeyInfo.
         // See https://www.rfc-editor.org/rfc/rfc6962#section-3.2
         dev.sigstore.common.v1.LogId log_id = 4;
+
         // The checkpoint key identifier for the log used in a checkpoint.
         // Optional, not provided for logs that do not generate checkpoints.
         // For logs that do generate checkpoints, if not set, assume
@@ -68,6 +69,7 @@ message CertificateAuthority {
         // The root certificate MUST be self-signed, and so the subject and
         // issuer are the same.
         dev.sigstore.common.v1.DistinguishedName subject = 1;
+
         // The URI identifies the certificate authority.
         //
         // It is RECOMMENDED that the URI is the base URL for the certificate
@@ -75,10 +77,12 @@ message CertificateAuthority {
         // by the certificate authority to interact with the certificate
         // authority.
         string uri = 2;
+
         // The certificate chain for this CA. The last certificate in the chain
         // MUST be the trust anchor. The trust anchor MAY be a self-signed root
         // CA certificate or MAY be an intermediate CA certificate.
         dev.sigstore.common.v1.X509CertificateChain cert_chain = 3;
+
         // The time the *entire* chain was valid. This is at max the
         // longest interval when *all* certificates in the chain were valid,
         // but it MAY be shorter. Clients MUST check timestamps against *both*
@@ -126,6 +130,7 @@ message TrustedRoot {
         // type defined in the old format:
         // application/vnd.dev.sigstore.trustedroot+json;version=0.1
         string media_type = 1;
+
         // A set of trusted Rekor servers.
         repeated TransparencyLogInstance tlogs = 2;
         // A set of trusted certificate authorities (e.g Fulcio), and any
@@ -137,12 +142,13 @@ message TrustedRoot {
         // The certificates are intended to be used for verifying artifact
         // signatures.
         repeated CertificateAuthority certificate_authorities = 3;
+
         // A set of trusted certificate transparency logs.
         repeated TransparencyLogInstance ctlogs = 4;
+
         // A set of trusted timestamping authorities.
         repeated CertificateAuthority timestamp_authorities = 5;
 }
-
 
 // SigningConfig represents the trusted entities/state needed by Sigstore
 // signing. In particular, it primarily contains service URLs that a Sigstore
@@ -187,8 +193,8 @@ message ClientTrustConfig {
         string media_type = 1;
 
         // The root of trust, which MUST be present.
-        //TrustedRoot trusted_root = 2 [(google.api.field_behavior) = REQUIRED];
+        TrustedRoot trusted_root = 2 [(google.api.field_behavior) = REQUIRED];
 
         // Configuration for signing clients, which MUST be present.
-        //SigningConfig signing_config = 3 [(google.api.field_behavior) = REQUIRED];
+        SigningConfig signing_config = 3 [(google.api.field_behavior) = REQUIRED];
 }
