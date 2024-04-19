@@ -676,6 +676,16 @@ module ProtoBoeuf
       numbers_taken.add(constant.number)
     end
 
+    # Check that reserved constant numbers are not used
+    constants.each do |constant|
+      # For each reserved range
+      reserved.each do |r|
+        if (r.respond_to?(:include?) && r.include?(constant.number)) || r == constant.number
+          raise ParseError.new("constant #{constant.name} uses reserved constant number #{constant.number}", constant.pos)
+        end
+      end
+    end
+
     Enum.new(enum_name, constants, options, pos)
   end
 

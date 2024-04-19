@@ -164,6 +164,13 @@ class ParserTest < ProtoBoeuf::Test
     assert_equal (-0xBA), unit.enums[0].constants[1].number
   end
 
+  def test_enum_reserved
+    ProtoBoeuf.parse_string('enum Foo { C0 = 0; C1 = 1; reserved 5; }')
+    assert_raises { ProtoBoeuf.parse_string('enum Foo { C0 = 0; C1 = 1; reserved 1; }') }
+    assert_raises { ProtoBoeuf.parse_string('enum Foo { C0 = 0; C1 = 5; reserved 1 to 10; }') }
+    assert_raises { ProtoBoeuf.parse_string('enum Foo { C0 = 0; C1 = 5; reserved 2 to max; }') }
+  end
+
   def test_package_name
     unit = ProtoBoeuf.parse_string('package foo;')
     assert_equal 'foo', unit.package
