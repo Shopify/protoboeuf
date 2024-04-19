@@ -102,7 +102,7 @@ enum PublicKeyDetails {
         LMOTS_SHA256 = 15;
 
         // Reserved for future additions of public key/signature algorithm types.
-        //reserved 19 to 50;
+        reserved 19 to 50;
 }
 
 // HashOutput captures a digest of a 'message' (generic octet sequence)

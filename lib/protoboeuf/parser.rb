@@ -436,12 +436,48 @@ module ProtoBoeuf
     options
   end
 
+  # Parse the reserved directive, e.g.
+  # reserved 2;
+  # reserved 2 to 50;
+  # reserved 2 to max;
+  # reserved 2, 5 to 10;
+  # Returns a list of integer ranges
+  def self.parse_reserved(input)
+    ranges = []
+
+    loop do
+      input.eat_ws
+
+      min_val = input.read_int
+
+      if input.match "to"
+        if input.match "max"
+          ranges << (min_val..)
+        else
+          input.eat_ws
+          max_val = input.read_int
+          ranges << (min_val..max_val)
+        end
+      else
+        ranges << min_val
+      end
+
+      if input.match ';'
+        break;
+      end
+
+      input.expect ',';
+    end
+
+    ranges
+  end
+
   # Parse the body for a message or oneof
   def self.parse_body(input, pos, inside_message)
     fields = []
     messages = []
     enums = []
-    reserved = Set.new
+    reserved = []
 
     input.expect '{'
 
@@ -458,12 +494,9 @@ module ProtoBoeuf
         next
       end
 
-      # For now, we just support one single reserved number
       if input.match 'reserved'
-        input.eat_ws
-        number = input.read_int
-        reserved.add(number)
-        input.expect ';'
+        reserved.concat(parse_reserved(input))
+        next
       end
 
       qualifier = nil
@@ -509,8 +542,11 @@ module ProtoBoeuf
         if field.instance_of? OneOf
           check_reserved_fields.call(field.fields)
         else
-          if reserved.include? field.number
-            raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+          # For each reserved range
+          reserved.each do |r|
+            if (r.respond_to?(:include?) && r.include?(field.number)) || r == field.number
+              raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+            end
           end
         end
       end
@@ -574,6 +610,7 @@ module ProtoBoeuf
   def self.parse_enum(input, pos)
     constants = []
     options = {}
+    reserved = []
 
     input.eat_ws
     enum_name = input.read_ident
@@ -587,6 +624,11 @@ module ProtoBoeuf
         value = parse_option_value(input)
         input.expect ';'
         options[option_name.to_sym] = value
+        next
+      end
+
+      if input.match 'reserved'
+        reserved.concat(parse_reserved(input))
         next
       end
 
@@ -632,6 +674,16 @@ module ProtoBoeuf
         raise ParseError.new("two constants use the number #{constant.number}", constant.pos)
       end
       numbers_taken.add(constant.number)
+    end
+
+    # Check that reserved constant numbers are not used
+    constants.each do |constant|
+      # For each reserved range
+      reserved.each do |r|
+        if (r.respond_to?(:include?) && r.include?(constant.number)) || r == constant.number
+          raise ParseError.new("constant #{constant.name} uses reserved constant number #{constant.number}", constant.pos)
+        end
+      end
     end
 
     Enum.new(enum_name, constants, options, pos)
