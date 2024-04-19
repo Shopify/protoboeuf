@@ -91,9 +91,9 @@ message VerificationMaterial {
         // When used in a `0.3` bundle with the PGI and "keyless" signing,
         // form (3) MUST be used.
         oneof content {
-                //dev.sigstore.common.v1.PublicKeyIdentifier public_key = 1 [(google.api.field_behavior) = REQUIRED];
-                //dev.sigstore.common.v1.X509CertificateChain x509_certificate_chain = 2 [(google.api.field_behavior) = REQUIRED];
-                //dev.sigstore.common.v1.X509Certificate certificate = 5 [(google.api.field_behavior) = REQUIRED];
+                dev.sigstore.common.v1.PublicKeyIdentifier public_key = 1 [(google.api.field_behavior) = REQUIRED];
+                dev.sigstore.common.v1.X509CertificateChain x509_certificate_chain = 2 [(google.api.field_behavior) = REQUIRED];
+                dev.sigstore.common.v1.X509Certificate certificate = 5 [(google.api.field_behavior) = REQUIRED];
         }
 
         // An inclusion proof and an optional signed timestamp from the log.
@@ -128,7 +128,7 @@ message Bundle {
         // (key hint) and the `content` is a DSSE envelope, the key hints
         // MUST be exactly the same in the verification material and in the
         // DSSE envelope.
-        //VerificationMaterial verification_material = 2 [(google.api.field_behavior) = REQUIRED];
+        VerificationMaterial verification_material = 2 [(google.api.field_behavior) = REQUIRED];
 
         oneof content {
                 //dev.sigstore.common.v1.MessageSignature message_signature = 3 [(google.api.field_behavior) = REQUIRED];
@@ -138,7 +138,7 @@ message Bundle {
                 // supported and expected type. This is part of the DSSE
                 // protocol which is defined here:
                 // <https://github.com/secure-systems-lab/dsse/blob/master/protocol.md>
-                //io.intoto.Envelope dsse_envelope = 4 [(google.api.field_behavior) = REQUIRED];
+                io.intoto.Envelope dsse_envelope = 4 [(google.api.field_behavior) = REQUIRED];
         }
 
         // Reserved for future additions of artifact types.
