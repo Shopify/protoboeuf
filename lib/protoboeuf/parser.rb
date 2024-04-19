@@ -452,11 +452,11 @@ module ProtoBoeuf
 
       if input.match "to"
         if input.match "max"
-          ranges << min_val..
+          ranges << (min_val..)
         else
           input.eat_ws
           max_val = input.read_int
-          ranges << min_val..max_val
+          ranges << (min_val..max_val)
         end
       else
         ranges << min_val
@@ -542,8 +542,11 @@ module ProtoBoeuf
         if field.instance_of? OneOf
           check_reserved_fields.call(field.fields)
         else
-          if reserved.include? field.number
-            raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+          # For each reserved range
+          reserved.each do |r|
+            if (r.respond_to?(:include?) && r.include?(field.number)) || r == field.number
+              raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+            end
           end
         end
       end

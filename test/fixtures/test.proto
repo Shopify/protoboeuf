@@ -88,6 +88,14 @@ message TestReserved {
   reserved 999 to max;
 }
 
+enum TestReservedEnum {
+  CONST_ZERO = 0;
+  CONST_ONE = 1;
+
+  reserved 2;
+  reserved 999 to max;
+}
+
 message TestRepeatedField {
   repeated uint32 e = 1;
   int64 another_value = 2;

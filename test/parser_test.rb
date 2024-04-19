@@ -73,6 +73,14 @@ class ParserTest < ProtoBoeuf::Test
     assert_equal 0xAA, unit.messages[0].fields[0].number
   end
 
+  def test_message_reserved
+    ProtoBoeuf.parse_string('message Test1 { int32 a = 1; reserved 2; }')
+    assert_raises { ProtoBoeuf.parse_string('message Test1 { int32 a = 1; reserved 1; }') }
+    assert_raises { ProtoBoeuf.parse_string('message Test1 { int32 a = 2; reserved 1 to 10; }') }
+    assert_raises { ProtoBoeuf.parse_string('message Test1 { int32 a = 2; reserved 1 to max; }') }
+    assert_raises { ProtoBoeuf.parse_string('message Test1 { int32 a = 3; reserved 1, 2, 3, 4; }') }
+  end
+
   def test_negative_field_num
     assert_raises { ProtoBoeuf.parse_string('message Test1 { optional int32 a = -1; }') }
   end
