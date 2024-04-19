@@ -142,5 +142,5 @@ message Bundle {
         }
 
         // Reserved for future additions of artifact types.
-        //reserved 5 to 50;
+        reserved 5 to 50;
 }

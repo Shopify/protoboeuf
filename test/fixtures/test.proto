@@ -76,6 +76,18 @@ message TestEmbedder {
   string message = 3;
 }
 
+message TestReserved {
+  reserved 2;
+
+  string message = 3;
+
+  reserved 7;
+  reserved 9 to 11;
+  reserved 15, 16;
+  reserved 20 to 26, 30, 35 to 42;
+  reserved 999 to max;
+}
+
 message TestRepeatedField {
   repeated uint32 e = 1;
   int64 another_value = 2;
