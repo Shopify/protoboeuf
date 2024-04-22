@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   test:
-    runs-on: shopify-${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}-latest
 
     strategy:
       fail-fast: false
