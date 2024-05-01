@@ -9,7 +9,8 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode
+        buff = obj._encode "".b
+        buff.force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
       attr_accessor :value
@@ -26,7 +27,7 @@ module ProtoBoeuf
 
         while true
           if tag == 0xd
-            @value = buff.byteslice(index, 4).unpack1("F")
+            @value = buff.unpack1("F", offset: index)
             index += 4
 
             return self if index >= len
@@ -35,19 +36,22 @@ module ProtoBoeuf
           end
 
           return self if index >= len
-          raise NotImplementedError
         end
       end
-      def _encode
-        buff = "".b
+      def _encode(buff)
         val = @value
         if val != 0
-          ## encode the tag
           buff << 0x0d
+
           buff << [val].pack("F")
         end
 
         buff
+      end
+      def to_h
+        result = {}
+        result["value".to_sym] = @value
+        result
       end
     end
   end
