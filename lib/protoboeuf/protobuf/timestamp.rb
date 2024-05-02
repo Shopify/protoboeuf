@@ -9,7 +9,8 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode
+        buff = obj._encode "".b
+        buff.force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
       attr_accessor :seconds, :nanos
@@ -177,15 +178,13 @@ module ProtoBoeuf
           end
 
           return self if index >= len
-          raise NotImplementedError
         end
       end
-      def _encode
-        buff = "".b
+      def _encode(buff)
         val = @seconds
         if val != 0
-          ## encode the tag
           buff << 0x08
+
           while val != 0
             byte = val & 0x7F
 
@@ -202,8 +201,8 @@ module ProtoBoeuf
 
         val = @nanos
         if val != 0
-          ## encode the tag
           buff << 0x10
+
           while val != 0
             byte = val & 0x7F
 
@@ -219,6 +218,12 @@ module ProtoBoeuf
         end
 
         buff
+      end
+      def to_h
+        result = {}
+        result["seconds".to_sym] = @seconds
+        result["nanos".to_sym] = @nanos
+        result
       end
     end
   end

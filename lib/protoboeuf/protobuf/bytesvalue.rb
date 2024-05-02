@@ -9,7 +9,8 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode
+        buff = obj._encode "".b
+        buff.force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
       attr_accessor :value
@@ -94,26 +95,29 @@ module ProtoBoeuf
           end
 
           return self if index >= len
-          raise NotImplementedError
         end
       end
-      def _encode
-        buff = "".b
+      def _encode(buff)
         val = @value.b
         if val.bytesize > 0
-          ## encode the tag
           buff << 0x0a
           len = val.bytesize
-          while len > 0
+          while len != 0
             byte = len & 0x7F
             len >>= 7
             byte |= 0x80 if len > 0
             buff << byte
           end
+
           buff.concat(val)
         end
 
         buff
+      end
+      def to_h
+        result = {}
+        result["value".to_sym] = @value
+        result
       end
     end
   end
