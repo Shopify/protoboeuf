@@ -10,10 +10,13 @@ BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
 
 well_known_types = Rake::FileList[File.join(BASE_DIR, "lib/protoboeuf/protobuf/*.proto")]
 
+WELL_KNOWN_PB = well_known_types.pathmap("%X.rb")
+
 # Clobber/clean rules
 rb_files.each { |x| CLOBBER.append x }
 CLOBBER.append BENCHMARK_UPSTREAM_PB
 CLOBBER.append BENCHMARK_PROTOBOEUF_PB
+CLOBBER.append WELL_KNOWN_PB
 
 rule ".rb" => "%X.proto" do |t|
   require_relative "lib/protoboeuf/codegen"
@@ -25,7 +28,7 @@ rule ".rb" => "%X.proto" do |t|
   File.binwrite t.name, unit.to_ruby
 end
 
-task :well_known_types => well_known_types.pathmap("%X.rb")
+task :well_known_types => WELL_KNOWN_PB
 
 # Makefile-like rule to generate "_pb.rb"
 rule "_pb.rb" => "test/fixtures/%{_pb,}n.proto" do |task|
