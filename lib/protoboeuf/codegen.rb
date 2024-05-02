@@ -919,11 +919,11 @@ module ProtoBoeuf
       end
 
       def pull_double(dest, operator)
-        "#{dest} #{operator} buff.byteslice(index, 8).unpack1('D'); index += 8"
+        "#{dest} #{operator} buff.unpack1('D', offset: index); index += 8"
       end
 
       def pull_float(dest, operator)
-        "#{dest} #{operator} buff.byteslice(index, 4).unpack1('F'); index += 4"
+        "#{dest} #{operator} buff.unpack1('F', offset: index); index += 4"
       end
 
       def pull_fixed_int64(dest, operator)

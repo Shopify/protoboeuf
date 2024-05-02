@@ -639,7 +639,7 @@ module ProtoBoeuf
       input.expect '='
       input.eat_ws
       number = input.read_int
-      const_options = parse_field_options(input)
+      _const_options = parse_field_options(input)
       input.expect ';'
 
       if name != name.upcase
