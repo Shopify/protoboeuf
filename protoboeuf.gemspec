@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/releases"
 
-  spec.bindir = "bin"
+  spec.bindir = "exe"
   spec.executables = ["protoboeuf"]
   spec.require_paths = ["lib"]
   spec.files = Dir.glob(%w[lib/**/*.rb]) + %w[README.md Gemfile Rakefile]
@@ -26,5 +26,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency("syntax_tree")
 
-  spec.required_ruby_version = ">= 3.3"
+  spec.required_ruby_version = ">= 3.0"
 end

@@ -8,7 +8,9 @@ require "protoboeuf/codegen"
 require "protoboeuf/parser"
 require "optparse"
 
-op = OptionParser.new { |opts| opts.banner = "Usage: protoboeuf file.proto" }
+op = OptionParser.new do |opts|
+  opts.banner = "Usage: protoboeuf file.proto"
+end
 op.parse!
 
 if ARGV[0] && File.exist?(ARGV[0])
