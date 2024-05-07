@@ -1,13 +1,14 @@
-#!env ruby
+#!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/protoboeuf/codegen"
-require_relative "../lib/protoboeuf/parser"
+lib = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require "protoboeuf/codegen"
+require "protoboeuf/parser"
 require "optparse"
 
-op = OptionParser.new do |opts|
-  opts.banner = "Usage: protoboeuf file.proto"
-end
+op = OptionParser.new { |opts| opts.banner = "Usage: protoboeuf file.proto" }
 op.parse!
 
 if ARGV[0] && File.exist?(ARGV[0])
