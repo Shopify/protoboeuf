@@ -1,8 +1,8 @@
-#!env ruby
+#!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/protoboeuf/codegen"
-require_relative "../lib/protoboeuf/parser"
+require "protoboeuf/codegen"
+require "protoboeuf/parser"
 require "optparse"
 
 op = OptionParser.new do |opts|
