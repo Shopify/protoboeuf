@@ -1,16 +1,15 @@
-# frozen_string_literal: true
+# encoding: ascii-8bit
+# frozen_string_literal: false
 
 module ProtoBoeuf
   module Protobuf
     class Int64Value
       def self.decode(buff)
-        buff = buff.b
-        allocate.decode_from(buff, 0, buff.bytesize)
+        allocate.decode_from(buff.b, 0, buff.bytesize)
       end
 
       def self.encode(obj)
-        buff = obj._encode "".b
-        buff.force_encoding(Encoding::ASCII_8BIT)
+        obj._encode("").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
       attr_accessor :value

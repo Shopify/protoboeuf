@@ -1,26 +1,25 @@
-# frozen_string_literal: true
+# encoding: ascii-8bit
+# frozen_string_literal: false
 
 module ProtoBoeuf
   module Protobuf
     class BytesValue
       def self.decode(buff)
-        buff = buff.b
-        allocate.decode_from(buff, 0, buff.bytesize)
+        allocate.decode_from(buff.b, 0, buff.bytesize)
       end
 
       def self.encode(obj)
-        buff = obj._encode "".b
-        buff.force_encoding(Encoding::ASCII_8BIT)
+        obj._encode("").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
       attr_accessor :value
 
-      def initialize(value: "")
+      def initialize(value: "".freeze)
         @value = value
       end
 
       def decode_from(buff, index, len)
-        @value = ""
+        @value = "".freeze
 
         tag = buff.getbyte(index)
         index += 1
@@ -98,10 +97,10 @@ module ProtoBoeuf
         end
       end
       def _encode(buff)
-        val = @value.b
-        if val.bytesize > 0
+        val = @value
+        if ((bs = val.bytesize) > 0)
           buff << 0x0a
-          len = val.bytesize
+          len = bs
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -109,7 +108,7 @@ module ProtoBoeuf
             buff << byte
           end
 
-          buff.concat(val)
+          buff.concat(val.b)
         end
 
         buff
