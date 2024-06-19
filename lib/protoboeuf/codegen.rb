@@ -190,10 +190,10 @@ module ProtoBoeuf
       def encode_bytes(field, value_expr, tagged)
         # Empty bytes is default value, so encodes nothing
         <<~RUBY
-          val = #{value_expr}.b
-          if val.bytesize > 0
-            #{encode_tag_and_length(field, tagged, "val.bytesize")}
-            buff.concat(val)
+          val = #{value_expr}
+          if((bs = val.bytesize) > 0)
+            #{encode_tag_and_length(field, tagged, "bs")}
+            buff.concat(val.b)
           end
         RUBY
       end
@@ -215,7 +215,7 @@ module ProtoBoeuf
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
-              buff = new_buffer = ''.b
+              buff = new_buffer = ''
               #{encode_subtype(field.key_field, "key", true)}
               #{encode_subtype(field.value_field, "value", true)}
               buff = old_buff
@@ -263,7 +263,7 @@ module ProtoBoeuf
         <<~RUBY
           val = #{value_expr}
           if val
-            encoded = val._encode("".b)
+            encoded = val._encode("")
             #{encode_tag_and_length(field, true, "encoded.bytesize")}
             buff << encoded
           end
@@ -415,13 +415,11 @@ module ProtoBoeuf
       def prelude
         <<~RUBY
           def self.decode(buff)
-            buff = buff.b
-            allocate.decode_from(buff, 0, buff.bytesize)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
           end
 
           def self.encode(obj)
-            buff = obj._encode "".b
-            buff.force_encoding(Encoding::ASCII_8BIT)
+            obj._encode("").force_encoding(Encoding::ASCII_8BIT)
           end
         RUBY
       end
@@ -837,7 +835,7 @@ module ProtoBoeuf
             else
               case field.type
               when "string", "bytes"
-                '""'
+                '"".freeze'
               when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32", "sfixed64", "sfixed32"
                 0
               when "double", "float"
@@ -1130,7 +1128,8 @@ module ProtoBoeuf
 
     def to_ruby
       packages = (@ast.package || "").split(".").reject(&:empty?)
-      head = "# frozen_string_literal: true\n\n"
+      head = "# encoding: ascii-8bit\n"
+      head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
