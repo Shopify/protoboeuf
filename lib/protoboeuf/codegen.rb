@@ -467,6 +467,7 @@ module ProtoBoeuf
 
       def prelude
         <<~RUBY
+          #{type_signature(params: {buff: String}, returns: "T.attached_class")}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
           end
@@ -665,7 +666,8 @@ module ProtoBoeuf
       end
 
       def decode
-        DECODE_METHOD.result(binding)
+        type_signature(params: {buff: String, index: Integer, len: Integer}, returns: message.name, newline: true) +
+          DECODE_METHOD.result(binding)
       end
 
       def oneof_field_readers
