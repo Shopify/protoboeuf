@@ -513,13 +513,20 @@ module ProtoBoeuf
         return "" if fields.empty?
 
         "# required field readers\n" +
-        "attr_accessor " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        fields.map do |field|
+          "#{reader_signature(field.type)}\nattr_accessor :#{field.name}\n"
+        end.join("\n") +
+        "\n\n"
       end
 
       def optional_readers
         return "" unless optional_fields.length > 0
+
         "# optional field readers\n" +
-        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        optional_fields.map do |field|
+          "#{reader_signature(field.type, optional: true)}\nattr_reader :#{field.name}\n"
+        end.join("\n") +
+        "\n\n"
       end
 
       def oneof_readers
@@ -555,6 +562,7 @@ module ProtoBoeuf
         "# BEGIN writers for optional fields\n" +
         optional_fields.map { |field|
           <<~RUBY
+            #{type_signature(params: {v: field.type})}
             def #{field.name}=(v)
               #{set_bitmask(field)}
               @#{field.name} = v
