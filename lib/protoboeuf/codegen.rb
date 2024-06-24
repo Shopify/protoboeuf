@@ -5,15 +5,61 @@ require "syntax_tree"
 
 module ProtoBoeuf
   class CodeGen
+    module TypeHelper
+      TYPE_MAPPING = {
+        "int32" => "Integer",
+        "sint32" => "Integer",
+        "uint32" => "Integer",
+        "int64" => "Integer",
+        "sint64" => "Integer",
+        "uint64" => "Integer",
+        "string" => "String",
+        "double" => "Float",
+        "bytes" => "", # TODO: this needs the correct type
+        "TimeRange" => "", # TODO: this needs the correct type
+        "google.protobuf.Timestamp" => "", # TODO: this needs the correct type
+      }.freeze
+
+      def type_signature(params: nil, returns: nil, newline: false)
+        return "" unless generate_types
+
+        sig = []
+        sig << "params(#{params.map { |k, v| "#{k}: #{convert_type(v)}"}.join(", ")})" if params
+        sig << "returns(#{returns})" if returns
+        sig << "void" unless returns
+
+        complete_sig = "sig { #{sig.join(".")} }"
+        return complete_sig unless newline
+
+        complete_sig += "\n"
+      end
+
+      def reader_signature(type, optional: false)
+        type_signature(returns: convert_type(type, optional:))
+      end
+
+      def convert_type(type, optional:)
+        converted_type = TYPE_MAPPING[type] || type
+
+        return "T.nilable(#{converted_type})" if optional
+
+        converted_type
+      end
+    end
+
     class EnumCompiler
-      def self.result(enum)
-        new(enum).result
+      attr_reader :generate_types
+      include TypeHelper
+
+      def self.result(enum, generate_types: false)
+        new(enum, generate_types:).result
       end
 
       attr_reader :enum
 
-      def initialize(enum)
+      def initialize(enum, generate_types: false)
         @enum = enum
+        @generate_types = generate_types
       end
 
       def result
@@ -44,19 +90,24 @@ module ProtoBoeuf
     end
 
     class MessageCompiler
-      def self.result(message, toplevel_enums)
-        new(message, toplevel_enums).result
+      attr_reader :generate_types
+
+      include TypeHelper
+
+      def self.result(message, toplevel_enums, generate_types: false)
+        new(message, toplevel_enums, generate_types:).result
       end
 
       attr_reader :message, :fields, :oneof_fields
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums)
+      def initialize(message, toplevel_enums, generate_types:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.fields
         @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
         @requires = Set.new
+        @generate_types = generate_types
 
         mark_enum_fields
 
@@ -131,7 +182,7 @@ module ProtoBoeuf
         # FIXME: we should probably sort fields by field number
         "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-          "\nbuff\n end\n"
+          "\nbuff\n end\n\n"
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
@@ -439,7 +490,7 @@ module ProtoBoeuf
           RUBY
         else
           ""
-        end) + message.messages.map { |x| self.class.new(x, enum_field_types).result }.join("\n")
+        end) + message.messages.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
       end
 
       def readers
@@ -1122,19 +1173,23 @@ module ProtoBoeuf
       end
     end
 
-    def initialize(ast)
+    attr_reader :generate_types
+
+    def initialize(ast, generate_types: false)
       @ast = ast # unit node
+      @generate_types = generate_types
     end
 
     def to_ruby
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# encoding: ascii-8bit\n"
+      head += "# typed: false\n" if generate_types
       head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
       body = @ast.enums.map { |enum| EnumCompiler.result(enum) }.join + "\n"
-      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join
+      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
 
       tail = "\n" + packages.map { "end" }.join("\n")
 

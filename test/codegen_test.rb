@@ -55,5 +55,12 @@ module ProtoBoeuf
       obj = klass::Test1.new(nil: 1234)
       assert_equal 1234, obj.nil
     end
+
+    def test_generate_types
+      unit = ProtoBoeuf.parse_string('message Test1 { required int32 int_field = 1; optional string string_field = 2; }')
+      gen = CodeGen.new unit, generate_types: true
+
+      File.write("typed_test.rb", gen.to_ruby)
+    end
   end
 end
