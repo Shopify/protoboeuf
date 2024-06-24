@@ -647,6 +647,7 @@ module ProtoBoeuf
 
         optional_fields.map { |field|
           <<~RUBY
+            #{type_signature(returns: "T::Boolean")}
             def has_#{field.name}?
               #{test_bitmask(field)}
             end
