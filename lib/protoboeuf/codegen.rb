@@ -181,6 +181,7 @@ module ProtoBoeuf
 
       def encode
         # FIXME: we should probably sort fields by field number
+        type_signature(params: {buff: "String"}, returns: "String", newline: true) +
         "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
           "\nbuff\n end\n\n"
