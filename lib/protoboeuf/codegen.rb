@@ -160,6 +160,7 @@ module ProtoBoeuf
 
       def conversion
         <<~RUBY
+          #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
           def to_h
             result = {}
             #{fields.map { |field| convert_field(field) }.join("\n")}
