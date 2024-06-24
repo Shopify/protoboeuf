@@ -34,6 +34,20 @@ module ProtoBoeuf
         complete_sig += "\n"
       end
 
+      def initialize_type_signature(fields)
+        type_signature(params: fields.map do |field|
+          if field.oneof?
+            # TODO: support one of fields
+            nil
+          elsif field.field?
+            type = field.optional? ? "T.any(#{convert_type(field.type)}, T.class_of(NONE))" : field.type
+            [field.name, type]
+          else
+            raise "Unsupported field #{f.inspect}"
+          end
+        end.compact.to_h, newline: true)
+      end
+
       def reader_signature(type, optional: false)
         type_signature(returns: convert_type(type, optional:))
       end
@@ -497,7 +511,7 @@ module ProtoBoeuf
       def constants
         (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
           <<~RUBY
-            NONE = Object.new
+            NONE = Class.new
             private_constant :NONE
 
           RUBY
@@ -602,7 +616,8 @@ module ProtoBoeuf
       end
 
       def initialize_code
-        "def initialize(" + initialize_signature + ")\n" +
+          initialize_type_signature(fields) +
+          "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
           fields.map { |field|
             if field.field?
