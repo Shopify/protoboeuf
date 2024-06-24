@@ -38,7 +38,15 @@ module ProtoBoeuf
         type_signature(returns: convert_type(type, optional:))
       end
 
-      def convert_type(type, optional:)
+      def extend_t_sig
+        return "" unless generate_types
+
+        return "extend T::Sig"
+      end
+
+      private
+
+      def convert_type(type, optional: false)
         converted_type = TYPE_MAPPING[type] || type
 
         return "T.nilable(#{converted_type})" if optional
@@ -467,6 +475,7 @@ module ProtoBoeuf
 
       def prelude
         <<~RUBY
+          #{extend_t_sig}
           #{type_signature(params: {buff: String}, returns: message.name)}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
