@@ -467,11 +467,12 @@ module ProtoBoeuf
 
       def prelude
         <<~RUBY
-          #{type_signature(params: {buff: String}, returns: "T.attached_class")}
+          #{type_signature(params: {buff: String}, returns: message.name)}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
           end
 
+          #{type_signature(params: {obj: message.name}, returns: "String")}
           def self.encode(obj)
             obj._encode("").force_encoding(Encoding::ASCII_8BIT)
           end
