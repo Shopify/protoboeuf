@@ -12,7 +12,16 @@ module ProtoBoeuf
         "double" => "Float",
         "bytes" => "", # TODO: this needs the correct type
         "TimeRange" => "", # TODO: this needs the correct type
-        "google.protobuf.Timestamp" => "", # TODO: this needs the correct type
+        "google.protobuf.BoolValue" => "ProtoBoeuf::Protobuf::BoolValue",
+        "google.protobuf.Int32Value" => "ProtoBoeuf::Protobuf::Int32Value",
+        "google.protobuf.Int64Value" => "ProtoBoeuf::Protobuf::Int64Value",
+        "google.protobuf.UInt32Value" => "ProtoBoeuf::Protobuf::UInt32Value",
+        "google.protobuf.UInt64Value" => "ProtoBoeuf::Protobuf::UInt64Value",
+        "google.protobuf.FloatValue" => "ProtoBoeuf::Protobuf::FloatValue",
+        "google.protobuf.DoubleValue" => "ProtoBoeuf::Protobuf::DoubleValue",
+        "google.protobuf.StringValue" => "ProtoBoeuf::Protobuf::StringValue",
+        "google.protobuf.BytesValue" => "ProtoBoeuf::Protobuf::BytesValue",
+        "google.protobuf.Timestamp" => "ProtoBoeuf::Protobuf::Timestamp",
       }.freeze
 
       def type_signature(params: nil, returns: nil, newline: false)
