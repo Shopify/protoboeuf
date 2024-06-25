@@ -37,19 +37,7 @@ module ProtoBoeuf
       def initialize_type_signature(fields)
         return "" unless generate_types
 
-        params = fields.map do |field|
-          if field.oneof?
-            field.fields.map do |field|
-              [field.name, convert_type(field.type, optional: field.optional?, array: field.repeated?)]
-            end
-          elsif field.field?
-            [[field.name, convert_type(field.type, optional: field.optional?, array: field.repeated?)]]
-          else
-            raise "Unsupported field #{f.inspect}"
-          end
-        end.flatten(1).compact.to_h
-
-        type_signature(params:, newline: true)
+        type_signature(params: fields_to_params(fields), newline: true)
       end
 
       def reader_type_signature(type, optional: false)
@@ -69,6 +57,28 @@ module ProtoBoeuf
         converted_type = "T::Array[#{converted_type}]" if array
         converted_type = "T.nilable(#{converted_type})" if optional
         converted_type
+      end
+
+      def convert_field_type(field)
+        convert_type(field.type, optional: field.optional?, array: field.repeated?)
+      end
+
+      def field_to_params(field)
+        if field.oneof?
+          field.fields.flat_map { |field| field_to_params(field) }
+        elsif field.field?
+          [field.name, convert_field_type(field)]
+        else
+          raise "Unsupported field #{f.inspect}"
+        end
+      end
+
+      def fields_to_params(fields)
+        fields
+          .map { |field| field_to_params(field) }
+          .flatten
+          .each_slice(2)
+          .to_h
       end
     end
 
