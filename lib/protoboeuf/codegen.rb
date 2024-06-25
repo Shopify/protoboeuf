@@ -35,16 +35,21 @@ module ProtoBoeuf
       end
 
       def initialize_type_signature(fields)
-        type_signature(params: fields.map do |field|
+        return "" unless generate_types
+
+        params = fields.map do |field|
           if field.oneof?
-            # TODO: support one of fields
-            nil
+            field.fields.map do |field|
+              [field.name, convert_type(field.type, optional: field.optional?)]
+            end
           elsif field.field?
-            [field.name, convert_type(field.type, optional: field.optional?)]
+            [[field.name, convert_type(field.type, optional: field.optional?)]]
           else
             raise "Unsupported field #{f.inspect}"
           end
-        end.compact.to_h, newline: true)
+        end.flatten(1).compact.to_h
+
+        type_signature(params:, newline: true)
       end
 
       def reader_type_signature(type, optional: false)
