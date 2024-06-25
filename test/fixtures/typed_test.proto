@@ -20,4 +20,5 @@ message Test1 {
     TestEnum2 enum_2 = 4;
   }
   repeated int32 repeated_ints = 5;
+  map<string, int32> map_field = 6;
 }

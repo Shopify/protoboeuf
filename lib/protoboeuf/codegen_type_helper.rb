@@ -78,8 +78,7 @@ module ProtoBoeuf
 
       def fields_to_params(fields)
         fields
-          .map { |field| field_to_params(field) }
-          .flatten
+          .flat_map { |field| field_to_params(field) }
           .each_slice(2)
           .to_h
       end

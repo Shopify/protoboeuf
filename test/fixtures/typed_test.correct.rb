@@ -75,6 +75,9 @@ class Test1
   sig { returns(T::Array[Integer]) }
   attr_accessor :repeated_ints
 
+  sig { returns(T::Hash[String, Integer]) }
+  attr_accessor :map_field
+
   # optional field readers
   sig { returns(T.nilable(String)) }
   attr_reader :string_field
@@ -113,7 +116,8 @@ class Test1
       string_field: T.nilable(String),
       enum_1: TestEnum,
       enum_2: TestEnum2,
-      repeated_ints: T::Array[Integer]
+      repeated_ints: T::Array[Integer],
+      map_field: T::Hash[String, Integer],
     ).void
   end
   def initialize(
@@ -121,7 +125,8 @@ class Test1
     string_field: nil,
     enum_1: nil,
     enum_2: nil,
-    repeated_ints: []
+    repeated_ints: [],
+    map_field: {}
   )
     @_bitmask = 0
     @int_field = int_field
@@ -148,6 +153,7 @@ class Test1
     end
 
     @repeated_ints = repeated_ints
+    @map_field = map_field
   end
 
   sig { returns(T::Boolean) }
@@ -165,6 +171,7 @@ class Test1
     @enum_1 = nil
     @enum_2 = nil
     @repeated_ints = []
+    @map_field = {}
 
     tag = buff.getbyte(index)
     index += 1
@@ -549,6 +556,189 @@ class Test1
         tag = buff.getbyte(index)
         index += 1
       end
+      if tag == 0x32
+        ## PULL_MAP
+        map = @map_field
+        while tag == 0x32
+          ## PULL_UINT64
+          value =
+            if (byte0 = buff.getbyte(index)) < 0x80
+              index += 1
+              byte0
+            elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+              index += 2
+              (byte1 << 7) | (byte0 & 0x7F)
+            elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+              index += 3
+              (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+              index += 4
+              (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                (byte0 & 0x7F)
+            elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+              index += 5
+              (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+              index += 6
+              (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+              index += 7
+              (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+              index += 8
+              (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+              index += 9
+              (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+              index += 10
+
+              (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+                ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            else
+              raise "integer decoding error"
+            end
+
+          ## END PULL_UINT64
+
+          index += 1 # skip the tag, assume it's the key
+          ## PULL_STRING
+          value =
+            if (byte0 = buff.getbyte(index)) < 0x80
+              index += 1
+              byte0
+            elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+              index += 2
+              (byte1 << 7) | (byte0 & 0x7F)
+            elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+              index += 3
+              (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+              index += 4
+              (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                (byte0 & 0x7F)
+            elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+              index += 5
+              (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+              index += 6
+              (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+              index += 7
+              (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+              index += 8
+              (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+              index += 9
+              (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+              index += 10
+
+              (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+                ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            else
+              raise "integer decoding error"
+            end
+
+          key = buff.byteslice(index, value)
+          index += value
+
+          ## END PULL_STRING
+
+          index += 1 # skip the tag, assume it's the value
+          ## PULL_INT32
+          map[key] = if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            # Negative 32 bit integers are still encoded with 10 bytes
+            # handle 2's complement negative numbers
+            # If the top bit is 1, then it must be negative.
+            -(
+              (
+                (
+                  ~(
+                    (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                      ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  )
+                ) & 0xFFFF_FFFF
+              ) + 1
+            )
+          else
+            raise "integer decoding error"
+          end
+
+          ## END PULL_INT32
+
+          return self if index >= len
+          tag = buff.getbyte(index)
+          index += 1
+        end
+
+        return self if index >= len
+      end
 
       return self if index >= len
     end
@@ -650,6 +840,56 @@ class Test1
       end
     end
 
+    map = @map_field
+    if map.size > 0
+      old_buff = buff
+      map.each do |key, value|
+        buff = new_buffer = ""
+        val = key
+        if ((len = val.bytesize) > 0)
+          buff << 0x0a
+          while len != 0
+            byte = len & 0x7F
+            len >>= 7
+            byte |= 0x80 if len > 0
+            buff << byte
+          end
+
+          buff << val
+        end
+
+        val = value
+        if val != 0
+          buff << 0x10
+
+          while val != 0
+            byte = val & 0x7F
+
+            val >>= 7
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
+            buff << byte
+          end
+        end
+
+        buff = old_buff
+        buff << 0x32
+        len = new_buffer.bytesize
+        while len != 0
+          byte = len & 0x7F
+          len >>= 7
+          byte |= 0x80 if len > 0
+          buff << byte
+        end
+
+        old_buff.concat(new_buffer)
+      end
+    end
+
     buff
   end
 
@@ -660,6 +900,7 @@ class Test1
     result["string_field".to_sym] = @string_field
     send("oneof_field").tap { |f| result[f.to_sym] = send(f) if f }
     result["repeated_ints".to_sym] = @repeated_ints
+    result["map_field".to_sym] = @map_field
     result
   end
 end
