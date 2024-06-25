@@ -471,7 +471,7 @@ module ProtoBoeuf
 
         "# required field readers\n" +
         fields.map do |field|
-          "#{reader_type_signature(field.type)}\nattr_accessor :#{field.name}\n"
+          "#{reader_type_signature(field)}\nattr_accessor :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
@@ -481,7 +481,7 @@ module ProtoBoeuf
 
         "# optional field readers\n" +
         optional_fields.map do |field|
-          "#{reader_type_signature(field.type, optional: true)}\nattr_reader :#{field.name}\n"
+          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
@@ -495,7 +495,7 @@ module ProtoBoeuf
             reader_type_signature("Symbol"),
             "attr_reader :#{field.name}",
             field.fields.map do |sub_field|
-              "#{reader_type_signature(sub_field.type, optional: true)}\nattr_reader :#{sub_field.name}"
+              "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
             end
           ].join("\n")
         end.join("\n") + "\n\n"

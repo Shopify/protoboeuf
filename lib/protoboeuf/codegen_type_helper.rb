@@ -35,8 +35,12 @@ module ProtoBoeuf
         type_signature(params: fields_to_params(fields), newline: true)
       end
 
-      def reader_type_signature(type, optional: false)
-        type_signature(returns: convert_type(type, optional:))
+      def reader_type_signature(type)
+        if type.is_a?(Field)
+          type_signature(returns: convert_field_type(type))
+        else
+          type_signature(returns: convert_type(type))
+        end
       end
 
       def extend_t_sig
@@ -55,7 +59,11 @@ module ProtoBoeuf
       end
 
       def convert_field_type(field)
-        convert_type(field.type, optional: field.optional?, array: field.repeated?)
+        if field.map?
+          "T::Hash[#{convert_field_type(field.key_field)}, #{convert_field_type(field.value_field)}]"
+        else
+          convert_type(field.type, optional: field.optional?, array: field.repeated?)
+        end
       end
 
       def field_to_params(field)

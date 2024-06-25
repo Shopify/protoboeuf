@@ -72,7 +72,7 @@ class Test1
   sig { returns(Integer) }
   attr_accessor :int_field
 
-  sig { returns(Integer) }
+  sig { returns(T::Array[Integer]) }
   attr_accessor :repeated_ints
 
   # optional field readers
@@ -82,9 +82,9 @@ class Test1
   # oneof field readers
   sig { returns(Symbol) }
   attr_reader :oneof_field
-  sig { returns(T.nilable(TestEnum)) }
+  sig { returns(TestEnum) }
   attr_reader :enum_1
-  sig { returns(T.nilable(TestEnum2)) }
+  sig { returns(TestEnum2) }
   attr_reader :enum_2
 
   # BEGIN writers for optional fields
