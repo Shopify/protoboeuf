@@ -48,7 +48,7 @@ module ProtoBoeuf
         end.compact.to_h, newline: true)
       end
 
-      def reader_signature(type, optional: false)
+      def reader_type_signature(type, optional: false)
         type_signature(returns: convert_type(type, optional:))
       end
 
@@ -540,7 +540,7 @@ module ProtoBoeuf
 
         "# required field readers\n" +
         fields.map do |field|
-          "#{reader_signature(field.type)}\nattr_accessor :#{field.name}\n"
+          "#{reader_type_signature(field.type)}\nattr_accessor :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
@@ -550,7 +550,7 @@ module ProtoBoeuf
 
         "# optional field readers\n" +
         optional_fields.map do |field|
-          "#{reader_signature(field.type, optional: true)}\nattr_reader :#{field.name}\n"
+          "#{reader_type_signature(field.type, optional: true)}\nattr_reader :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
