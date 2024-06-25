@@ -34,7 +34,7 @@ module ProtoBoeuf
       end
 
       def lookup
-        type_signature(params: {val: Integer}, returns: Symbol, newline: true) +
+        type_signature(params: {val: "Integer"}, returns: "Symbol", newline: true) +
         "def self.lookup(val)\n" +
         "if " + enum.constants.map { |const|
           "val == #{const.number} then :#{const.name}"
@@ -429,7 +429,7 @@ module ProtoBoeuf
       def prelude
         <<~RUBY
           #{extend_t_sig}
-          #{type_signature(params: {buff: String}, returns: message.name)}
+          #{type_signature(params: {buff: "String"}, returns: message.name)}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
           end
@@ -492,7 +492,7 @@ module ProtoBoeuf
         "# oneof field readers\n" +
         oneof_fields.map do |field|
           [
-            reader_type_signature(Symbol),
+            reader_type_signature("Symbol"),
             "attr_reader :#{field.name}",
             field.fields.map do |sub_field|
               "#{reader_type_signature(sub_field.type, optional: true)}\nattr_reader :#{sub_field.name}"
