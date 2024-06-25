@@ -73,13 +73,13 @@ module ProtoBoeuf
       attr_reader :generate_types
       include TypeHelper
 
-      def self.result(enum, generate_types: false)
+      def self.result(enum, generate_types:)
         new(enum, generate_types:).result
       end
 
       attr_reader :enum
 
-      def initialize(enum, generate_types: false)
+      def initialize(enum, generate_types:)
         @enum = enum
         @generate_types = generate_types
       end
@@ -116,7 +116,7 @@ module ProtoBoeuf
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types: false)
+      def self.result(message, toplevel_enums, generate_types:)
         new(message, toplevel_enums, generate_types:).result
       end
 
@@ -504,7 +504,7 @@ module ProtoBoeuf
 
       def enums
         message.enums.map { |enum|
-          EnumCompiler.result(enum)
+          EnumCompiler.result(enum, generate_types:)
         }.join("\n")
       end
 
@@ -1226,7 +1226,7 @@ module ProtoBoeuf
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
-      body = @ast.enums.map { |enum| EnumCompiler.result(enum) }.join + "\n"
+      body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
       body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
 
       tail = "\n" + packages.map { "end" }.join("\n")
