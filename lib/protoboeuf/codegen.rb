@@ -555,10 +555,17 @@ module ProtoBoeuf
 
       def oneof_readers
         return "" unless oneof_fields.length > 0
-        fields = oneof_fields + oneof_fields.flat_map(&:fields)
 
         "# oneof field readers\n" +
-        "attr_reader " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        oneof_fields.map do |field|
+          [
+            reader_type_signature(Symbol),
+            "attr_reader :#{field.name}",
+            field.fields.map do |sub_field|
+              "#{reader_type_signature(sub_field.type, optional: true)}\nattr_reader :#{sub_field.name}"
+            end
+          ].join("\n")
+        end.join("\n") + "\n\n"
       end
 
       def writers
