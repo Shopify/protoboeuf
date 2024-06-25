@@ -10,7 +10,7 @@ module ProtoBoeuf
         "uint64" => "Integer",
         "string" => "String",
         "double" => "Float",
-        "bytes" => "", # TODO: this needs the correct type
+        "bytes" => "String",
         "google.protobuf.BoolValue" => "ProtoBoeuf::Protobuf::BoolValue",
         "google.protobuf.Int32Value" => "ProtoBoeuf::Protobuf::Int32Value",
         "google.protobuf.Int64Value" => "ProtoBoeuf::Protobuf::Int64Value",
