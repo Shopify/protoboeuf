@@ -93,10 +93,11 @@ module ProtoBoeuf
       def class_body
         enum.constants.map { |const|
           "#{const.name} = #{const.number}"
-        }.join("\n") + "\n" + lookup + "\n" + resolve
+        }.join("\n") + "\n\n" + lookup + "\n\n" + resolve
       end
 
       def lookup
+        type_signature(params: {val: Integer}, returns: Symbol, newline: true) +
         "def self.lookup(val)\n" +
         "if " + enum.constants.map { |const|
           "val == #{const.number} then :#{const.name}"
@@ -104,6 +105,7 @@ module ProtoBoeuf
       end
 
       def resolve
+        type_signature(params: {val: "Symbol"}, returns: "Integer", newline: true) +
         "def self.resolve(val)\n" +
         "if " + enum.constants.map { |const|
           "val == :#{const.name} then #{const.number}"
