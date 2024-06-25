@@ -40,8 +40,7 @@ module ProtoBoeuf
             # TODO: support one of fields
             nil
           elsif field.field?
-            type = field.optional? ? "T.any(#{convert_type(field.type)}, T.class_of(NONE))" : field.type
-            [field.name, type]
+            [field.name, convert_type(field.type, optional: field.optional?)]
           else
             raise "Unsupported field #{f.inspect}"
           end
@@ -511,15 +510,7 @@ module ProtoBoeuf
       end
 
       def constants
-        (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
-          <<~RUBY
-            NONE = Class.new
-            private_constant :NONE
-
-          RUBY
-        else
-          ""
-        end) + message.messages.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
+        message.messages.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
       end
 
       def readers
@@ -636,7 +627,7 @@ module ProtoBoeuf
         "@#{oneof.name} = nil # oneof field\n" +
           oneof.fields.map { |field|
             <<~RUBY
-              if #{field.lvar_read} == NONE
+              if #{field.lvar_read} == nil
                 #{field.iv_name} = #{default_for(field)}
               else
                 @#{oneof.name} = :#{field.name}
@@ -658,7 +649,7 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          if #{field.lvar_read} == NONE
+          if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
             #{set_bitmask(field)}
@@ -953,13 +944,13 @@ module ProtoBoeuf
         self.fields.flat_map { |f|
           if f.field?
             if f.optional?
-              "#{f.lvar_name}: NONE"
+              "#{f.lvar_name}: nil"
             else
               "#{f.lvar_name}: #{default_for(f)}"
             end
           elsif f.oneof?
             f.fields.map { |child|
-              "#{child.lvar_name}: NONE"
+              "#{child.lvar_name}: nil"
             }
           else
             raise NotImplementedError
