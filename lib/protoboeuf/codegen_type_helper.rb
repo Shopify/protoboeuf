@@ -11,7 +11,6 @@ module ProtoBoeuf
         "string" => "String",
         "double" => "Float",
         "bytes" => "", # TODO: this needs the correct type
-        "TimeRange" => "", # TODO: this needs the correct type
         "google.protobuf.BoolValue" => "ProtoBoeuf::Protobuf::BoolValue",
         "google.protobuf.Int32Value" => "ProtoBoeuf::Protobuf::Int32Value",
         "google.protobuf.Int64Value" => "ProtoBoeuf::Protobuf::Int64Value",
