@@ -40,10 +40,10 @@ module ProtoBoeuf
         params = fields.map do |field|
           if field.oneof?
             field.fields.map do |field|
-              [field.name, convert_type(field.type, optional: field.optional?)]
+              [field.name, convert_type(field.type, optional: field.optional?, array: field.repeated?)]
             end
           elsif field.field?
-            [[field.name, convert_type(field.type, optional: field.optional?)]]
+            [[field.name, convert_type(field.type, optional: field.optional?, array: field.repeated?)]]
           else
             raise "Unsupported field #{f.inspect}"
           end
@@ -64,11 +64,10 @@ module ProtoBoeuf
 
       private
 
-      def convert_type(type, optional: false)
+      def convert_type(type, optional: false, array: false)
         converted_type = TYPE_MAPPING[type] || type
-
-        return "T.nilable(#{converted_type})" if optional
-
+        converted_type = "T::Array[#{converted_type}]" if array
+        converted_type = "T.nilable(#{converted_type})" if optional
         converted_type
       end
     end

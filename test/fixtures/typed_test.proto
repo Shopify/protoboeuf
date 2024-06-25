@@ -19,4 +19,5 @@ message Test1 {
     TestEnum enum_1 = 3;
     TestEnum2 enum_2 = 4;
   }
+  repeated int32 repeated_ints = 5;
 }
