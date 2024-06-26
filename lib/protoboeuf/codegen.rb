@@ -877,15 +877,7 @@ module ProtoBoeuf
       end
 
       def tag_for_field(field, idx)
-        sprintf("%#02x", (idx << 3 | wire_type(field)))
-      end
-
-      def wire_type(field)
-        if field.enum?
-          ProtoBoeuf::Field::VARINT
-        else
-          field.wire_type
-        end
+        sprintf("%#02x", (idx << 3 | field.wire_type))
       end
 
       def decode_subtype(field, type, dest, operator)
