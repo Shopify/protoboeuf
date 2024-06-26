@@ -5,14 +5,16 @@ require "protoboeuf/codegen"
 require "protoboeuf/parser"
 require "optparse"
 
+generate_types = false
 op = OptionParser.new do |opts|
   opts.banner = "Usage: protoboeuf file.proto"
+  opts.on("-t", "--typed", "Generate sorbet types") { generate_types = true }
 end
 op.parse!
 
 if ARGV[0] && File.exist?(ARGV[0])
   unit = ProtoBoeuf.parse_file(ARGV[0])
-  gen = ProtoBoeuf::CodeGen.new(unit)
+  gen = ProtoBoeuf::CodeGen.new(unit, generate_types:)
   puts gen.to_ruby
 else
   $stderr.puts op
