@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+enum TestEnum {
+  FOO = 0;
+  BAR = 1;
+  BAZ = 2;
+}
+
+enum TestEnum2 {
+  BAZBAZ = 0;
+  BARBAR = 1;
+  FOOFOO = 2;
+}
+
+message Test1 {
+  int32 int_field = 1;
+  optional string string_field = 2;
+  oneof oneof_field {
+    TestEnum enum_1 = 3;
+    TestEnum2 enum_2 = 4;
+  }
+  repeated int32 repeated_ints = 5;
+  map<string, int32> map_field = 6;
+  bytes bytes_field = 7;
+}

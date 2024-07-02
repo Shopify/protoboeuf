@@ -55,5 +55,22 @@ module ProtoBoeuf
       obj = klass::Test1.new(nil: 1234)
       assert_equal 1234, obj.nil
     end
+
+    def test_generate_types
+      proto = File.read("test/fixtures/typed_test.proto")
+      unit = ProtoBoeuf.parse_string(proto)
+
+      gen = CodeGen.new unit, generate_types: true
+
+      File.write("test/fixtures/typed_test.generated.rb", gen.to_ruby)
+
+      # The goal of this test is to ensure that we generate valid sorbet signatures.
+      #
+      # This tests will break whenever any implementation of field encoding/deconding etc changes.
+      # While this is not great, writing tests that ensure that signatures are generated
+      # correctly without pulling in all of sorbet is at the very least incredibly complex.
+      # So this is the solution for now.
+      assert_equal File.read("test/fixtures/typed_test.correct.rb"), gen.to_ruby
+    end
   end
 end

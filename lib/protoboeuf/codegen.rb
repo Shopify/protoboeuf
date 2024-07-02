@@ -2,18 +2,23 @@
 
 require "erb"
 require "syntax_tree"
+require_relative "codegen_type_helper"
 
 module ProtoBoeuf
   class CodeGen
     class EnumCompiler
-      def self.result(enum)
-        new(enum).result
+      attr_reader :generate_types
+      include TypeHelper
+
+      def self.result(enum, generate_types:)
+        new(enum, generate_types:).result
       end
 
       attr_reader :enum
 
-      def initialize(enum)
+      def initialize(enum, generate_types:)
         @enum = enum
+        @generate_types = generate_types
       end
 
       def result
@@ -25,10 +30,11 @@ module ProtoBoeuf
       def class_body
         enum.constants.map { |const|
           "#{const.name} = #{const.number}"
-        }.join("\n") + "\n" + lookup + "\n" + resolve
+        }.join("\n") + "\n\n" + lookup + "\n\n" + resolve
       end
 
       def lookup
+        type_signature(params: {val: "Integer"}, returns: "Symbol", newline: true) +
         "def self.lookup(val)\n" +
         "if " + enum.constants.map { |const|
           "val == #{const.number} then :#{const.name}"
@@ -36,6 +42,7 @@ module ProtoBoeuf
       end
 
       def resolve
+        type_signature(params: {val: "Symbol"}, returns: "Integer", newline: true) +
         "def self.resolve(val)\n" +
         "if " + enum.constants.map { |const|
           "val == :#{const.name} then #{const.number}"
@@ -44,19 +51,24 @@ module ProtoBoeuf
     end
 
     class MessageCompiler
-      def self.result(message, toplevel_enums)
-        new(message, toplevel_enums).result
+      attr_reader :generate_types
+
+      include TypeHelper
+
+      def self.result(message, toplevel_enums, generate_types:)
+        new(message, toplevel_enums, generate_types:).result
       end
 
       attr_reader :message, :fields, :oneof_fields
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums)
+      def initialize(message, toplevel_enums, generate_types:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.fields
         @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
         @requires = Set.new
+        @generate_types = generate_types
 
         mark_enum_fields
 
@@ -109,6 +121,7 @@ module ProtoBoeuf
 
       def conversion
         <<~RUBY
+          #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
           def to_h
             result = {}
             #{fields.map { |field| convert_field(field) }.join("\n")}
@@ -129,9 +142,10 @@ module ProtoBoeuf
 
       def encode
         # FIXME: we should probably sort fields by field number
+        type_signature(params: {buff: "String"}, returns: "String", newline: true) +
         "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-          "\nbuff\n end\n"
+          "\nbuff\n end\n\n"
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
@@ -414,10 +428,13 @@ module ProtoBoeuf
 
       def prelude
         <<~RUBY
+          #{extend_t_sig}
+          #{type_signature(params: {buff: "String"}, returns: message.name)}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
           end
 
+          #{type_signature(params: {obj: message.name}, returns: "String")}
           def self.encode(obj)
             obj._encode("").force_encoding(Encoding::ASCII_8BIT)
           end
@@ -426,20 +443,12 @@ module ProtoBoeuf
 
       def enums
         message.enums.map { |enum|
-          EnumCompiler.result(enum)
+          EnumCompiler.result(enum, generate_types:)
         }.join("\n")
       end
 
       def constants
-        (if message.fields.any? { |msg| msg.oneof? || msg.optional? }
-          <<~RUBY
-            NONE = Object.new
-            private_constant :NONE
-
-          RUBY
-        else
-          ""
-        end) + message.messages.map { |x| self.class.new(x, enum_field_types).result }.join("\n")
+        message.messages.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
       end
 
       def readers
@@ -461,21 +470,35 @@ module ProtoBoeuf
         return "" if fields.empty?
 
         "# required field readers\n" +
-        "attr_accessor " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        fields.map do |field|
+          "#{reader_type_signature(field)}\nattr_accessor :#{field.name}\n"
+        end.join("\n") +
+        "\n\n"
       end
 
       def optional_readers
         return "" unless optional_fields.length > 0
+
         "# optional field readers\n" +
-        "attr_reader " + optional_fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        optional_fields.map do |field|
+          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
+        end.join("\n") +
+        "\n\n"
       end
 
       def oneof_readers
         return "" unless oneof_fields.length > 0
-        fields = oneof_fields + oneof_fields.flat_map(&:fields)
 
         "# oneof field readers\n" +
-        "attr_reader " + fields.map { |f| ":" + f.name }.join(", ") + "\n\n"
+        oneof_fields.map do |field|
+          [
+            reader_type_signature("Symbol"),
+            "attr_reader :#{field.name}",
+            field.fields.map do |sub_field|
+              "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
+            end
+          ].join("\n")
+        end.join("\n") + "\n\n"
       end
 
       def writers
@@ -503,6 +526,7 @@ module ProtoBoeuf
         "# BEGIN writers for optional fields\n" +
         optional_fields.map { |field|
           <<~RUBY
+            #{type_signature(params: {v: field.type})}
             def #{field.name}=(v)
               #{set_bitmask(field)}
               @#{field.name} = v
@@ -530,7 +554,8 @@ module ProtoBoeuf
       end
 
       def initialize_code
-        "def initialize(" + initialize_signature + ")\n" +
+          initialize_type_signature(fields) +
+          "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
           fields.map { |field|
             if field.field?
@@ -547,7 +572,7 @@ module ProtoBoeuf
         "@#{oneof.name} = nil # oneof field\n" +
           oneof.fields.map { |field|
             <<~RUBY
-              if #{field.lvar_read} == NONE
+              if #{field.lvar_read} == nil
                 #{field.iv_name} = #{default_for(field)}
               else
                 @#{oneof.name} = :#{field.name}
@@ -569,7 +594,7 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          if #{field.lvar_read} == NONE
+          if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
             #{set_bitmask(field)}
@@ -595,6 +620,7 @@ module ProtoBoeuf
 
         optional_fields.map { |field|
           <<~RUBY
+            #{type_signature(returns: "T::Boolean")}
             def has_#{field.name}?
               #{test_bitmask(field)}
             end
@@ -603,7 +629,8 @@ module ProtoBoeuf
       end
 
       def decode
-        DECODE_METHOD.result(binding)
+        type_signature(params: {buff: String, index: Integer, len: Integer}, returns: message.name, newline: true) +
+          DECODE_METHOD.result(binding)
       end
 
       def oneof_field_readers
@@ -862,13 +889,13 @@ module ProtoBoeuf
         self.fields.flat_map { |f|
           if f.field?
             if f.optional?
-              "#{f.lvar_name}: NONE"
+              "#{f.lvar_name}: nil"
             else
               "#{f.lvar_name}: #{default_for(f)}"
             end
           elsif f.oneof?
             f.fields.map { |child|
-              "#{child.lvar_name}: NONE"
+              "#{child.lvar_name}: nil"
             }
           else
             raise NotImplementedError
@@ -1114,19 +1141,23 @@ module ProtoBoeuf
       end
     end
 
-    def initialize(ast)
+    attr_reader :generate_types
+
+    def initialize(ast, generate_types: false)
       @ast = ast # unit node
+      @generate_types = generate_types
     end
 
     def to_ruby
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# encoding: ascii-8bit\n"
+      head += "# typed: false\n" if generate_types
       head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
-      body = @ast.enums.map { |enum| EnumCompiler.result(enum) }.join + "\n"
-      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums) }.join
+      body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
+      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
 
       tail = "\n" + packages.map { "end" }.join("\n")
 
