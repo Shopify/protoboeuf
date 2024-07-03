@@ -35,19 +35,27 @@ module ProtoBoeuf
       end
 
       def lookup
-        type_signature(params: {val: "Integer"}, returns: "Symbol", newline: true) +
-        "def self.lookup(val)\n" +
-        "if " + enum.constants.map { |const|
-          "val == #{const.number} then :#{const.name}"
-        }.join(" elsif ") + " end; end"
+        <<~RUBY
+          #{type_signature(params: {val: "Integer"}, returns: "T.nilable(Symbol)")}
+          def self.lookup(val)
+          if #{enum.constants.map { |const|
+            "val == #{const.number} then :#{const.name}"
+          }.join(" elsif ")}
+          end
+        end
+        RUBY
       end
 
       def resolve
-        type_signature(params: {val: "Symbol"}, returns: "Integer", newline: true) +
-        "def self.resolve(val)\n" +
-        "if " + enum.constants.map { |const|
-          "val == :#{const.name} then #{const.number}"
-        }.join(" elsif ") + " end; end"
+        <<~RUBY
+          #{type_signature(params: {val: "Symbol"}, returns: "T.nilable(Integer)")}
+          def self.resolve(val)
+          if #{enum.constants.map { |const|
+            "val == :#{const.name} then #{const.number}"
+          }.join(" elsif ")}
+          end
+        end
+        RUBY
       end
     end
 

@@ -9,7 +9,7 @@ module TestEnum
   BAR = 1
   BAZ = 2
 
-  sig { params(val: Integer).returns(Symbol) }
+  sig { params(val: Integer).returns(T.nilable(Symbol)) }
   def self.lookup(val)
     if val == 0
       :FOO
@@ -20,7 +20,7 @@ module TestEnum
     end
   end
 
-  sig { params(val: Symbol).returns(Integer) }
+  sig { params(val: Symbol).returns(T.nilable(Integer)) }
   def self.resolve(val)
     if val == :FOO
       0
@@ -38,7 +38,7 @@ module TestEnum2
   BARBAR = 1
   FOOFOO = 2
 
-  sig { params(val: Integer).returns(Symbol) }
+  sig { params(val: Integer).returns(T.nilable(Symbol)) }
   def self.lookup(val)
     if val == 0
       :BAZBAZ
@@ -49,7 +49,7 @@ module TestEnum2
     end
   end
 
-  sig { params(val: Symbol).returns(Integer) }
+  sig { params(val: Symbol).returns(T.nilable(Integer)) }
   def self.resolve(val)
     if val == :BAZBAZ
       0
