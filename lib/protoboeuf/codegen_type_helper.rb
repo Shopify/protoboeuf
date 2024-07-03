@@ -60,18 +60,18 @@ module ProtoBoeuf
       private
 
       def convert_type(type, optional: false, array: false)
+
         converted_type = TYPE_MAPPING[type] || type
+        if type.is_a?(MapType)
+          converted_type = "T::Hash[#{convert_type(type.key_type)}, #{convert_type(type.value_type)}]"
+        end
         converted_type = "T::Array[#{converted_type}]" if array
         converted_type = "T.nilable(#{converted_type})" if optional
         converted_type
       end
 
       def convert_field_type(field)
-        if field.map?
-          "T::Hash[#{convert_field_type(field.key_field)}, #{convert_field_type(field.value_field)}]"
-        else
-          convert_type(field.type, optional: field.optional?, array: field.repeated?)
-        end
+        convert_type(field.type, optional: field.optional?, array: field.repeated?)
       end
 
       def field_to_params(field)
