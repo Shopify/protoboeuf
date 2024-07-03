@@ -72,5 +72,131 @@ module ProtoBoeuf
       # So this is the solution for now.
       assert_equal File.read("test/fixtures/typed_test.correct.rb"), gen.to_ruby
     end
+
+    def test_bounds_checks
+      proto = <<~PROTO
+        message Test1 {
+          optional int32 i32 = 1;
+          optional sint32 s32 = 2;
+          required uint32 u32 = 3;
+          required int64 i64 = 4;
+          required sint64 s64 = 5;
+          optional uint64 u64 = 6;
+          repeated int32 i32s = 7;
+          repeated sint32 s32s = 8;
+          repeated uint32 u32s = 9;
+          repeated int64 i64s = 10;
+          repeated sint64 s64s = 11;
+          repeated uint64 u64s = 12;
+        }
+      PROTO
+      unit = ProtoBoeuf.parse_string(proto)
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      obj = klass::Test1.new()
+
+      assert_raises RangeError do
+        obj.i32 = -2_147_483_649
+      end
+      obj.i32 = -2_147_483_648
+      obj.i32 = 2_147_483_647
+      assert_raises RangeError do
+        obj.i32 = 2_147_483_648
+      end
+
+      assert_raises RangeError do
+        obj.s32 = -2_147_483_649
+      end
+      obj.s32 = -2_147_483_648
+      obj.s32 = 2_147_483_647
+      assert_raises RangeError do
+        obj.s32 = 2_147_483_648
+      end
+
+      assert_raises RangeError do
+        obj.u32 = -1
+      end
+      obj.u32 = 0
+      obj.u32 = 4_294_967_295
+      assert_raises RangeError do
+        obj.u32 = 4_294_967_296
+      end
+
+      assert_raises RangeError do
+        obj.i64 = -9_223_372_036_854_775_809
+      end
+      obj.i64 = -9_223_372_036_854_775_808
+      obj.i64 = 9_223_372_036_854_775_807
+      assert_raises RangeError do
+        obj.i64 = 9_223_372_036_854_775_808
+      end
+
+      assert_raises RangeError do
+        obj.s64 = -9_223_372_036_854_775_809
+      end
+      obj.s64 = -9_223_372_036_854_775_808
+      obj.s64 = 9_223_372_036_854_775_807
+      assert_raises RangeError do
+        obj.s64 = 9_223_372_036_854_775_808
+      end
+
+      assert_raises RangeError do
+        obj.u64 = -1
+      end
+      obj.u64 = 0
+      obj.u64 = 18_446_744_073_709_551_615
+      assert_raises RangeError do
+        obj.u64 = 18_446_744_073_709_551_616
+      end
+
+      assert_raises RangeError do
+        obj.i32s = [-2_147_483_649, -2_147_483_648, 2_147_483_647]
+      end
+      obj.i32s = [-2_147_483_648, 2_147_483_647]
+      assert_raises RangeError do
+        obj.i32s = [-2_147_483_648, 2_147_483_647, 2_147_483_648]
+      end
+
+      assert_raises RangeError do
+        obj.s32s = [-2_147_483_649, -2_147_483_648, 2_147_483_647]
+      end
+      obj.s32s = [-2_147_483_648, 2_147_483_647]
+      assert_raises RangeError do
+        obj.s32s = [-2_147_483_648, 2_147_483_647, 2_147_483_648]
+      end
+
+      assert_raises RangeError do
+        obj.u32s = [-1, 0, 2_147_483_647]
+      end
+      obj.u32s = [0, 4_294_967_295]
+      assert_raises RangeError do
+        obj.u32s = [0, 4_294_967_295, 4_294_967_296]
+      end
+
+      assert_raises RangeError do
+        obj.i64s = [-9_223_372_036_854_775_809, -9_223_372_036_854_775_808, 9_223_372_036_854_775_807]
+      end
+      obj.i64s = [-9_223_372_036_854_775_808, 2_147_483_647]
+      assert_raises RangeError do
+        obj.i64s = [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807, 9_223_372_036_854_775_808]
+      end
+
+      assert_raises RangeError do
+        obj.s64s = [-9_223_372_036_854_775_809, -9_223_372_036_854_775_808, 9_223_372_036_854_775_807]
+      end
+      obj.s64s = [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807]
+      assert_raises RangeError do
+        obj.s64s = [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807, 9_223_372_036_854_775_808]
+      end
+
+      assert_raises RangeError do
+        obj.u64s = [-1, 0, 2_147_483_647]
+      end
+      obj.u64s = [0, 18_446_744_073_709_551_615]
+      assert_raises RangeError do
+        obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
+      end
+    end
   end
 end

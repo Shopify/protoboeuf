@@ -306,7 +306,6 @@ module ProtoBoeuf
         RUBY
       end
 
-      # NOTE: should we be doing bounds checking somewhere?
       # Ideally this should happen when setting the field value
       # rather than when doing the encoding
       alias encode_uint32 encode_uint64
@@ -471,7 +470,7 @@ module ProtoBoeuf
 
         "# required field readers\n" +
         fields.map do |field|
-          "#{reader_type_signature(field)}\nattr_accessor :#{field.name}\n"
+          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
@@ -516,8 +515,18 @@ module ProtoBoeuf
       end
 
       def required_writers
-        # We generate attr_accessors for required fields, so no need for writers
-        ""
+        fields = message.fields.select(&:field?).reject(&:optional?).reject(&:enum?)
+        return "" if fields.empty?
+
+        fields.map { |field|
+          <<~RUBY
+            #{type_signature(params: {v: field.type})}
+            def #{field.name}=(v)
+              #{bounds_check(field, "v")}
+              @#{field.name} = v
+            end
+          RUBY
+        }.join("\n") + "\n"
       end
 
       def optional_writers
@@ -528,6 +537,7 @@ module ProtoBoeuf
           <<~RUBY
             #{type_signature(params: {v: field.type})}
             def #{field.name}=(v)
+              #{bounds_check(field, "v")}
               #{set_bitmask(field)}
               @#{field.name} = v
             end
@@ -544,6 +554,7 @@ module ProtoBoeuf
           oneof.fields.map { |field|
             <<~RUBY
               def #{field.name}=(v)
+                #{bounds_check(field, "v")}
                 @#{oneof.name} = :#{field.name}
                 @#{field.name} = v
               end
@@ -575,6 +586,7 @@ module ProtoBoeuf
               if #{field.lvar_read} == nil
                 #{field.iv_name} = #{default_for(field)}
               else
+                #{bounds_check(field, field.name)}
                 @#{oneof.name} = :#{field.name}
                 #{field.iv_name} = #{field.lvar_read}
               end
@@ -597,6 +609,7 @@ module ProtoBoeuf
           if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
+            #{bounds_check(field, field.lvar_read).chomp}
             #{set_bitmask(field)}
             #{field.iv_name} = #{field.lvar_read}
           end
@@ -604,7 +617,10 @@ module ProtoBoeuf
       end
 
       def initialize_required_field(field)
-        "@#{field.name} = #{field.name}"
+        <<~RUBY
+          #{bounds_check(field, field.name).chomp}
+          @#{field.name} = #{field.name}
+        RUBY
       end
 
       def initialize_enum_field(field)
@@ -638,6 +654,15 @@ module ProtoBoeuf
         return "" if fields.empty?
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
+
+      TYPE_BOUNDS = {
+        "uint32" => [0, 4_294_967_295],
+        "int32" => [-2_147_483_648,  2_147_483_647],
+        "sint32" => [-2_147_483_648,  2_147_483_647],
+        "uint64" => [0, 18_446_744_073_709_551_615],
+        "int64" => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+        "sint64" => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+      }.freeze
 
       PULL_VARINT = ERB.new(<<~ERB, trim_mode: '-')
         if (byte0 = buff.getbyte(index)) < 0x80
@@ -1124,7 +1149,7 @@ module ProtoBoeuf
         optionals = optional_fields
         raise NotImplementedError unless optionals.length < 63
         if optionals.length > 0
-          "    @_bitmask = 0\n"
+          "    @_bitmask = 0\n\n"
         else
           ""
         end
@@ -1133,6 +1158,28 @@ module ProtoBoeuf
       def set_bitmask(field)
         i = @optional_field_bit_lut[field.number]
         "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
+      end
+
+      def bounds_check(field, value_name)
+        bounds = TYPE_BOUNDS[field.type]
+        return "" unless bounds
+
+        lower_bound, upper_bound = bounds
+        if field.repeated?
+          <<~RUBY
+            #{value_name}.each do |v|
+              unless #{lower_bound} <= v && v <= #{upper_bound}
+                raise RangeError, "Value (\#{v}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
+              end
+            end
+          RUBY
+        else
+          <<~RUBY
+            unless #{lower_bound} <= #{value_name} && #{value_name} <= #{upper_bound}
+              raise RangeError, "Value (\#{#{value_name}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
+            end
+          RUBY
+        end
       end
 
       def test_bitmask(field)

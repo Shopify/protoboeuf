@@ -70,16 +70,16 @@ class Test1
   end
   # required field readers
   sig { returns(Integer) }
-  attr_accessor :int_field
+  attr_reader :int_field
 
   sig { returns(T::Array[Integer]) }
-  attr_accessor :repeated_ints
+  attr_reader :repeated_ints
 
   sig { returns(T::Hash[String, Integer]) }
-  attr_accessor :map_field
+  attr_reader :map_field
 
   sig { returns(String) }
-  attr_accessor :bytes_field
+  attr_reader :bytes_field
 
   # optional field readers
   sig { returns(T.nilable(String)) }
@@ -92,6 +92,38 @@ class Test1
   attr_reader :enum_1
   sig { returns(TestEnum2) }
   attr_reader :enum_2
+
+  sig { params(v: Integer).void }
+  def int_field=(v)
+    unless -2_147_483_648 <= v && v <= 2_147_483_647
+      raise RangeError,
+            "Value (#{v}) for field int_field is out of bounds (-2147483648..2147483647)"
+    end
+
+    @int_field = v
+  end
+
+  sig { params(v: Integer).void }
+  def repeated_ints=(v)
+    v.each do |v|
+      unless -2_147_483_648 <= v && v <= 2_147_483_647
+        raise RangeError,
+              "Value (#{v}}) for field repeated_ints is out of bounds (-2147483648..2147483647)"
+      end
+    end
+
+    @repeated_ints = v
+  end
+
+  sig { params(v: T::Hash[String, Integer]).void }
+  def map_field=(v)
+    @map_field = v
+  end
+
+  sig { params(v: String).void }
+  def bytes_field=(v)
+    @bytes_field = v
+  end
 
   # BEGIN writers for optional fields
   sig { params(v: String).void }
@@ -134,7 +166,13 @@ class Test1
     bytes_field: "".freeze
   )
     @_bitmask = 0
+
+    unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
+      raise RangeError,
+            "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
+    end
     @int_field = int_field
+
     if string_field == nil
       @string_field = "".freeze
     else
@@ -157,8 +195,16 @@ class Test1
       @enum_2 = enum_2
     end
 
+    repeated_ints.each do |v|
+      unless -2_147_483_648 <= v && v <= 2_147_483_647
+        raise RangeError,
+              "Value (#{v}}) for field repeated_ints is out of bounds (-2147483648..2147483647)"
+      end
+    end
     @repeated_ints = repeated_ints
+
     @map_field = map_field
+
     @bytes_field = bytes_field
   end
 
