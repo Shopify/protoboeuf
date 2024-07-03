@@ -2,6 +2,19 @@
 # typed: false
 # frozen_string_literal: false
 
+class BufferWithKnownLength < String
+  extend T::Sig
+  sig { params(offset: Integer).returns(Integer) }
+  def getbyte(offset)
+    T.must(super(offset))
+  end
+
+  sig { params(start: Integer, length: Integer).returns(String) }
+  def byteslice(start, length)
+    T.must(super(start, length))
+  end
+end
+
 module TestEnum
   extend T::Sig
 
@@ -221,6 +234,7 @@ class Test1
 
   sig { params(buff: String, index: Integer, len: Integer).returns(Test1) }
   def decode_from(buff, index, len)
+    buff = T.cast(buff, BufferWithKnownLength)
     @_bitmask = 0
 
     @int_field = 0

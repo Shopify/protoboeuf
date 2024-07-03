@@ -818,6 +818,9 @@ module ProtoBoeuf
 
       DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
         def decode_from(buff, index, len)
+          <%- if generate_types %>
+            buff = T.cast(buff, BufferWithKnownLength)
+          <%- end -%>
           <%= init_bitmask(message) %>
           <%- for field in fields -%>
             <%- if field.field? -%>
@@ -1198,6 +1201,24 @@ module ProtoBoeuf
       end
     end
 
+    def buffer_with_known_length
+      <<~RUBY
+      class BufferWithKnownLength < String
+        extend T::Sig
+        sig { params(offset: Integer).returns(Integer)}
+        def getbyte(offset)
+          T.must(super(offset))
+        end
+
+        sig { params(start: Integer, length: Integer).returns(String)}
+        def byteslice(start, length)
+          T.must(super(start, length))
+        end
+      end
+
+      RUBY
+    end
+
     attr_reader :generate_types
 
     def initialize(ast, generate_types: false)
@@ -1211,6 +1232,8 @@ module ProtoBoeuf
       head += "# typed: false\n" if generate_types
       head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
+
+      head += buffer_with_known_length if generate_types
 
       toplevel_enums = @ast.enums.group_by(&:name)
       body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
