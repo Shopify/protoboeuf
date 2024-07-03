@@ -3,6 +3,8 @@
 # frozen_string_literal: false
 
 module TestEnum
+  extend T::Sig
+
   FOO = 0
   BAR = 1
   BAZ = 2
@@ -30,6 +32,8 @@ module TestEnum
   end
 end
 module TestEnum2
+  extend T::Sig
+
   BAZBAZ = 0
   BARBAR = 1
   FOOFOO = 2

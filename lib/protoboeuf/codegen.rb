@@ -28,6 +28,7 @@ module ProtoBoeuf
       private
 
       def class_body
+        extend_t_sig + "\n\n" +
         enum.constants.map { |const|
           "#{const.name} = #{const.number}"
         }.join("\n") + "\n\n" + lookup + "\n\n" + resolve
