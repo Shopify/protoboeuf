@@ -66,19 +66,19 @@ module ProtoBoeuf
           converted_type = "T::Hash[#{convert_type(type.key_type)}, #{convert_type(type.value_type)}]"
         end
         converted_type = "T::Array[#{converted_type}]" if array
-        converted_type = "T.nilable(#{converted_type})" if optional
+        converted_type =  nilable(converted_type) if optional
         converted_type
       end
 
-      def convert_field_type(field)
-        convert_type(field.type, optional: field.optional?, array: field.repeated?)
+      def convert_field_type(field, force_optional: false)
+        convert_type(field.type, optional: field.optional? || force_optional, array: field.repeated?)
       end
 
-      def field_to_params(field)
+      def field_to_params(field, optional: false)
         if field.oneof?
-          field.fields.flat_map { |field| field_to_params(field) }
+          field.fields.flat_map { |field| field_to_params(field, optional: true) }
         elsif field.field?
-          [field.name, convert_field_type(field)]
+          [field.name, convert_field_type(field, force_optional: optional)]
         else
           raise "Unsupported field #{f.inspect}"
         end
@@ -89,6 +89,10 @@ module ProtoBoeuf
           .flat_map { |field| field_to_params(field) }
           .each_slice(2)
           .to_h
+      end
+
+      def nilable(type)
+        "T.nilable(#{type})"
       end
     end
   end

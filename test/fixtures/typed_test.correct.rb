@@ -168,8 +168,8 @@ class Test1
     params(
       int_field: Integer,
       string_field: T.nilable(String),
-      enum_1: TestEnum,
-      enum_2: TestEnum2,
+      enum_1: T.nilable(TestEnum),
+      enum_2: T.nilable(TestEnum2),
       repeated_ints: T::Array[Integer],
       map_field: T::Hash[String, Integer],
       bytes_field: String
