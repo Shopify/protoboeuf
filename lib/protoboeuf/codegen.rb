@@ -554,6 +554,7 @@ module ProtoBoeuf
         oneof_fields.map { |oneof|
           oneof.fields.map { |field|
             <<~RUBY
+              #{type_signature(params: {v: field.type})}
               def #{field.name}=(v)
                 #{bounds_check(field, "v")}
                 @#{oneof.name} = :#{field.name}

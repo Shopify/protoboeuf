@@ -138,11 +138,13 @@ class Test1
   # END writers for optional fields
 
   # BEGIN writers for oneof fields
+  sig { params(v: TestEnum).void }
   def enum_1=(v)
     @oneof_field = :enum_1
     @enum_1 = v
   end
 
+  sig { params(v: TestEnum2).void }
   def enum_2=(v)
     @oneof_field = :enum_2
     @enum_2 = v
