@@ -95,7 +95,24 @@ class Test1
 
   sig { params(v: Integer).void }
   def int_field=(v)
+    unless -2_147_483_648 <= v && v <= 2_147_483_647
+      raise RangeError,
+            "Value (#{v}) for field int_field is out of bounds (-2147483648..2147483647)"
+    end
+
     @int_field = v
+  end
+
+  sig { params(v: Integer).void }
+  def repeated_ints=(v)
+    v.each do |v|
+      unless -2_147_483_648 <= v && v <= 2_147_483_647
+        raise RangeError,
+              "Value (#{v}}) for field repeated_ints is out of bounds (-2147483648..2147483647)"
+      end
+    end
+
+    @repeated_ints = v
   end
 
   sig { params(v: T::Hash[String, Integer]).void }
@@ -149,7 +166,13 @@ class Test1
     bytes_field: "".freeze
   )
     @_bitmask = 0
+
+    unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
+      raise RangeError,
+            "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
+    end
     @int_field = int_field
+
     if string_field == nil
       @string_field = "".freeze
     else
@@ -172,8 +195,16 @@ class Test1
       @enum_2 = enum_2
     end
 
+    repeated_ints.each do |v|
+      unless -2_147_483_648 <= v && v <= 2_147_483_647
+        raise RangeError,
+              "Value (#{v}}) for field repeated_ints is out of bounds (-2147483648..2147483647)"
+      end
+    end
     @repeated_ints = repeated_ints
+
     @map_field = map_field
+
     @bytes_field = bytes_field
   end
 
