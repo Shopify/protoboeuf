@@ -157,7 +157,7 @@ module ProtoBoeuf
           "\nbuff\n end\n\n"
       end
 
-      def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
+      def encode_subtype(field, value_expr = "@#{field.name}", tagged = true, variable_name = "val")
         method = if field.oneof?
           "encode_oneof"
         elsif field.repeated?
@@ -172,7 +172,7 @@ module ProtoBoeuf
           "encode_submessage"
         end
 
-        send(method, field, value_expr, tagged) if respond_to?(method, true)
+        send(method, field, value_expr, tagged, variable_name) if respond_to?(method, true)
       end
 
       def encode_tag_and_length(field, tagged, len_expr = false)
@@ -195,7 +195,7 @@ module ProtoBoeuf
         result
       end
 
-      def encode_bool(field, value_expr, tagged)
+      def encode_bool(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the false case encodes nothing
         <<~RUBY
           val = #{value_expr}
@@ -210,7 +210,7 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_bytes(field, value_expr, tagged)
+      def encode_bytes(field, value_expr, tagged, variable_name = "val")
         # Empty bytes is default value, so encodes nothing
         <<~RUBY
           val = #{value_expr}
@@ -221,7 +221,7 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_enum(field, value_expr, tagged)
+      def encode_enum(field, value_expr, tagged, variable_name = "val")
         # Zero is default value for enums, so encodes nothing
         <<~RUBY
           val = #{value_expr}
@@ -232,15 +232,15 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_map(field, value_expr, tagged)
+      def encode_map(field, value_expr, tagged, variable_name = "val")
         <<~RUBY
           map = #{value_expr}
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
               buff = new_buffer = ''
-              #{encode_subtype(field.key_field, "key", true)}
-              #{encode_subtype(field.value_field, "value", true)}
+              #{encode_subtype(field.key_field, "key", true, "key")}
+              #{encode_subtype(field.value_field, "value", true, "value")}
               buff = old_buff
               #{encode_tag_and_length(field, true, "new_buffer.bytesize")}
               old_buff.concat(new_buffer)
@@ -249,7 +249,7 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_oneof(field, value_expr, tagged)
+      def encode_oneof(field, value_expr, tagged, variable_name = "val")
         field.fields.map do |f|
           <<~RUBY
             if @#{field.name} == :"#{f.name}"
@@ -259,34 +259,34 @@ module ProtoBoeuf
         end.join("\n")
       end
 
-      def encode_repeated(field, value_expr, tagged)
+      def encode_repeated(field, value_expr, tagged, variable_name = "val")
         <<~RUBY
           list = #{value_expr}
           if list.size > 0
             #{encode_tag_and_length(field, field.packed?, "list.size")}
             list.each do |item|
-              #{encode_subtype(field.item_field, "item", !field.packed?)}
+              #{encode_subtype(field.item_field, "item", !field.packed?, "item")}
             end
           end
         RUBY
       end
 
-      def encode_string(field, value_expr, tagged)
+      def encode_string(field, value_expr, tagged, variable_name = "val")
         # Empty string is default value, so encodes nothing
         <<~RUBY
-          val = #{value_expr}
-          if((len = val.bytesize) > 0)
+          #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+          if((len = #{variable_name}.bytesize) > 0)
             #{encode_tag_and_length(field, tagged, "len")}
-            buff << val
+            buff << #{variable_name}
           end
         RUBY
       end
 
-      def encode_submessage(field, value_expr, tagged)
+      def encode_submessage(field, value_expr, tagged, variable_name = "val")
         <<~RUBY
-          val = #{value_expr}
-          if val
-            encoded = val._encode("")
+          #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+          if #{variable_name}
+            encoded = #{variable_name}._encode("")
             #{encode_tag_and_length(field, true, "encoded.bytesize")}
             buff << encoded
           end
@@ -304,13 +304,13 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_uint64(field, value_expr, tagged)
+      def encode_uint64(field, value_expr, tagged, variable_name = "val")
         # Zero is the default value, so it encodes zero bytes
         <<~RUBY
-          val = #{value_expr}
-          if val != 0
+          #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+          if #{variable_name} != 0
             #{encode_tag_and_length(field, tagged)}
-            #{uint64_code("val")}
+            #{uint64_code(variable_name)}
           end
         RUBY
       end
@@ -319,22 +319,22 @@ module ProtoBoeuf
       # rather than when doing the encoding
       alias encode_uint32 encode_uint64
 
-      def encode_int64(field, value_expr, tagged)
+      def encode_int64(field, value_expr, tagged, variable_name = "val")
         # Zero is the default value, so it encodes zero bytes
         <<~RUBY
-          val = #{value_expr}
-          if val != 0
+          #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+          if #{variable_name} != 0
             #{encode_tag_and_length(field, tagged)}
-            while val != 0
-              byte = val & 0x7F
+            while #{variable_name} != 0
+              byte = #{variable_name} & 0x7F
 
-              val >>= 7
+              #{variable_name} >>= 7
               # This drops the top bits,
               # Otherwise, with a signed right shift,
               # we get infinity one bits at the top
-              val &= (1 << 57) - 1
+              #{variable_name} &= (1 << 57) - 1
 
-              byte |= 0x80 if val != 0
+              byte |= 0x80 if #{variable_name} != 0
               buff << byte
             end
           end
@@ -344,7 +344,7 @@ module ProtoBoeuf
       # The same encoding logic is used for int32 and int64
       alias encode_int32 encode_int64
 
-      def encode_sint64(field, value_expr, tagged)
+      def encode_sint64(field, value_expr, tagged, variable_name = "val")
         # Zero is the default value, so it encodes zero bytes
         <<-eocode
         val = #{value_expr}
@@ -368,70 +368,70 @@ module ProtoBoeuf
       # The same encoding logic is used for sint32 and sint64
       alias encode_sint32 encode_sint64
 
-      def encode_double(field, value_expr, tagged)
+      def encode_double(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('D')
+          buff << [#{variable_name}].pack('D')
         end
-        eocode
+        RUBY
       end
 
-      def encode_float(field, value_expr, tagged)
+      def encode_float(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('F')
+          buff << [#{variable_name}].pack('F')
         end
-        eocode
+        RUBY
       end
 
-      def encode_fixed64(field, value_expr, tagged)
+      def encode_fixed64(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('Q<')
+          buff << [#{variable_name}].pack('Q<')
         end
-        eocode
+        RUBY
       end
 
-      def encode_sfixed64(field, value_expr, tagged)
+      def encode_sfixed64(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('q<')
+          buff << [#{variable_name}].pack('q<')
         end
-        eocode
+        RUBY
       end
 
-      def encode_fixed32(field, value_expr, tagged)
+      def encode_fixed32(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('L<')
+          buff << [#{variable_name}].pack('L<')
         end
-        eocode
+        RUBY
       end
 
-      def encode_sfixed32(field, value_expr, tagged)
+      def encode_sfixed32(field, value_expr, tagged, variable_name = "val")
         # False/zero is the default value, so the zero case encodes nothing
-        <<-eocode
-        val = #{value_expr}
-        if val != 0
+        <<-RUBY
+        #{"#{variable_name} = #{value_expr}" if variable_name != value_expr}
+        if #{variable_name} != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('l<')
+          buff << [#{variable_name}].pack('l<')
         end
-        eocode
+        RUBY
       end
 
       def prelude
@@ -1229,7 +1229,7 @@ module ProtoBoeuf
     def to_ruby
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# encoding: ascii-8bit\n"
-      head += "# typed: false\n" if generate_types
+      head += "# typed: true\n" if generate_types
       head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 

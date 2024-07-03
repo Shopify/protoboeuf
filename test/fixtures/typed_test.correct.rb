@@ -1,5 +1,5 @@
 # encoding: ascii-8bit
-# typed: false
+# typed: true
 # frozen_string_literal: false
 
 class BufferWithKnownLength < String
@@ -956,18 +956,17 @@ class Test1
       end
 
       list.each do |item|
-        val = item
-        if val != 0
-          while val != 0
-            byte = val & 0x7F
+        if item != 0
+          while item != 0
+            byte = item & 0x7F
 
-            val >>= 7
+            item >>= 7
             # This drops the top bits,
             # Otherwise, with a signed right shift,
             # we get infinity one bits at the top
-            val &= (1 << 57) - 1
+            item &= (1 << 57) - 1
 
-            byte |= 0x80 if val != 0
+            byte |= 0x80 if item != 0
             buff << byte
           end
         end
@@ -979,8 +978,8 @@ class Test1
       old_buff = buff
       map.each do |key, value|
         buff = new_buffer = ""
-        val = key
-        if ((len = val.bytesize) > 0)
+
+        if ((len = key.bytesize) > 0)
           buff << 0x0a
           while len != 0
             byte = len & 0x7F
@@ -989,23 +988,22 @@ class Test1
             buff << byte
           end
 
-          buff << val
+          buff << key
         end
 
-        val = value
-        if val != 0
+        if value != 0
           buff << 0x10
 
-          while val != 0
-            byte = val & 0x7F
+          while value != 0
+            byte = value & 0x7F
 
-            val >>= 7
+            value >>= 7
             # This drops the top bits,
             # Otherwise, with a signed right shift,
             # we get infinity one bits at the top
-            val &= (1 << 57) - 1
+            value &= (1 << 57) - 1
 
-            byte |= 0x80 if val != 0
+            byte |= 0x80 if value != 0
             buff << byte
           end
         end
