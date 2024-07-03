@@ -70,16 +70,16 @@ class Test1
   end
   # required field readers
   sig { returns(Integer) }
-  attr_accessor :int_field
+  attr_reader :int_field
 
   sig { returns(T::Array[Integer]) }
-  attr_accessor :repeated_ints
+  attr_reader :repeated_ints
 
   sig { returns(T::Hash[String, Integer]) }
-  attr_accessor :map_field
+  attr_reader :map_field
 
   sig { returns(String) }
-  attr_accessor :bytes_field
+  attr_reader :bytes_field
 
   # optional field readers
   sig { returns(T.nilable(String)) }
@@ -92,6 +92,21 @@ class Test1
   attr_reader :enum_1
   sig { returns(TestEnum2) }
   attr_reader :enum_2
+
+  sig { params(v: Integer).void }
+  def int_field=(v)
+    @int_field = v
+  end
+
+  sig { params(v: T::Hash[String, Integer]).void }
+  def map_field=(v)
+    @map_field = v
+  end
+
+  sig { params(v: String).void }
+  def bytes_field=(v)
+    @bytes_field = v
+  end
 
   # BEGIN writers for optional fields
   sig { params(v: String).void }

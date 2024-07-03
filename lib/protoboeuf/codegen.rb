@@ -471,7 +471,7 @@ module ProtoBoeuf
 
         "# required field readers\n" +
         fields.map do |field|
-          "#{reader_type_signature(field)}\nattr_accessor :#{field.name}\n"
+          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
         end.join("\n") +
         "\n\n"
       end
@@ -516,8 +516,16 @@ module ProtoBoeuf
       end
 
       def required_writers
-        # We generate attr_accessors for required fields, so no need for writers
-        ""
+        return "" if @required_fields.empty?
+
+        @required_fields.map { |field|
+          <<~RUBY
+            #{type_signature(params: {v: field.type})}
+            def #{field.name}=(v)
+              @#{field.name} = v
+            end
+          RUBY
+        }.join("\n") + "\n"
       end
 
       def optional_writers
