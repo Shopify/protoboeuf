@@ -187,17 +187,15 @@ class Test1
     @_bitmask = 0
 
     unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
+    @int_field = int_field || 0
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
     end
-    @int_field = int_field
+    @_bitmask |= 0x0000000000000001 if int_field
 
-    if string_field == nil
-      @string_field = "".freeze
-    else
-      @_bitmask |= 0x0000000000000001
-      @string_field = string_field
-    end
+    @string_field = string_field || "".freeze
+
+    @_bitmask |= 0x0000000000000002 if string_field
 
     @oneof_field = nil # oneof field
     if string_1 == nil

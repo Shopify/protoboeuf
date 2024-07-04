@@ -616,13 +616,9 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          if #{field.lvar_read} == nil
-            #{field.iv_name} = #{default_for(field)}
-          else
-            #{bounds_check(field, field.lvar_read).chomp}
-            #{set_bitmask(field)}
-            #{field.iv_name} = #{field.lvar_read}
-          end
+          #{field.iv_name} = #{field.lvar_read} || #{default_for(field)}
+          #{bounds_check(field, field.lvar_read).chomp}
+          #{set_bitmask(field)} if #{field.lvar_read}
         RUBY
       end
 
@@ -1184,11 +1180,11 @@ module ProtoBoeuf
               unless #{lower_bound} <= v && v <= #{upper_bound}
                 raise RangeError, "Value (\#{v}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
               end
-            end
+            end #{"if #{value_name}" if field.optional?}
           RUBY
         else
           <<~RUBY
-            unless #{lower_bound} <= #{value_name} && #{value_name} <= #{upper_bound}
+            if #{"#{value_name} && "if field.optional?} (#{value_name} < #{lower_bound} || #{value_name} > #{upper_bound})
               raise RangeError, "Value (\#{#{value_name}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
             end
           RUBY
