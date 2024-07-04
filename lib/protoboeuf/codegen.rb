@@ -529,7 +529,7 @@ module ProtoBoeuf
 
         fields.map { |field|
           <<~RUBY
-            #{type_signature(params: {v: field.type})}
+            #{type_signature(params: {v: field})}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               @#{field.name} = v
@@ -544,7 +544,7 @@ module ProtoBoeuf
         "# BEGIN writers for optional fields\n" +
         optional_fields.map { |field|
           <<~RUBY
-            #{type_signature(params: {v: field.type})}
+            #{type_signature(params: {v: field})}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               #{set_bitmask(field)}

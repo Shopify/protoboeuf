@@ -60,6 +60,7 @@ module ProtoBoeuf
       private
 
       def convert_type(type, optional: false, array: false)
+        return convert_field_type(type) if type.is_a?(Field)
 
         converted_type = TYPE_MAPPING[type] || type
         if type.is_a?(MapType)

@@ -86,9 +86,6 @@ class Test1
     obj._encode("").force_encoding(Encoding::ASCII_8BIT)
   end
   # required field readers
-  sig { returns(Integer) }
-  attr_reader :int_field
-
   sig { returns(T::Array[Integer]) }
   attr_reader :repeated_ints
 
@@ -99,6 +96,9 @@ class Test1
   attr_reader :bytes_field
 
   # optional field readers
+  sig { returns(T.nilable(Integer)) }
+  attr_reader :int_field
+
   sig { returns(T.nilable(String)) }
   attr_reader :string_field
 
@@ -110,17 +110,7 @@ class Test1
   sig { returns(String) }
   attr_reader :string_2
 
-  sig { params(v: Integer).void }
-  def int_field=(v)
-    unless -2_147_483_648 <= v && v <= 2_147_483_647
-      raise RangeError,
-            "Value (#{v}) for field int_field is out of bounds (-2147483648..2147483647)"
-    end
-
-    @int_field = v
-  end
-
-  sig { params(v: Integer).void }
+  sig { params(v: T::Array[Integer]).void }
   def repeated_ints=(v)
     v.each do |v|
       unless -2_147_483_648 <= v && v <= 2_147_483_647
@@ -143,9 +133,20 @@ class Test1
   end
 
   # BEGIN writers for optional fields
-  sig { params(v: String).void }
-  def string_field=(v)
+  sig { params(v: T.nilable(Integer)).void }
+  def int_field=(v)
+    if v && (v < -2_147_483_648 || v > 2_147_483_647)
+      raise RangeError,
+            "Value (#{v}) for field int_field is out of bounds (-2147483648..2147483647)"
+    end
+
     @_bitmask |= 0x0000000000000001
+    @int_field = v
+  end
+
+  sig { params(v: T.nilable(String)).void }
+  def string_field=(v)
+    @_bitmask |= 0x0000000000000002
     @string_field = v
   end
   # END writers for optional fields
@@ -166,7 +167,7 @@ class Test1
 
   sig do
     params(
-      int_field: Integer,
+      int_field: T.nilable(Integer),
       string_field: T.nilable(String),
       string_1: T.nilable(String),
       string_2: T.nilable(String),
@@ -176,7 +177,7 @@ class Test1
     ).void
   end
   def initialize(
-    int_field: 0,
+    int_field: nil,
     string_field: nil,
     string_1: nil,
     string_2: nil,
@@ -186,8 +187,8 @@ class Test1
   )
     @_bitmask = 0
 
-    unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
     @int_field = int_field || 0
+    if int_field && (int_field < -2_147_483_648 || int_field > 2_147_483_647)
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
     end
@@ -226,8 +227,13 @@ class Test1
   end
 
   sig { returns(T::Boolean) }
-  def has_string_field?
+  def has_int_field?
     (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+  end
+
+  sig { returns(T::Boolean) }
+  def has_string_field?
+    (@_bitmask & 0x0000000000000002) == 0x0000000000000002
   end
 
   sig { params(buff: String, index: Integer, len: Integer).returns(Test1) }
@@ -313,6 +319,7 @@ class Test1
 
         ## END PULL_INT32
 
+        @_bitmask |= 0x0000000000000001
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
@@ -373,7 +380,7 @@ class Test1
 
         ## END PULL_STRING
 
-        @_bitmask |= 0x0000000000000001
+        @_bitmask |= 0x0000000000000002
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
