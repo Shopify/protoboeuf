@@ -105,10 +105,10 @@ class Test1
   # oneof field readers
   sig { returns(Symbol) }
   attr_reader :oneof_field
-  sig { returns(TestEnum) }
-  attr_reader :enum_1
-  sig { returns(TestEnum2) }
-  attr_reader :enum_2
+  sig { returns(String) }
+  attr_reader :string_1
+  sig { returns(String) }
+  attr_reader :string_2
 
   sig { params(v: Integer).void }
   def int_field=(v)
@@ -151,16 +151,16 @@ class Test1
   # END writers for optional fields
 
   # BEGIN writers for oneof fields
-  sig { params(v: TestEnum).void }
-  def enum_1=(v)
-    @oneof_field = :enum_1
-    @enum_1 = v
+  sig { params(v: String).void }
+  def string_1=(v)
+    @oneof_field = :string_1
+    @string_1 = v
   end
 
-  sig { params(v: TestEnum2).void }
-  def enum_2=(v)
-    @oneof_field = :enum_2
-    @enum_2 = v
+  sig { params(v: String).void }
+  def string_2=(v)
+    @oneof_field = :string_2
+    @string_2 = v
   end
   # END writers for oneof fields
 
@@ -168,8 +168,8 @@ class Test1
     params(
       int_field: Integer,
       string_field: T.nilable(String),
-      enum_1: T.nilable(TestEnum),
-      enum_2: T.nilable(TestEnum2),
+      string_1: T.nilable(String),
+      string_2: T.nilable(String),
       repeated_ints: T::Array[Integer],
       map_field: T::Hash[String, Integer],
       bytes_field: String
@@ -178,8 +178,8 @@ class Test1
   def initialize(
     int_field: 0,
     string_field: nil,
-    enum_1: nil,
-    enum_2: nil,
+    string_1: nil,
+    string_2: nil,
     repeated_ints: [],
     map_field: {},
     bytes_field: "".freeze
@@ -200,18 +200,18 @@ class Test1
     end
 
     @oneof_field = nil # oneof field
-    if enum_1 == nil
-      @enum_1 = nil
+    if string_1 == nil
+      @string_1 = "".freeze
     else
-      @oneof_field = :enum_1
-      @enum_1 = enum_1
+      @oneof_field = :string_1
+      @string_1 = string_1
     end
 
-    if enum_2 == nil
-      @enum_2 = nil
+    if string_2 == nil
+      @string_2 = "".freeze
     else
-      @oneof_field = :enum_2
-      @enum_2 = enum_2
+      @oneof_field = :string_2
+      @string_2 = string_2
     end
 
     repeated_ints.each do |v|
@@ -240,8 +240,8 @@ class Test1
     @int_field = 0
     @string_field = "".freeze
     @oneof_field = nil # oneof field
-    @enum_1 = nil
-    @enum_2 = nil
+    @string_1 = "".freeze
+    @string_2 = "".freeze
     @repeated_ints = []
     @map_field = {}
     @bytes_field = "".freeze
@@ -381,9 +381,8 @@ class Test1
         index += 1
       end
       if tag == 0x1a
-        ## PULL_MESSAGE
-        ## PULL_UINT64
-        msg_len =
+        ## PULL_STRING
+        value =
           if (byte0 = buff.getbyte(index)) < 0x80
             index += 1
             byte0
@@ -432,20 +431,19 @@ class Test1
             raise "integer decoding error"
           end
 
-        ## END PULL_UINT64
+        @string_1 = buff.byteslice(index, value)
+        index += value
 
-        @enum_1 = TestEnum.allocate.decode_from(buff, index, index += msg_len)
-        ## END PULL_MESSAGE
+        ## END PULL_STRING
 
-        @oneof_field = :enum_1
+        @oneof_field = :string_1
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
       end
       if tag == 0x22
-        ## PULL_MESSAGE
-        ## PULL_UINT64
-        msg_len =
+        ## PULL_STRING
+        value =
           if (byte0 = buff.getbyte(index)) < 0x80
             index += 1
             byte0
@@ -494,12 +492,12 @@ class Test1
             raise "integer decoding error"
           end
 
-        ## END PULL_UINT64
+        @string_2 = buff.byteslice(index, value)
+        index += value
 
-        @enum_2 = TestEnum2.allocate.decode_from(buff, index, index += msg_len)
-        ## END PULL_MESSAGE
+        ## END PULL_STRING
 
-        @oneof_field = :enum_2
+        @oneof_field = :string_2
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
@@ -910,12 +908,10 @@ class Test1
       buff << val
     end
 
-    if @oneof_field == :"enum_1"
-      val = @enum_1
-      if val
-        encoded = val._encode("")
+    if @oneof_field == :"string_1"
+      val = @string_1
+      if ((len = val.bytesize) > 0)
         buff << 0x1a
-        len = encoded.bytesize
         while len != 0
           byte = len & 0x7F
           len >>= 7
@@ -923,16 +919,14 @@ class Test1
           buff << byte
         end
 
-        buff << encoded
+        buff << val
       end
     end
 
-    if @oneof_field == :"enum_2"
-      val = @enum_2
-      if val
-        encoded = val._encode("")
+    if @oneof_field == :"string_2"
+      val = @string_2
+      if ((len = val.bytesize) > 0)
         buff << 0x22
-        len = encoded.bytesize
         while len != 0
           byte = len & 0x7F
           len >>= 7
@@ -940,7 +934,7 @@ class Test1
           buff << byte
         end
 
-        buff << encoded
+        buff << val
       end
     end
 
