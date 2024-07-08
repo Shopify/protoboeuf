@@ -949,6 +949,8 @@ class Test1
       end
 
       list.each do |item|
+        byte = 0
+
         if item != 0
           while item != 0
             byte = item & 0x7F
@@ -970,6 +972,7 @@ class Test1
     if map.size > 0
       old_buff = buff
       map.each do |key, value|
+        byte = 0
         buff = new_buffer = ""
 
         if ((len = key.bytesize) > 0)

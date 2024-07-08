@@ -238,6 +238,7 @@ module ProtoBoeuf
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
+              byte = 0
               buff = new_buffer = ''
               #{encode_subtype(field.key_field, "key", true, "key")}
               #{encode_subtype(field.value_field, "value", true, "value")}
@@ -265,6 +266,7 @@ module ProtoBoeuf
           if list.size > 0
             #{encode_tag_and_length(field, field.packed?, "list.size")}
             list.each do |item|
+              byte = 0
               #{encode_subtype(field.item_field, "item", !field.packed?, "item")}
             end
           end
