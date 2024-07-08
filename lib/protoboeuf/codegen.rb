@@ -1225,7 +1225,7 @@ module ProtoBoeuf
     def to_ruby
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# encoding: ascii-8bit\n"
-      head += "# typed: true\n" if generate_types
+      head += "# typed: strict\n" if generate_types
       head += "# frozen_string_literal: false\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 

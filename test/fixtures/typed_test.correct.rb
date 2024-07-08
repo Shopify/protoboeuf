@@ -1,5 +1,5 @@
 # encoding: ascii-8bit
-# typed: true
+# typed: strict
 # frozen_string_literal: false
 
 class BufferWithKnownLength < String
