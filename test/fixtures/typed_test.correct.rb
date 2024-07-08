@@ -96,10 +96,10 @@ class Test1
   attr_reader :bytes_field
 
   # optional field readers
-  sig { returns(T.nilable(Integer)) }
+  sig { returns(Integer) }
   attr_reader :int_field
 
-  sig { returns(T.nilable(String)) }
+  sig { returns(String) }
   attr_reader :string_field
 
   # oneof field readers
@@ -187,14 +187,14 @@ class Test1
   )
     @_bitmask = T.let(0, Integer)
 
-    @int_field = T.let(int_field || 0, T.nilable(Integer))
+    @int_field = T.let(int_field || 0, Integer)
     if int_field && (int_field < -2_147_483_648 || int_field > 2_147_483_647)
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
     end
     @_bitmask |= 0x0000000000000001 if int_field
 
-    @string_field = T.let(string_field || "".freeze, T.nilable(String))
+    @string_field = T.let(string_field || "".freeze, String)
 
     @_bitmask |= 0x0000000000000002 if string_field
 

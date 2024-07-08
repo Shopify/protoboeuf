@@ -41,7 +41,7 @@ module ProtoBoeuf
         return value unless generate_types
 
         type = if field_or_type.is_a?(Field)
-          convert_field_type(field_or_type)
+          convert_field_type(field_or_type, prohibit_optional: true)
         else
           convert_type(field_or_type)
         end
@@ -56,7 +56,7 @@ module ProtoBoeuf
 
       def reader_type_signature(type)
         if type.is_a?(Field)
-          type_signature(returns: convert_field_type(type))
+          type_signature(returns: convert_field_type(type, prohibit_optional: true))
         else
           type_signature(returns: convert_type(type))
         end
@@ -82,8 +82,11 @@ module ProtoBoeuf
         converted_type
       end
 
-      def convert_field_type(field, force_optional: false)
-        convert_type(field.type, optional: field.optional? || force_optional, array: field.repeated?)
+      def convert_field_type(field, force_optional: false, prohibit_optional: false)
+        optional = field.optional? || force_optional
+        optional = false if prohibit_optional
+
+        convert_type(field.type, optional: optional, array: field.repeated?)
       end
 
       def field_to_params(field, optional: false)
