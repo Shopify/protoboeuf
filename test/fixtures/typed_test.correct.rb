@@ -107,8 +107,8 @@ class Test1
   attr_reader :oneof_field
   sig { returns(String) }
   attr_reader :string_1
-  sig { returns(String) }
-  attr_reader :string_2
+  sig { returns(Integer) }
+  attr_reader :int_1
 
   sig { params(v: T::Array[Integer]).void }
   def repeated_ints=(v)
@@ -158,10 +158,15 @@ class Test1
     @string_1 = v
   end
 
-  sig { params(v: String).void }
-  def string_2=(v)
-    @oneof_field = :string_2
-    @string_2 = v
+  sig { params(v: Integer).void }
+  def int_1=(v)
+    if (v < -2_147_483_648 || v > 2_147_483_647)
+      raise RangeError,
+            "Value (#{v}) for field int_1 is out of bounds (-2147483648..2147483647)"
+    end
+
+    @oneof_field = :int_1
+    @int_1 = v
   end
   # END writers for oneof fields
 
@@ -170,7 +175,7 @@ class Test1
       int_field: T.nilable(Integer),
       string_field: T.nilable(String),
       string_1: T.nilable(String),
-      string_2: T.nilable(String),
+      int_1: T.nilable(Integer),
       repeated_ints: T::Array[Integer],
       map_field: T::Hash[String, Integer],
       bytes_field: String
@@ -180,7 +185,7 @@ class Test1
     int_field: nil,
     string_field: nil,
     string_1: nil,
-    string_2: nil,
+    int_1: nil,
     repeated_ints: [],
     map_field: {},
     bytes_field: "".freeze
@@ -203,9 +208,13 @@ class Test1
 
     @oneof_field = :string_1 if string_1
 
-    @string_2 = T.let(string_2 || "".freeze, String)
+    @int_1 = T.let(int_1 || 0, Integer)
+    if (int_1 < -2_147_483_648 || int_1 > 2_147_483_647)
+      raise RangeError,
+            "Value (#{int_1}) for field int_1 is out of bounds (-2147483648..2147483647)"
+    end
 
-    @oneof_field = :string_2 if string_2
+    @oneof_field = :int_1 if int_1
 
     repeated_ints.each do |v|
       unless -2_147_483_648 <= v && v <= 2_147_483_647
@@ -239,7 +248,7 @@ class Test1
     @string_field = "".freeze
     @oneof_field = nil # oneof field
     @string_1 = "".freeze
-    @string_2 = "".freeze
+    @int_1 = 0
     @repeated_ints = []
     @map_field = {}
     @bytes_field = "".freeze
@@ -440,9 +449,9 @@ class Test1
         tag = buff.getbyte(index)
         index += 1
       end
-      if tag == 0x22
-        ## PULL_STRING
-        value =
+      if tag == 0x20
+        ## PULL_INT32
+        @int_1 =
           if (byte0 = buff.getbyte(index)) < 0x80
             index += 1
             byte0
@@ -483,20 +492,29 @@ class Test1
           elsif (byte9 = buff.getbyte(index + 9)) < 0x80
             index += 10
 
-            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
-              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            # Negative 32 bit integers are still encoded with 10 bytes
+            # handle 2's complement negative numbers
+            # If the top bit is 1, then it must be negative.
+            -(
+              (
+                (
+                  ~(
+                    (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                      ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  )
+                ) & 0xFFFF_FFFF
+              ) + 1
+            )
           else
             raise "integer decoding error"
           end
 
-        @string_2 = buff.byteslice(index, value)
-        index += value
+        ## END PULL_INT32
 
-        ## END PULL_STRING
-
-        @oneof_field = :string_2
+        @oneof_field = :int_1
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
@@ -922,18 +940,23 @@ class Test1
       end
     end
 
-    if @oneof_field == :"string_2"
-      val = @string_2
-      if ((len = val.bytesize) > 0)
-        buff << 0x22
-        while len != 0
-          byte = len & 0x7F
-          len >>= 7
-          byte |= 0x80 if len > 0
+    if @oneof_field == :"int_1"
+      val = @int_1
+      if val != 0
+        buff << 0x20
+
+        while val != 0
+          byte = val & 0x7F
+
+          val >>= 7
+          # This drops the top bits,
+          # Otherwise, with a signed right shift,
+          # we get infinity one bits at the top
+          val &= (1 << 57) - 1
+
+          byte |= 0x80 if val != 0
           buff << byte
         end
-
-        buff << val
       end
     end
 
