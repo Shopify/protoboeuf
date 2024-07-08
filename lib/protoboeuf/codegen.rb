@@ -590,16 +590,12 @@ module ProtoBoeuf
       end
 
       def initialize_oneof(oneof)
-        "@#{oneof.name} = nil # oneof field\n" +
+        "@#{oneof.name} = #{ivar_signature("T.nilable(Symbol)", "nil")} # oneof field\n" +
           oneof.fields.map { |field|
             <<~RUBY
-              if #{field.lvar_read} == nil
-                #{field.iv_name} = #{default_for(field)}
-              else
-                #{bounds_check(field, field.name)}
-                @#{oneof.name} = :#{field.name}
-                #{field.iv_name} = #{field.lvar_read}
-              end
+              #{field.iv_name} = #{ivar_signature(field, "#{field.lvar_read} || #{default_for(field)}")}
+              #{bounds_check(field, field.name)}
+              @#{oneof.name} = :#{field.name} if #{field.lvar_read}
             RUBY
           }.join("\n")
       end
@@ -1154,7 +1150,6 @@ module ProtoBoeuf
         msg.fields.select(&:field?).reject(&:optional?)
       end
 
-      def init_bitmask(msg)
       def init_bitmask(msg, signature: false)
         optionals = optional_fields
         raise NotImplementedError unless optionals.length < 63

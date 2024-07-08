@@ -198,20 +198,14 @@ class Test1
 
     @_bitmask |= 0x0000000000000002 if string_field
 
-    @oneof_field = nil # oneof field
-    if string_1 == nil
-      @string_1 = "".freeze
-    else
-      @oneof_field = :string_1
-      @string_1 = string_1
-    end
+    @oneof_field = T.let(nil, T.nilable(Symbol)) # oneof field
+    @string_1 = T.let(string_1 || "".freeze, String)
 
-    if string_2 == nil
-      @string_2 = "".freeze
-    else
-      @oneof_field = :string_2
-      @string_2 = string_2
-    end
+    @oneof_field = :string_1 if string_1
+
+    @string_2 = T.let(string_2 || "".freeze, String)
+
+    @oneof_field = :string_2 if string_2
 
     repeated_ints.each do |v|
       unless -2_147_483_648 <= v && v <= 2_147_483_647
