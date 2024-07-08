@@ -141,13 +141,13 @@ class Test1
     end
 
     @_bitmask |= 0x0000000000000001
-    @int_field = v
+    @int_field = v || 0
   end
 
   sig { params(v: T.nilable(String)).void }
   def string_field=(v)
     @_bitmask |= 0x0000000000000002
-    @string_field = v
+    @string_field = v || "".freeze
   end
   # END writers for optional fields
 

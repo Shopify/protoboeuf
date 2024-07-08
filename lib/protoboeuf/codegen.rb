@@ -548,7 +548,7 @@ module ProtoBoeuf
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               #{set_bitmask(field)}
-              @#{field.name} = v
+              @#{field.name} = v || #{default_for(field)}
             end
           RUBY
         }.join("\n") +
