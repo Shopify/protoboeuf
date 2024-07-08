@@ -500,7 +500,7 @@ module ProtoBoeuf
         "# oneof field readers\n" +
         oneof_fields.map do |field|
           [
-            reader_type_signature("Symbol"),
+            reader_type_signature("T.nilable(Symbol)"),
             "attr_reader :#{field.name}",
             field.fields.map do |sub_field|
               "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"

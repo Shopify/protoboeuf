@@ -103,7 +103,7 @@ class Test1
   attr_reader :string_field
 
   # oneof field readers
-  sig { returns(Symbol) }
+  sig { returns(T.nilable(Symbol)) }
   attr_reader :oneof_field
   sig { returns(String) }
   attr_reader :string_1
