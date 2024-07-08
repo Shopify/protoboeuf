@@ -596,7 +596,7 @@ module ProtoBoeuf
           oneof.fields.map { |field|
             <<~RUBY
               #{field.iv_name} = #{ivar_signature(field, "#{field.lvar_read} || #{default_for(field)}")}
-              #{bounds_check(field, field.name)}
+              #{bounds_check(field, field.name, force_optional: true)}
               @#{oneof.name} = :#{field.name} if #{field.lvar_read}
             RUBY
           }.join("\n")
@@ -1172,7 +1172,7 @@ module ProtoBoeuf
         "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
       end
 
-      def bounds_check(field, value_name)
+      def bounds_check(field, value_name, force_optional: false)
         bounds = TYPE_BOUNDS[field.type]
         return "" unless bounds
 
@@ -1183,11 +1183,11 @@ module ProtoBoeuf
               unless #{lower_bound} <= v && v <= #{upper_bound}
                 raise RangeError, "Value (\#{v}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
               end
-            end #{"if #{value_name}" if field.optional?}
+            end #{"if #{value_name}" if field.optional? || force_optional}
           RUBY
         else
           <<~RUBY
-            if #{"#{value_name} && "if field.optional?} (#{value_name} < #{lower_bound} || #{value_name} > #{upper_bound})
+            if #{"#{value_name} && "if field.optional? || force_optional} (#{value_name} < #{lower_bound} || #{value_name} > #{upper_bound})
               raise RangeError, "Value (\#{#{value_name}}) for field #{field.name} is out of bounds (#{lower_bound}..#{upper_bound})"
             end
           RUBY

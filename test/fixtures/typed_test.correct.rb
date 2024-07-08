@@ -209,7 +209,7 @@ class Test1
     @oneof_field = :string_1 if string_1
 
     @int_1 = T.let(int_1 || 0, Integer)
-    if (int_1 < -2_147_483_648 || int_1 > 2_147_483_647)
+    if int_1 && (int_1 < -2_147_483_648 || int_1 > 2_147_483_647)
       raise RangeError,
             "Value (#{int_1}) for field int_1 is out of bounds (-2147483648..2147483647)"
     end
