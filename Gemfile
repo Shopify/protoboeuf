@@ -9,3 +9,6 @@ gem "rake"
 gem "minitest"
 gem "benchmark-ips"
 gem "syntax_tree"
+gem 'sorbet'
+gem 'sorbet-runtime'
+gem 'tapioca'

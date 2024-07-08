@@ -1,4 +1,5 @@
 require "helper"
+require "open3"
 
 module ProtoBoeuf
   class CodeGenTest < Test
@@ -71,6 +72,9 @@ module ProtoBoeuf
       # correctly without pulling in all of sorbet is at the very least incredibly complex.
       # So this is the solution for now.
       assert_equal File.read("test/fixtures/typed_test.correct.rb"), gen.to_ruby
+
+      output, status = Open3.capture2e("bin/srb", "tc", "--no-config", "test/fixtures/typed_test.generated.rb")
+      assert_equal 0, status, "Sorbet type checking failed, errors:\n\n#{output}"
     end
 
     def test_bounds_checks
