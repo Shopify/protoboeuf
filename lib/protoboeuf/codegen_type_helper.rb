@@ -37,6 +37,17 @@ module ProtoBoeuf
         complete_sig += "\n"
       end
 
+      def ivar_signature(field_or_type, value)
+        return value unless generate_types
+
+        type = if field_or_type.is_a?(Field)
+          convert_field_type(field_or_type)
+        else
+          convert_type(field_or_type)
+        end
+        "T.let(#{value}, #{type})"
+      end
+
       def initialize_type_signature(fields)
         return "" unless generate_types
 

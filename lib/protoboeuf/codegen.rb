@@ -577,7 +577,7 @@ module ProtoBoeuf
       def initialize_code
           initialize_type_signature(fields) +
           "def initialize(" + initialize_signature + ")\n" +
-          init_bitmask(message) +
+          init_bitmask(message, signature: true) +
           fields.map { |field|
             if field.field?
               initialize_field(field)
@@ -616,7 +616,7 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          #{field.iv_name} = #{field.lvar_read} || #{default_for(field)}
+          #{field.iv_name} = #{ivar_signature(field, "#{field.lvar_read} || #{default_for(field)}")}
           #{bounds_check(field, field.lvar_read).chomp}
           #{set_bitmask(field)} if #{field.lvar_read}
         RUBY
@@ -625,7 +625,7 @@ module ProtoBoeuf
       def initialize_required_field(field)
         <<~RUBY
           #{bounds_check(field, field.name).chomp}
-          @#{field.name} = #{field.name}
+          @#{field.name} = #{ivar_signature(field, field.name)}
         RUBY
       end
 
@@ -1155,10 +1155,16 @@ module ProtoBoeuf
       end
 
       def init_bitmask(msg)
+      def init_bitmask(msg, signature: false)
         optionals = optional_fields
         raise NotImplementedError unless optionals.length < 63
         if optionals.length > 0
-          "    @_bitmask = 0\n\n"
+          value = if signature
+            ivar_signature(Integer, 0)
+          else
+            0
+          end
+          "    @_bitmask = #{value}\n\n"
         else
           ""
         end

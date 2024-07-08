@@ -185,16 +185,16 @@ class Test1
     map_field: {},
     bytes_field: "".freeze
   )
-    @_bitmask = 0
+    @_bitmask = T.let(0, Integer)
 
-    @int_field = int_field || 0
+    @int_field = T.let(int_field || 0, T.nilable(Integer))
     if int_field && (int_field < -2_147_483_648 || int_field > 2_147_483_647)
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
     end
     @_bitmask |= 0x0000000000000001 if int_field
 
-    @string_field = string_field || "".freeze
+    @string_field = T.let(string_field || "".freeze, T.nilable(String))
 
     @_bitmask |= 0x0000000000000002 if string_field
 
@@ -219,11 +219,11 @@ class Test1
               "Value (#{v}}) for field repeated_ints is out of bounds (-2147483648..2147483647)"
       end
     end
-    @repeated_ints = repeated_ints
+    @repeated_ints = T.let(repeated_ints, T::Array[Integer])
 
-    @map_field = map_field
+    @map_field = T.let(map_field, T::Hash[String, Integer])
 
-    @bytes_field = bytes_field
+    @bytes_field = T.let(bytes_field, String)
   end
 
   sig { returns(T::Boolean) }
