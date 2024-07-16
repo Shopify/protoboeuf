@@ -893,34 +893,60 @@ class Test1
     if @oneof_field == :"enum_1"
       val = @enum_1
       if val
-        encoded = val._encode("")
         buff << 0x1a
-        len = encoded.bytesize
-        while len != 0
-          byte = len & 0x7F
-          len >>= 7
-          byte |= 0x80 if len > 0
-          buff << byte
-        end
 
-        buff << encoded
+        # Save the buffer size before appending the submessage
+        current_len = buff.bytesize
+        val._encode(buff)
+
+        # Calculate the submessage's size
+        submessage_size = buff.bytesize - current_len
+
+        # Calculate the number of bytes required to encode the submessage
+        encoded_len_len = uint64_encoded_size(submessage_size)
+
+        # Write some dummy bytes in to expand the buffer.
+        # We'll write over those bytes with the encoded length
+        buff.bytesplice(current_len, 0, "1234567890".freeze, 0, encoded_len_len)
+
+        # Write the submessage size in to the buffer
+        while submessage_size != 0
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+          current_len += 1
+        end
       end
     end
 
     if @oneof_field == :"enum_2"
       val = @enum_2
       if val
-        encoded = val._encode("")
         buff << 0x22
-        len = encoded.bytesize
-        while len != 0
-          byte = len & 0x7F
-          len >>= 7
-          byte |= 0x80 if len > 0
-          buff << byte
-        end
 
-        buff << encoded
+        # Save the buffer size before appending the submessage
+        current_len = buff.bytesize
+        val._encode(buff)
+
+        # Calculate the submessage's size
+        submessage_size = buff.bytesize - current_len
+
+        # Calculate the number of bytes required to encode the submessage
+        encoded_len_len = uint64_encoded_size(submessage_size)
+
+        # Write some dummy bytes in to expand the buffer.
+        # We'll write over those bytes with the encoded length
+        buff.bytesplice(current_len, 0, "1234567890".freeze, 0, encoded_len_len)
+
+        # Write the submessage size in to the buffer
+        while submessage_size != 0
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+          current_len += 1
+        end
       end
     end
 
@@ -1031,5 +1057,48 @@ class Test1
     result["map_field".to_sym] = @map_field
     result["bytes_field".to_sym] = @bytes_field
     result
+  end
+
+  private
+
+  sig { params(val: Integer).returns(Integer) }
+  def uint64_encoded_size(val)
+    if val > 0x7f
+      if val > 0x3fff
+        if val > 0x1fffff
+          if val > 0xfffffff
+            if val > 0x7ffffffff
+              if val > 0x3ffffffffff
+                if val > 0x1ffffffffffff
+                  if val > 0xffffffffffffff
+                    if val > 0x7fffffffffffffff
+                      10
+                    else
+                      9
+                    end
+                  else
+                    8
+                  end
+                else
+                  7
+                end
+              else
+                6
+              end
+            else
+              5
+            end
+          else
+            4
+          end
+        else
+          3
+        end
+      else
+        2
+      end
+    else
+      1
+    end
   end
 end

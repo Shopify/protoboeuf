@@ -12,9 +12,23 @@ module ProtoBoeuf
         obj._encode("").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
-      attr_accessor :value
+
+      attr_reader :value
+
+      def value=(v)
+        unless 0 <= v && v <= 18_446_744_073_709_551_615
+          raise RangeError,
+                "Value (#{v}) for field value is out of bounds (0..18446744073709551615)"
+        end
+
+        @value = v
+      end
 
       def initialize(value: 0)
+        unless 0 <= value && value <= 18_446_744_073_709_551_615
+          raise RangeError,
+                "Value (#{value}) for field value is out of bounds (0..18446744073709551615)"
+        end
         @value = value
       end
 
@@ -107,11 +121,14 @@ module ProtoBoeuf
 
         buff
       end
+
       def to_h
         result = {}
         result["value".to_sym] = @value
         result
       end
+
+      private
     end
   end
 end
