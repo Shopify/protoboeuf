@@ -12,10 +12,41 @@ module ProtoBoeuf
         obj._encode("").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
-      attr_accessor :seconds, :nanos
+
+      attr_reader :seconds
+
+      attr_reader :nanos
+
+      def seconds=(v)
+        unless -9_223_372_036_854_775_808 <= v && v <= 9_223_372_036_854_775_807
+          raise RangeError,
+                "Value (#{v}) for field seconds is out of bounds (-9223372036854775808..9223372036854775807)"
+        end
+
+        @seconds = v
+      end
+
+      def nanos=(v)
+        unless -2_147_483_648 <= v && v <= 2_147_483_647
+          raise RangeError,
+                "Value (#{v}) for field nanos is out of bounds (-2147483648..2147483647)"
+        end
+
+        @nanos = v
+      end
 
       def initialize(seconds: 0, nanos: 0)
+        unless -9_223_372_036_854_775_808 <= seconds &&
+                 seconds <= 9_223_372_036_854_775_807
+          raise RangeError,
+                "Value (#{seconds}) for field seconds is out of bounds (-9223372036854775808..9223372036854775807)"
+        end
         @seconds = seconds
+
+        unless -2_147_483_648 <= nanos && nanos <= 2_147_483_647
+          raise RangeError,
+                "Value (#{nanos}) for field nanos is out of bounds (-2147483648..2147483647)"
+        end
         @nanos = nanos
       end
 
@@ -218,6 +249,7 @@ module ProtoBoeuf
 
         buff
       end
+
       def to_h
         result = {}
         result["seconds".to_sym] = @seconds

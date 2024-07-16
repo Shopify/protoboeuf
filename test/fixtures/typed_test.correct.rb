@@ -893,34 +893,62 @@ class Test1
     if @oneof_field == :"enum_1"
       val = @enum_1
       if val
-        encoded = val._encode("")
         buff << 0x1a
-        len = encoded.bytesize
-        while len != 0
-          byte = len & 0x7F
-          len >>= 7
-          byte |= 0x80 if len > 0
-          buff << byte
+
+        # Save the buffer size before appending the submessage
+        current_len = buff.bytesize
+
+        # Write dummy bytes to store encoded length
+        buff << "1234567890".freeze
+        val._encode(buff)
+
+        # Calculate the submessage's size
+        submessage_size = buff.bytesize - current_len - 10
+
+        encoded_int_len = 0
+
+        # Overwrite the dummy bytes with the encoded length
+        while submessage_size != 0
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+          current_len += 1
+          encoded_int_len += 1
         end
 
-        buff << encoded
+        buff.slice!(current_len, 10 - encoded_int_len)
       end
     end
 
     if @oneof_field == :"enum_2"
       val = @enum_2
       if val
-        encoded = val._encode("")
         buff << 0x22
-        len = encoded.bytesize
-        while len != 0
-          byte = len & 0x7F
-          len >>= 7
-          byte |= 0x80 if len > 0
-          buff << byte
+
+        # Save the buffer size before appending the submessage
+        current_len = buff.bytesize
+
+        # Write dummy bytes to store encoded length
+        buff << "1234567890".freeze
+        val._encode(buff)
+
+        # Calculate the submessage's size
+        submessage_size = buff.bytesize - current_len - 10
+
+        encoded_int_len = 0
+
+        # Overwrite the dummy bytes with the encoded length
+        while submessage_size != 0
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+          current_len += 1
+          encoded_int_len += 1
         end
 
-        buff << encoded
+        buff.slice!(current_len, 10 - encoded_int_len)
       end
     end
 
