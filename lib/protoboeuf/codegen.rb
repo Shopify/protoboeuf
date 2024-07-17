@@ -296,7 +296,7 @@ module ProtoBoeuf
             current_len = buff.bytesize
 
             # Write dummy bytes to store encoded length
-            buff << "1234567890".freeze
+            buff << "1234567890"
             val._encode(buff)
 
             # Calculate the submessage's size
@@ -314,7 +314,7 @@ module ProtoBoeuf
               encoded_int_len += 1
             end
 
-            buff.bytesplice(current_len, 10 - encoded_int_len, "".freeze)
+            buff.bytesplice(current_len, 10 - encoded_int_len, "")
           end
         RUBY
       end
@@ -922,7 +922,7 @@ module ProtoBoeuf
             else
               case field.type
               when "string", "bytes"
-                '"".freeze'
+                '""'
               when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32", "sfixed64", "sfixed32"
                 0
               when "double", "float"

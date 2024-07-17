@@ -19,12 +19,12 @@ module ProtoBoeuf
         @value = v
       end
 
-      def initialize(value: "".freeze)
+      def initialize(value: "")
         @value = value
       end
 
       def decode_from(buff, index, len)
-        @value = "".freeze
+        @value = ""
 
         tag = buff.getbyte(index)
         index += 1
