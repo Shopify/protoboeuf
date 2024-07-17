@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 # typed: false
-# frozen_string_literal: false
+# frozen_string_literal: true
 
 module TestEnum
   FOO = 0
@@ -66,7 +66,7 @@ class Test1
 
   sig { params(obj: Test1).returns(String) }
   def self.encode(obj)
-    obj._encode("").force_encoding(Encoding::ASCII_8BIT)
+    obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
   end
   # required field readers
   sig { returns(Integer) }
@@ -986,7 +986,7 @@ class Test1
     if map.size > 0
       old_buff = buff
       map.each do |key, value|
-        buff = new_buffer = ""
+        buff = new_buffer = +""
         val = key
         if ((len = val.bytesize) > 0)
           buff << 0x0a

@@ -241,7 +241,7 @@ module ProtoBoeuf
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
-              buff = new_buffer = ''
+              buff = new_buffer = +''
               #{encode_subtype(field.key_field, "key", true)}
               #{encode_subtype(field.value_field, "value", true)}
               buff = old_buff
@@ -470,7 +470,7 @@ module ProtoBoeuf
 
           #{type_signature(params: {obj: message.name}, returns: "String")}
           def self.encode(obj)
-            obj._encode("").force_encoding(Encoding::ASCII_8BIT)
+            obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
           end
         RUBY
       end
@@ -1234,7 +1234,7 @@ module ProtoBoeuf
       packages = (@ast.package || "").split(".").reject(&:empty?)
       head = "# encoding: ascii-8bit\n"
       head += "# typed: false\n" if generate_types
-      head += "# frozen_string_literal: false\n\n"
+      head += "# frozen_string_literal: true\n\n"
       head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)

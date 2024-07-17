@@ -1,5 +1,5 @@
 # encoding: ascii-8bit
-# frozen_string_literal: false
+# frozen_string_literal: true
 
 module ProtoBoeuf
   module Protobuf
@@ -9,7 +9,7 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode("").force_encoding(Encoding::ASCII_8BIT)
+        obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
 
