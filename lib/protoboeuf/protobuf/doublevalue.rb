@@ -47,7 +47,7 @@ module ProtoBoeuf
         if val != 0
           buff << 0x09
 
-          buff << [val].pack("D")
+          [val].pack("D", buffer: buff)
         end
 
         buff
