@@ -314,7 +314,7 @@ module ProtoBoeuf
               encoded_int_len += 1
             end
 
-            buff.slice!(current_len, 10 - encoded_int_len)
+            buff.bytesplice(current_len, 10 - encoded_int_len, "".freeze)
           end
         RUBY
       end
