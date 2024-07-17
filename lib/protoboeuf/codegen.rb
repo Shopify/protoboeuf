@@ -69,6 +69,7 @@ module ProtoBoeuf
         @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
         @requires = Set.new
         @generate_types = generate_types
+        @has_submessage = false
 
         mark_enum_fields
 
@@ -166,21 +167,32 @@ module ProtoBoeuf
         send(method, field, value_expr, tagged) if respond_to?(method, true)
       end
 
+      def encode_tag(field)
+        tag = (field.number << 3) | field.wire_type
+        "buff << #{sprintf("%#04x", tag)}\n"
+      end
+
+      def encode_length(field, len_expr)
+        result = +""
+
+        if field.wire_type == ProtoBoeuf::Field::LEN
+          raise "length encoded fields must have a length expression" unless len_expr
+          if len_expr != "len"
+            result << "len = #{len_expr}\n"
+          end
+
+          result << uint64_code("len")
+        end
+
+        result
+      end
+
       def encode_tag_and_length(field, tagged, len_expr = false)
         result = +""
 
         if tagged
-          tag = (field.number << 3) | field.wire_type
-          result << "buff << #{sprintf("%#04x", tag)}\n"
-
-          if field.wire_type == ProtoBoeuf::Field::LEN
-            raise "length encoded fields must have a length expression" unless len_expr
-            if len_expr != "len"
-              result << "len = #{len_expr}\n"
-            end
-
-            result << uint64_code("len")
-          end
+          result << encode_tag(field)
+          result << encode_length(field, len_expr)
         end
 
         result
@@ -274,12 +286,35 @@ module ProtoBoeuf
       end
 
       def encode_submessage(field, value_expr, tagged)
+        @has_submessage = true
+
         <<~RUBY
           val = #{value_expr}
           if val
-            encoded = val._encode("")
-            #{encode_tag_and_length(field, true, "encoded.bytesize")}
-            buff << encoded
+            #{encode_tag(field)}
+            # Save the buffer size before appending the submessage
+            current_len = buff.bytesize
+
+            # Write dummy bytes to store encoded length
+            buff << "1234567890".freeze
+            val._encode(buff)
+
+            # Calculate the submessage's size
+            submessage_size = buff.bytesize - current_len - 10
+
+            encoded_int_len = 0
+
+            # Overwrite the dummy bytes with the encoded length
+            while submessage_size != 0
+              byte = submessage_size & 0x7F
+              submessage_size >>= 7
+              byte |= 0x80 if submessage_size > 0
+              buff.setbyte(current_len, byte)
+              current_len += 1
+              encoded_int_len += 1
+            end
+
+            buff.slice!(current_len, 10 - encoded_int_len)
           end
         RUBY
       end

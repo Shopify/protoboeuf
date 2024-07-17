@@ -12,7 +12,12 @@ module ProtoBoeuf
         obj._encode("").force_encoding(Encoding::ASCII_8BIT)
       end
       # required field readers
-      attr_accessor :value
+
+      attr_reader :value
+
+      def value=(v)
+        @value = v
+      end
 
       def initialize(value: false)
         @value = value
@@ -53,6 +58,7 @@ module ProtoBoeuf
 
         buff
       end
+
       def to_h
         result = {}
         result["value".to_sym] = @value
