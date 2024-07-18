@@ -1,6 +1,6 @@
 # encoding: ascii-8bit
 # typed: false
-# frozen_string_literal: false
+# frozen_string_literal: true
 
 module TestEnum
   FOO = 0
@@ -66,7 +66,7 @@ class Test1
 
   sig { params(obj: Test1).returns(String) }
   def self.encode(obj)
-    obj._encode("").force_encoding(Encoding::ASCII_8BIT)
+    obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
   end
   # required field readers
   sig { returns(Integer) }
@@ -163,7 +163,7 @@ class Test1
     enum_2: nil,
     repeated_ints: [],
     map_field: {},
-    bytes_field: "".freeze
+    bytes_field: ""
   )
     @_bitmask = 0
 
@@ -174,7 +174,7 @@ class Test1
     @int_field = int_field
 
     if string_field == nil
-      @string_field = "".freeze
+      @string_field = ""
     else
       @_bitmask |= 0x0000000000000001
       @string_field = string_field
@@ -218,13 +218,13 @@ class Test1
     @_bitmask = 0
 
     @int_field = 0
-    @string_field = "".freeze
+    @string_field = ""
     @oneof_field = nil # oneof field
     @enum_1 = nil
     @enum_2 = nil
     @repeated_ints = []
     @map_field = {}
-    @bytes_field = "".freeze
+    @bytes_field = ""
 
     tag = buff.getbyte(index)
     index += 1
@@ -899,7 +899,7 @@ class Test1
         current_len = buff.bytesize
 
         # Write dummy bytes to store encoded length
-        buff << "1234567890".freeze
+        buff << "1234567890"
         val._encode(buff)
 
         # Calculate the submessage's size
@@ -917,7 +917,7 @@ class Test1
           encoded_int_len += 1
         end
 
-        buff.bytesplice(current_len, 10 - encoded_int_len, "".freeze)
+        buff.bytesplice(current_len, 10 - encoded_int_len, "")
       end
     end
 
@@ -930,7 +930,7 @@ class Test1
         current_len = buff.bytesize
 
         # Write dummy bytes to store encoded length
-        buff << "1234567890".freeze
+        buff << "1234567890"
         val._encode(buff)
 
         # Calculate the submessage's size
@@ -948,7 +948,7 @@ class Test1
           encoded_int_len += 1
         end
 
-        buff.bytesplice(current_len, 10 - encoded_int_len, "".freeze)
+        buff.bytesplice(current_len, 10 - encoded_int_len, "")
       end
     end
 
@@ -986,7 +986,7 @@ class Test1
     if map.size > 0
       old_buff = buff
       map.each do |key, value|
-        buff = new_buffer = ""
+        buff = new_buffer = +""
         val = key
         if ((len = val.bytesize) > 0)
           buff << 0x0a
