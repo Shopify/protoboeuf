@@ -2,6 +2,7 @@ require "rake/testtask"
 require "rake/clean"
 
 BASE_DIR = File.dirname __FILE__
+codegen_rb_files = ["lib/protoboeuf/codegen.rb", "lib/protoboeuf/parser.rb"]
 proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
 rb_files = proto_files.pathmap("#{BASE_DIR}/test/fixtures/%n_pb.rb")
 
@@ -18,9 +19,8 @@ CLOBBER.append BENCHMARK_UPSTREAM_PB
 CLOBBER.append BENCHMARK_PROTOBOEUF_PB
 CLOBBER.append WELL_KNOWN_PB
 
-rule ".rb" => "%X.proto" do |t|
-  require_relative "lib/protoboeuf/codegen"
-  require_relative "lib/protoboeuf/parser"
+rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
+  codegen_rb_files.each { |f| require_relative f }
 
   unit = ProtoBoeuf.parse_file t.source
 
@@ -50,10 +50,9 @@ file BENCHMARK_UPSTREAM_PB => "bench/fixtures/benchmark.proto" do
 end
 
 # This is a file task to generate an rb file from benchmark.proto
-file BENCHMARK_PROTOBOEUF_PB => "bench/fixtures/benchmark.proto" do |t|
+file BENCHMARK_PROTOBOEUF_PB => ["bench/fixtures/benchmark.proto"] + codegen_rb_files do |t|
   mkdir_p "bench/lib/protoboeuf"
-  require_relative "lib/protoboeuf/codegen"
-  require_relative "lib/protoboeuf/parser"
+  codegen_rb_files.each { |f| require_relative f }
 
   unit = ProtoBoeuf.parse_file t.source
   unit.package = "proto_boeuf"
