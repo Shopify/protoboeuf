@@ -73,7 +73,7 @@ If you would like to regenerate the `.rb` files without running any tests, do
 this:
 
 ```
-bundle exec rake gen_proto
+bundle exec rake gen_proto well_known_types
 ```
 
 ## Benchmarks
