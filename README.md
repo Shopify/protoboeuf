@@ -54,8 +54,10 @@ bundle exec ruby -I lib:test test/message_test.rb -n test_decoding
 
 ## Generated files
 
-Files under `lib/proto` are generated from the `.proto` files in
-`test/fixtures`. For example, currently `lib/proto/test/fixtures/test_pb.rb`
+Ruby files under `lib/protoboeuf/protobuf/` are generated from the `.proto` files in the same directory.
+The same is true for `test/fixtures`.
+
+For example, currently `test/fixtures/test_pb.rb`
 is generated from the file `test/fixtures/test.proto`
 
 Running `rake test` will automatically regenerate the `.rb` files if the
@@ -71,7 +73,7 @@ If you would like to regenerate the `.rb` files without running any tests, do
 this:
 
 ```
-bundle exec rake gen_proto
+bundle exec rake gen_proto well_known_types
 ```
 
 ## Benchmarks
