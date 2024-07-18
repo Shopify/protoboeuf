@@ -400,7 +400,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('D')
+          [val].pack('D', buffer: buff)
         end
         eocode
       end
@@ -411,7 +411,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('F')
+          [val].pack('F', buffer: buff)
         end
         eocode
       end
@@ -422,7 +422,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('Q<')
+          [val].pack('Q<', buffer: buff)
         end
         eocode
       end
@@ -433,7 +433,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('q<')
+          [val].pack('q<', buffer: buff)
         end
         eocode
       end
@@ -444,7 +444,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('L<')
+          [val].pack('L<', buffer: buff)
         end
         eocode
       end
@@ -455,7 +455,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          buff << [val].pack('l<')
+          [val].pack('l<', buffer: buff)
         end
         eocode
       end
