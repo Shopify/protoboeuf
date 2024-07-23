@@ -400,7 +400,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          [val].pack('D', buffer: buff)
+          [val].pack('E', buffer: buff)
         end
         eocode
       end
@@ -411,7 +411,7 @@ module ProtoBoeuf
         val = #{value_expr}
         if val != 0
           #{encode_tag_and_length(field, tagged)}
-          [val].pack('F', buffer: buff)
+          [val].pack('e', buffer: buff)
         end
         eocode
       end
@@ -996,11 +996,11 @@ module ProtoBoeuf
       end
 
       def pull_double(dest, operator)
-        "#{dest} #{operator} buff.unpack1('D', offset: index); index += 8"
+        "#{dest} #{operator} buff.unpack1('E', offset: index); index += 8"
       end
 
       def pull_float(dest, operator)
-        "#{dest} #{operator} buff.unpack1('F', offset: index); index += 4"
+        "#{dest} #{operator} buff.unpack1('e', offset: index); index += 4"
       end
 
       def pull_fixed_int64(dest, operator)

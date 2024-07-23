@@ -31,7 +31,7 @@ module ProtoBoeuf
 
         while true
           if tag == 0x9
-            @value = buff.unpack1("D", offset: index)
+            @value = buff.unpack1("E", offset: index)
             index += 8
 
             return self if index >= len
@@ -47,7 +47,7 @@ module ProtoBoeuf
         if val != 0
           buff << 0x09
 
-          [val].pack("D", buffer: buff)
+          [val].pack("E", buffer: buff)
         end
 
         buff
