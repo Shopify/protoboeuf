@@ -1231,19 +1231,32 @@ module ProtoBoeuf
     end
 
     def to_ruby
-      packages = (@ast.package || "").split(".").reject(&:empty?)
+      modules = resolve_modules
       head = "# encoding: ascii-8bit\n"
       head += "# typed: false\n" if generate_types
       head += "# frozen_string_literal: true\n\n"
-      head += packages.map { |m| "module " + m.split("_").map(&:capitalize).join + "\n" }.join
+      head += modules.map { |m| "module #{m}\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
       body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
       body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
 
-      tail = "\n" + packages.map { "end" }.join("\n")
+      tail = "\n" + modules.map { "end" }.join("\n")
 
       SyntaxTree.format(head + body + tail)
+    end
+
+    def resolve_modules
+      ruby_package = @ast.options.find { |opt| opt.name == "ruby_package" }
+      ruby_package = ruby_package&.value&.strip
+
+      if ruby_package && !ruby_package.empty?
+        return ruby_package.split("::")
+      end
+
+      (@ast.package || "").split(".").filter_map do |m|
+        m.split("_").map(&:capitalize).join unless m.empty?
+      end
     end
   end
 end

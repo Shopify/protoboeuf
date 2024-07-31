@@ -73,6 +73,32 @@ module ProtoBoeuf
       assert_equal File.read("test/fixtures/typed_test.correct.rb"), gen.to_ruby
     end
 
+    def test_modules_with_package
+      unit = ProtoBoeuf.parse_string(<<~PROTO)
+        package example.code_gen.package;
+
+        message Foo {}
+      PROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      assert klass::Example::CodeGen::Package::Foo.new
+    end
+
+    def test_modules_with_ruby_package
+      unit = ProtoBoeuf.parse_string(<<~PROTO)
+        package example.proto;
+
+        option ruby_package = "Example::Ruby::Package";
+
+        message Foo {}
+      PROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      assert klass::Example::Ruby::Package::Foo.new
+    end
+
     def test_bounds_checks
       proto = <<~PROTO
         message Test1 {
