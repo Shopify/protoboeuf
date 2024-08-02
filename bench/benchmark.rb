@@ -5,6 +5,9 @@ require "protoboeuf/benchmark_pb"
 require "upstream/benchmark_pb"
 require "benchmark/ips"
 
+# Ensure the dataset is random but always the same
+Random.srand(42)
+
 # Recursively populate the type map
 def pop_type_map(type_map, obj)
   if defined? obj.messages
@@ -145,20 +148,31 @@ puts "total encoded size: #{total_bin_size} bytes"
 # We do this because ProtoBoeuf can't directly encode Google's protobuf message classes
 decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeuf::ParkingLot.decode bin }
 
+version = RubyVM::YJIT.enabled? ? "/jit" : "/interp"
+
+puts "=== decode ==="
 Benchmark.ips do |x|
-  x.report("decode upstream")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
-  x.report("decode protoboeuf") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
+  x.report("upstream#{version}")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
+  x.report("protoboeuf#{version}") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
+
+  x.save!(File.join(ENV["BENCH_HOLD"], "decode.bench")) if ENV["BENCH_HOLD"]
   x.compare!(order: :baseline)
 end
 
+puts "=== decode and read ==="
 Benchmark.ips do |x|
-  x.report("decode and read upstream")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
-  x.report("decode and read protoboeuf") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
+  x.report("upstream#{version}")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
+  x.report("protoboeuf#{version}") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
+
+  x.save!(File.join(ENV["BENCH_HOLD"], "read.bench")) if ENV["BENCH_HOLD"]
   x.compare!(order: :baseline)
 end
 
+puts "=== encode ==="
 Benchmark.ips do |x|
-  x.report("encode upstream")  { fake_msgs.map { |msg| Upstream::ParkingLot.encode(msg) } }
-  x.report("encode protoboeuf") { decoded_msgs_proto.map { |msg| ProtoBoeuf::ParkingLot.encode(msg) } }
+  x.report("upstream#{version}")  { fake_msgs.each { |msg| Upstream::ParkingLot.encode(msg) } }
+  x.report("protoboeuf#{version}") { decoded_msgs_proto.each { |msg| ProtoBoeuf::ParkingLot.encode(msg) } }
+
+  x.save!(File.join(ENV["BENCH_HOLD"], "encode.bench")) if ENV["BENCH_HOLD"]
   x.compare!(order: :baseline)
 end

@@ -6,3 +6,4 @@ Gemfile.lock
 test/fixtures/*_pb.rb
 test/fixtures/typed_test.generated.rb
 bench/lib/
+bench/tmp/
