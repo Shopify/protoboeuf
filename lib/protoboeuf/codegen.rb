@@ -280,7 +280,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if((len = val.bytesize) > 0)
             #{encode_tag_and_length(field, tagged, "len")}
-            buff << val
+            buff << (val.ascii_only? ? val : val.b)
           end
         RUBY
       end
@@ -817,7 +817,7 @@ module ProtoBoeuf
       PULL_STRING = ERB.new(<<~ERB, trim_mode: '-')
         value = <%= pull_varint %>
 
-        <%= dest %> <%= operator %> buff.byteslice(index, value)
+        <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
         index += value
       ERB
 

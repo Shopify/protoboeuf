@@ -350,7 +350,8 @@ class Test1
             raise "integer decoding error"
           end
 
-        @string_field = buff.byteslice(index, value)
+        @string_field =
+          buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
         index += value
 
         ## END PULL_STRING
@@ -716,7 +717,7 @@ class Test1
               raise "integer decoding error"
             end
 
-          key = buff.byteslice(index, value)
+          key = buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
           index += value
 
           ## END PULL_STRING
@@ -887,7 +888,7 @@ class Test1
         buff << byte
       end
 
-      buff << val
+      buff << (val.ascii_only? ? val : val.b)
     end
 
     if @oneof_field == :"enum_1"
@@ -997,7 +998,7 @@ class Test1
             buff << byte
           end
 
-          buff << val
+          buff << (val.ascii_only? ? val : val.b)
         end
 
         val = value
