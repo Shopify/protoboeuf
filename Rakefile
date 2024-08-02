@@ -74,6 +74,11 @@ task :test => [:gen_proto, :well_known_types]
 task :default => :test
 
 task :bench => [BENCHMARK_UPSTREAM_PB, BENCHMARK_PROTOBOEUF_PB] do
+  rm_rf "bench/tmp"
+  mkdir_p "bench/tmp"
+
+  ENV["BENCH_HOLD"] = "bench/tmp/"
+
   puts "###### INTERPRETER ######"
   ruby "-I lib:bench/lib bench/benchmark.rb"
 
