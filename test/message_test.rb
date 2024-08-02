@@ -353,6 +353,16 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 0xCAFE, obj.b
   end
 
+  def test_decode_utf8_strings
+    string = "h€llo"
+    data = TestMessageWithOneOf.encode(TestMessageWithOneOf.new(oneof_str: string))
+    expected = ::TestMessageWithOneOf.decode(data)
+    actual = TestMessageWithOneOf.decode(data)
+
+    assert_equal expected.oneof_str, actual.oneof_str
+    assert_equal expected.oneof_str.encoding, actual.oneof_str.encoding
+  end
+
   def test_decode_repeated_messages
     data = ::RepeatedSubMessages.encode(::RepeatedSubMessages.new(ints:[
       ::TestSint64.new(sint_64: 1),

@@ -817,7 +817,7 @@ module ProtoBoeuf
       PULL_STRING = ERB.new(<<~ERB, trim_mode: '-')
         value = <%= pull_varint %>
 
-        <%= dest %> <%= operator %> buff.byteslice(index, value)
+        <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
         index += value
       ERB
 

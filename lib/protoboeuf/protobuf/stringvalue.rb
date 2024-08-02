@@ -87,7 +87,8 @@ module ProtoBoeuf
                 raise "integer decoding error"
               end
 
-            @value = buff.byteslice(index, value)
+            @value =
+              buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
             index += value
 
             ## END PULL_STRING
