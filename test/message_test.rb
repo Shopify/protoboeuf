@@ -353,7 +353,25 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal 0xCAFE, obj.b
   end
 
+  def test_encode_repeated_utf8_strings
+    # Just making sure using UTF-8 strings outside the ASCII range won't cause EncodingError
+    init = -> (x) do
+      x.a = 1234
+      x.names[0] = "™"
+      x.names[1] = "€"
+      x.names[2] = "£"
+      x.names[3] = "∞"
+      x.b = 0xCAFE
+    end
+
+    expected_data = ::RepeatedStrings.encode(::RepeatedStrings.new.tap(&init))
+    actual_data = RepeatedStrings.encode(RepeatedStrings.new.tap(&init))
+
+    assert_equal expected_data, actual_data
+  end
+
   def test_decode_utf8_strings
+    # Making sure strings are returned in the proper encoding (UTF-8)
     string = "h€llo"
     data = TestMessageWithOneOf.encode(TestMessageWithOneOf.new(oneof_str: string))
     expected = ::TestMessageWithOneOf.decode(data)
@@ -361,6 +379,7 @@ class MessageTest < ProtoBoeuf::Test
 
     assert_equal expected.oneof_str, actual.oneof_str
     assert_equal expected.oneof_str.encoding, actual.oneof_str.encoding
+    assert_equal Encoding::UTF_8, actual.oneof_str.encoding
   end
 
   def test_decode_repeated_messages

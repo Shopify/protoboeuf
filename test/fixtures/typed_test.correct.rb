@@ -888,7 +888,7 @@ class Test1
         buff << byte
       end
 
-      buff << val
+      buff << (val.ascii_only? ? val : val.b)
     end
 
     if @oneof_field == :"enum_1"
@@ -998,7 +998,7 @@ class Test1
             buff << byte
           end
 
-          buff << val
+          buff << (val.ascii_only? ? val : val.b)
         end
 
         val = value

@@ -112,7 +112,7 @@ module ProtoBoeuf
             buff << byte
           end
 
-          buff << val
+          buff << (val.ascii_only? ? val : val.b)
         end
 
         buff

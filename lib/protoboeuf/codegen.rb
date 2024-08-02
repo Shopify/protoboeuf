@@ -280,7 +280,7 @@ module ProtoBoeuf
           val = #{value_expr}
           if((len = val.bytesize) > 0)
             #{encode_tag_and_length(field, tagged, "len")}
-            buff << val
+            buff << (val.ascii_only? ? val : val.b)
           end
         RUBY
       end
