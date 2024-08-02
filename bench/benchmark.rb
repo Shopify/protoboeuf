@@ -2,6 +2,7 @@
 
 require "protoboeuf/parser"
 require "protoboeuf/benchmark_pb"
+require "protoboeuf-edge/benchmark_pb"
 require "upstream/benchmark_pb"
 require "benchmark/ips"
 
@@ -32,7 +33,7 @@ def gen_fake_field_val(type_map, field)
     rand < 0.5
   when :TYPE_STRING
     # TODO: better random strings with variable lengths
-    "foobar" + "_foo" * rand(0..8)
+    "foobar€" + "_foo" * rand(0..8)
   when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64,
             :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_SFIXED32,
             :TYPE_SFIXED64, :TYPE_ENUM
@@ -152,6 +153,7 @@ puts "total encoded size: #{total_bin_size} bytes"
 # Decode the messages using protoboeuf so we can re-encode them for the encoding benchmark
 # We do this because ProtoBoeuf can't directly encode Google's protobuf message classes
 decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeuf::ParkingLot.decode(bin) }
+edge_decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeufEdge::ParkingLot.decode(bin) }
 
 version = RubyVM::YJIT.enabled? ? "/jit" : "/interp"
 
@@ -174,10 +176,18 @@ Benchmark.ips do |x|
 end
 
 puts "=== encode ==="
+before_gc = GC.count
 Benchmark.ips do |x|
-  x.report("upstream#{version}") { fake_msgs.each { |msg| Upstream::ParkingLot.encode(msg) } }
-  x.report("protoboeuf#{version}") { decoded_msgs_proto.each { |msg| ProtoBoeuf::ParkingLot.encode(msg) } }
+  # Call String#clear to appease GC. Each iteration generated ~5MiB of strings. Every ~30MiB malloced
+  # GC triggers, so by clearing these strings we reduce GC triggers, reducing variance.
+  # On my machine adding these clear reduce GC triggers from 445 to 248.
+
+  x.report("upstream#{version}") { fake_msgs.each { |msg| Upstream::ParkingLot.encode(msg).clear } }
+  x.report("protoboeuf#{version}") { decoded_msgs_proto.each { |msg| ProtoBoeuf::ParkingLot.encode(msg).clear } }
+  x.report("pboeuf-edge#{version}") { edge_decoded_msgs_proto.each { |msg| ProtoBoeufEdge::ParkingLot.encode(msg).clear } }
 
   x.save!(File.join(ENV["BENCH_HOLD"], "encode.bench")) if ENV["BENCH_HOLD"]
   x.compare!(order: :baseline)
 end
+
+puts "Encode GC count: #{GC.count - before_gc}"
