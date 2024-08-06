@@ -3,7 +3,7 @@ require "helper"
 module ProtoBoeuf
   class CodeGenTest < Test
     def test_make_ruby
-      unit = ProtoBoeuf.parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
+      unit = parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::TestMessage.new
@@ -13,7 +13,7 @@ module ProtoBoeuf
     end
 
     def test_int32
-      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 a = 1; }')
+      unit = parse_string('message Test1 { optional int32 a = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new
@@ -21,7 +21,7 @@ module ProtoBoeuf
     end
 
     def test_fixture_file
-      unit = ProtoBoeuf.parse_file('./test/fixtures/test.proto')
+      unit = parse_file('./test/fixtures/test.proto')
 
       gen = CodeGen.new unit
 
@@ -33,7 +33,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_end
-      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 end = 1; }')
+      unit = parse_string('message Test1 { optional int32 end = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(end: 1234)
@@ -41,7 +41,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_class
-      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 class = 1; }')
+      unit = parse_string('message Test1 { optional int32 class = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(class: 1234)
@@ -49,7 +49,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_nil
-      unit = ProtoBoeuf.parse_string('message Test1 { optional int32 nil = 1; }')
+      unit = parse_string('message Test1 { optional int32 nil = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(nil: 1234)
@@ -58,7 +58,7 @@ module ProtoBoeuf
 
     def test_generate_types
       proto = File.read("test/fixtures/typed_test.proto")
-      unit = ProtoBoeuf.parse_string(proto)
+      unit = parse_string(proto)
 
       gen = CodeGen.new unit, generate_types: true
 
@@ -74,7 +74,7 @@ module ProtoBoeuf
     end
 
     def test_modules_with_package
-      unit = ProtoBoeuf.parse_string(<<~PROTO)
+      unit = parse_string(<<~PROTO)
         package example.code_gen.package;
 
         message Foo {}
@@ -86,7 +86,7 @@ module ProtoBoeuf
     end
 
     def test_modules_with_ruby_package
-      unit = ProtoBoeuf.parse_string(<<~PROTO)
+      unit = parse_string(<<~PROTO)
         package example.proto;
 
         option ruby_package = "Example::Ruby::Package";
@@ -116,7 +116,7 @@ module ProtoBoeuf
           repeated uint64 u64s = 12;
         }
       PROTO
-      unit = ProtoBoeuf.parse_string(proto)
+      unit = parse_string(proto)
 
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
@@ -223,6 +223,16 @@ module ProtoBoeuf
       assert_raises RangeError do
         obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
       end
+    end
+
+    private
+
+    def parse_string(string)
+      ProtoBoeuf.parse_string string
+    end
+
+    def parse_file(string)
+      ProtoBoeuf.parse_file string
     end
   end
 end
