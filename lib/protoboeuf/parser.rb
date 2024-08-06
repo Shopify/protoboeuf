@@ -12,6 +12,42 @@
 require 'set'
 
 module ProtoBoeuf
+  module AST
+    class FileDescriptorSet
+      attr_reader :file
+
+      def initialize(files)
+        @file = files
+      end
+
+      def accept(viz)
+        viz.visit_file_descriptor_set(self)
+      end
+
+      def to_ruby
+        ProtoBoeuf::CodeGen.new(self).to_ruby
+      end
+    end
+
+    class FileOptions
+      def initialize
+        @options = []
+      end
+
+      def ruby_package
+        @options.find { |opt| opt.name == __method__.to_s }&.value
+      end
+
+      def <<(option)
+        @options << option
+      end
+
+      def [](i)
+        @options[i]
+      end
+    end
+  end
+
   # Position in a source file
   # Numbers start from 1
   class SrcPos
@@ -47,13 +83,9 @@ module ProtoBoeuf
   end
 
   # Whole unit of input (e.g. one source file)
-  class Unit < Struct.new(:package, :options, :imports, :messages, :enums)
+  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type)
     def accept(viz)
       viz.visit_unit self
-    end
-
-    def to_ruby
-      ProtoBoeuf::CodeGen.new(self).to_ruby
     end
   end
 
@@ -64,7 +96,7 @@ module ProtoBoeuf
   end
 
   # The messages field is for nested/local message definitions
-  class Message < Struct.new(:name, :fields, :messages, :enums, :pos)
+  class Message < Struct.new(:name, :field, :messages, :enum_type, :pos)
     def accept(viz)
       viz.visit_message self
     end
@@ -105,13 +137,17 @@ module ProtoBoeuf
   MapType = Struct.new(:key_type, :value_type)
 
   # Qualifier is :optional, :required or :repeated
-  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos, :enum)
+  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos, :enum, :oneof_index)
     def field?
       true
     end
 
     def oneof?
       false
+    end
+
+    def has_oneof_index?
+      oneof_index
     end
 
     alias :enum? :enum
@@ -267,7 +303,7 @@ module ProtoBoeuf
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
     package = nil
-    options = []
+    options = nil
     imports = []
     messages = []
     enums = []
@@ -301,6 +337,7 @@ module ProtoBoeuf
 
       # Option
       elsif ident == "option"
+        options ||= AST::FileOptions.new
         options << parse_option(input, pos)
 
       # Import
@@ -321,7 +358,7 @@ module ProtoBoeuf
     end
 
     check_enum_collision(enums)
-    Unit.new(package, options, imports, messages, enums)
+    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums)]
   end
 
   # Parse the name of a field type

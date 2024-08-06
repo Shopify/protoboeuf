@@ -3,7 +3,7 @@ require "helper"
 module ProtoBoeuf
   class CodeGenTest < Test
     def test_make_ruby
-      unit = parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
+      unit = parse_string('syntax = "proto3"; message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::TestMessage.new
@@ -233,6 +233,32 @@ module ProtoBoeuf
 
     def parse_file(string)
       ProtoBoeuf.parse_file string
+    end
+  end
+
+  require "tempfile"
+  require "google/protobuf"
+
+  class ProtoCCodeGenTest < CodeGenTest
+    def parse_string(string)
+      skip
+      begin
+        binfile = Tempfile.new
+        Tempfile.create do |f|
+          f.write string
+          f.flush
+          system("protoc -o #{binfile.path} -I / #{f.path}")
+        end
+        binfile.rewind
+        Google::Protobuf::FileDescriptorSet.decode binfile.read
+      ensure
+        binfile.unlink
+      end
+    end
+
+    def parse_file(string)
+      skip
+      raise
     end
   end
 end

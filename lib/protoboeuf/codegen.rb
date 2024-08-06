@@ -65,15 +65,15 @@ module ProtoBoeuf
       def initialize(message, toplevel_enums, generate_types:)
         @message = message
         @optional_field_bit_lut = []
-        @fields = @message.fields
-        @enum_field_types = toplevel_enums.merge(message.enums.group_by(&:name))
+        @fields = @message.field
+        @enum_field_types = toplevel_enums.merge(message.enum_type.group_by(&:name))
         @requires = Set.new
         @generate_types = generate_types
         @has_submessage = false
 
         mark_enum_fields
 
-        field_types = message.fields.group_by { |field|
+        field_types = message.field.group_by { |field|
           if field.field?
             field.qualifier || :required
           else
@@ -102,7 +102,9 @@ module ProtoBoeuf
       private
 
       def mark_enum_fields
-        message.fields.select { |field| field.field? && enum_field_types.key?(field.type) }.each do |field|
+        message.field.select { |field|
+          field.field? && enum_field_types.key?(field.type)
+        }.each do |field|
           field.enum = true
         end
       end
@@ -495,7 +497,7 @@ module ProtoBoeuf
       end
 
       def enums
-        message.enums.map { |enum|
+        message.enum_type.map { |enum|
           EnumCompiler.result(enum, generate_types:)
         }.join("\n")
       end
@@ -509,7 +511,7 @@ module ProtoBoeuf
       end
 
       def enum_readers
-        fields = message.fields.select { |field| field.field? && field.enum? }
+        fields = message.field.select { |field| field.field? && field.enum? }
         return "" if fields.empty?
 
         "  # enum readers\n" +
@@ -519,7 +521,7 @@ module ProtoBoeuf
       end
 
       def required_readers
-        fields = message.fields.select(&:field?).reject(&:optional?).reject(&:enum?)
+        fields = message.field.select(&:field?).reject(&:optional?).reject(&:enum?)
         return "" if fields.empty?
 
         "# required field readers\n" +
@@ -559,7 +561,7 @@ module ProtoBoeuf
       end
 
       def enum_writers
-        fields = message.fields.select { |field| field.field? && field.enum? }
+        fields = message.field.select { |field| field.field? && field.enum? }
         return "" if fields.empty?
 
         "# enum writers\n" +
@@ -569,7 +571,7 @@ module ProtoBoeuf
       end
 
       def required_writers
-        fields = message.fields.select(&:field?).reject(&:optional?).reject(&:enum?)
+        fields = message.field.select(&:field?).reject(&:optional?).reject(&:enum?)
         return "" if fields.empty?
 
         fields.map { |field|
@@ -1250,30 +1252,31 @@ module ProtoBoeuf
     end
 
     def to_ruby
-      modules = resolve_modules
-      head = "# encoding: ascii-8bit\n"
-      head += "# typed: false\n" if generate_types
-      head += "# frozen_string_literal: true\n\n"
-      head += modules.map { |m| "module #{m}\n" }.join
+      @ast.file.each do |file|
+        modules = resolve_modules(file)
+        head = "# encoding: ascii-8bit\n"
+        head += "# typed: false\n" if generate_types
+        head += "# frozen_string_literal: true\n\n"
+        head += modules.map { |m| "module #{m}\n" }.join
 
-      toplevel_enums = @ast.enums.group_by(&:name)
-      body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
+        toplevel_enums = file.enum_type.group_by(&:name)
+        body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
+        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
 
-      tail = "\n" + modules.map { "end" }.join("\n")
+        tail = "\n" + modules.map { "end" }.join("\n")
 
-      SyntaxTree.format(head + body + tail)
+        return SyntaxTree.format(head + body + tail)
+      end
     end
 
-    def resolve_modules
-      ruby_package = @ast.options.find { |opt| opt.name == "ruby_package" }
-      ruby_package = ruby_package&.value&.strip
+    def resolve_modules(file)
+      ruby_package = file.options&.ruby_package
 
       if ruby_package && !ruby_package.empty?
         return ruby_package.split("::")
       end
 
-      (@ast.package || "").split(".").filter_map do |m|
+      (file.package || "").split(".").filter_map do |m|
         m.split("_").map(&:capitalize).join unless m.empty?
       end
     end

@@ -11,6 +11,10 @@ module ProtoBoeuf
         node.accept self
       end
 
+      def visit_file_descriptor_set(node)
+        node.file.map { |n| n.accept self }.join
+      end
+
       def visit_unit(unit)
         doc = "syntax = \"proto3\";"
         if unit.imports.length > 0
@@ -23,14 +27,14 @@ module ProtoBoeuf
           doc += "package #{unit.package};"
         end
 
-        if unit.enums.length > 0
+        if unit.enum_type.length > 0
           doc += "\n\n"
-          doc += unit.enums.map { |msg| msg.accept self }.join("\n")
+          doc += unit.enum_type.map { |msg| msg.accept self }.join("\n")
         end
 
-        if unit.messages.length > 0
+        if unit.message_type.length > 0
           doc += "\n\n"
-          doc += unit.messages.map { |msg| msg.accept self }.join("\n")
+          doc += unit.message_type.map { |msg| msg.accept self }.join("\n")
         end
         doc
       end
@@ -38,12 +42,12 @@ module ProtoBoeuf
       def visit_message(msg)
         @indent += 1
         body = "".dup
-        body += msg.enums.map { |f| f.accept self }.join("\n")
-        body += "\n" if msg.enums.length > 0
+        body += msg.enum_type.map { |f| f.accept self }.join("\n")
+        body += "\n" if msg.enum_type.length > 0
         body += msg.messages.map { |f| f.accept self }.join("\n")
         body += "\n" if msg.messages.length > 0
-        body += msg.fields.map { |f| f.accept self }.join("\n")
-        body += "\n" if msg.fields.length > 0
+        body += msg.field.map { |f| f.accept self }.join("\n")
+        body += "\n" if msg.field.length > 0
         @indent -= 1
 
         indent("message #{msg.name} {\n") + body + indent("}")
