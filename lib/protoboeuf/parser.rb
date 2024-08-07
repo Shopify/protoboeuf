@@ -137,7 +137,7 @@ module ProtoBoeuf
   MapType = Struct.new(:key_type, :value_type)
 
   # Qualifier is :optional, :required or :repeated
-  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos, :enum, :oneof_index)
+  class Field < Struct.new(:qualifier, :type_name, :type, :name, :number, :options, :pos, :enum, :oneof_index)
     def field?
       true
     end
@@ -225,13 +225,13 @@ module ProtoBoeuf
     def key_field
       raise "not a map field" unless map?
 
-      @key_field ||= Field.new(nil, type.key_type, "key", 1, {}, pos)
+      @key_field ||= Field.new(nil, type.key_type, nil, "key", 1, {}, pos)
     end
 
     def value_field
       raise "not a map field" unless map?
 
-      @value_field ||= Field.new(nil, type.value_type, "value", 2, {}, pos)
+      @value_field ||= Field.new(nil, type.value_type, nil, "value", 2, {}, pos)
     end
 
     VARINT = 0
@@ -349,7 +349,7 @@ module ProtoBoeuf
 
       # Message definition
       elsif ident == "message"
-        messages << parse_message(input, pos)
+        messages << parse_message(input, pos, enums)
 
       # Enum definition
       elsif ident == "enum"
@@ -510,7 +510,7 @@ module ProtoBoeuf
   end
 
   # Parse the body for a message or oneof
-  def self.parse_body(input, pos, inside_message)
+  def self.parse_body(input, pos, inside_message, top_enums)
     fields = []
     messages = []
     enums = []
@@ -522,7 +522,7 @@ module ProtoBoeuf
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
-        messages << parse_message(input, msg_pos)
+        messages << parse_message(input, msg_pos, top_enums)
         next
       end
       if inside_message && (input.match 'enum')
@@ -570,7 +570,7 @@ module ProtoBoeuf
         raise ParseError.new("field number outside of valid range #{number}", field_pos)
       end
 
-      fields << Field.new(qualifier, type, name, number, options, field_pos)
+      fields << Field.new(qualifier, qualify(type), get_type(type, top_enums), name, number, options, field_pos)
     end
 
     # Check that reserved field numbers are not used
@@ -627,19 +627,49 @@ module ProtoBoeuf
     return fields, messages, enums
   end
 
+  def self.qualify(name)
+    "." + name
+  end
+
+  def self.get_type(type, enums)
+    if enums.any? { |e| e.name == type }
+      :TYPE_ENUM
+    else
+      case type
+      when "uint32" then :TYPE_UINT32
+      when "bool" then :TYPE_BOOL
+      when "double" then :TYPE_DOUBLE
+      when "float" then :TYPE_FLOAT
+      when "int64" then :TYPE_INT64
+      when "uint64" then :TYPE_UINT64
+      when "int32" then :TYPE_INT32
+      when "fixed64" then :TYPE_FIXED64
+      when "fixed32" then :TYPE_FIXED32
+      when "string" then :TYPE_STRING
+      when "bytes" then :TYPE_BYTES
+      when "sfixed32" then :TYPE_SFIXED32
+      when "sfixed64" then :TYPE_SFIXED64
+      when "sint32" then :TYPE_SINT32
+      when "sint64" then :TYPE_SINT64
+      else
+        raise NotImplementedError, type
+      end
+    end
+  end
+
   # Parse a message definition
-  def self.parse_message(input, pos)
+  def self.parse_message(input, pos, enums)
     input.eat_ws
     message_name = input.read_ident
-    fields, messages, enums = parse_body(input, pos, inside_message = true)
+    fields, messages, enums = parse_body(input, pos, true, enums)
     Message.new(message_name, fields, messages, enums, pos)
   end
 
   # Parse a oneof definition
-  def self.parse_oneof(input, pos)
+  def self.parse_oneof(input, pos, enums)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _, _ = parse_body(input, pos, inside_message = false)
+    fields, _, _ = parse_body(input, pos, false, enums)
     OneOf.new(oneof_name, fields, pos)
   end
 
