@@ -264,6 +264,33 @@ message BucketObj {
       end
     end
 
+    def test_optional
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message OneItem {
+  optional uint32 a = 1;
+  optional uint32 b = 2;
+}
+      EOPROTO
+
+      their_message = theirs.file.first.message_type.first
+      our_message = ours.file.first.message_type.first
+
+      their_oneof = their_message.oneof_decl.first
+      our_oneof = our_message.oneof_decl.first
+
+      their_field = their_message.field.last
+      our_field = our_message.field.last
+
+      assert_equal their_field.oneof_index, our_field.oneof_index
+
+      assert their_field.proto3_optional
+      assert our_field.proto3_optional
+
+      assert_equal 2, our_message.oneof_decl.length
+    end
+
     def test_simple_codegen
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";

@@ -29,6 +29,8 @@ module ProtoBoeuf
       end
     end
 
+    OneOfDescriptor = Struct.new(:name)
+
     class FileOptions
       def initialize
         @options = []
@@ -140,7 +142,7 @@ module ProtoBoeuf
   MapType = Struct.new(:key_type, :value_type)
 
   # Qualifier is :optional, :required or :repeated
-  class Field < Struct.new(:label, :type_name, :type, :name, :number, :options, :pos, :enum, :oneof_index)
+  class Field < Struct.new(:label, :type_name, :type, :name, :number, :options, :pos, :enum, :oneof_index, :proto3_optional)
     def has_oneof_index?
       oneof_index || false
     end
@@ -148,25 +150,6 @@ module ProtoBoeuf
     # Return a local variable name for use in generated code
     def lvar_name
       name
-    end
-
-    RUBY_KEYWORDS = %w{ __ENCODING__ __LINE__ __FILE__ BEGIN END alias and
-    begin break case class def defined?  do else elsif end ensure false for if
-    in module next nil not or redo rescue retry return self super then true
-    undef unless until when while yield }.to_set
-
-    # Return code for reading the local variable returned by `lvar_name`
-    def lvar_read
-      if RUBY_KEYWORDS.include?(name)
-        "binding.local_variable_get(:#{name})"
-      else
-        name
-      end
-    end
-
-    # Return an instance variable name for use in generated code
-    def iv_name
-      "@#{name}"
     end
 
     def map?
@@ -565,7 +548,13 @@ module ProtoBoeuf
 
         fields << map_field
       else
-        fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index)
+        if qualifier == :optional
+          oneof_index = oneof_decls.length
+          oneof_decls << AST::OneOfDescriptor.new("_" + name)
+          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, true)
+        else
+          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, false)
+        end
       end
     end
 

@@ -76,7 +76,7 @@ module ProtoBoeuf
         @oneof_fields = []
 
         message.field.each { |field|
-          if field.has_oneof_index?
+          if field.has_oneof_index? && !field.proto3_optional
             @oneof_fields << field
             raise NotImplementedError
           else
@@ -125,7 +125,7 @@ module ProtoBoeuf
       end
 
       def convert_field(field)
-        if field.has_oneof_index?
+        if field.has_oneof_index? && !field.proto3_optional
           raise NotImplementedError
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
         elsif field.label == :TYPE_REPEATED
@@ -146,7 +146,7 @@ module ProtoBoeuf
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
-        method = if field.has_oneof_index?
+        method = if field.has_oneof_index? && !field.proto3_optional
           raise NotImplementedError
         else
           if field.label == :LABEL_REPEATED
@@ -624,7 +624,7 @@ module ProtoBoeuf
           "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
           fields.map { |field|
-            if field.has_oneof_index?
+            if field.has_oneof_index? && !field.proto3_optional
               initialize_oneof(field)
             else
               initialize_field(field)
@@ -648,7 +648,7 @@ module ProtoBoeuf
       end
 
       def initialize_field(field)
-        if field.label == :TYPE_OPTIONAL
+        if field.label == :LABEL_OPTIONAL
           initialize_optional_field(field)
         elsif field.type == :TYPE_ENUM
           initialize_enum_field(field)
@@ -659,14 +659,33 @@ module ProtoBoeuf
 
       def initialize_optional_field(field)
         <<~RUBY
-          if #{field.lvar_read} == nil
-            #{field.iv_name} = #{default_for(field)}
+          if #{lvar_read(field)} == nil
+            #{iv_name(field)} = #{default_for(field)}
           else
-            #{bounds_check(field, field.lvar_read).chomp}
+            #{bounds_check(field, lvar_read(field)).chomp}
             #{set_bitmask(field)}
-            #{field.iv_name} = #{field.lvar_read}
+            #{iv_name(field)} = #{lvar_read(field)}
           end
         RUBY
+      end
+
+      RUBY_KEYWORDS = %w{ __ENCODING__ __LINE__ __FILE__ BEGIN END alias and
+      begin break case class def defined?  do else elsif end ensure false for if
+      in module next nil not or redo rescue retry return self super then true
+      undef unless until when while yield }.to_set
+
+      # Return code for reading the local variable returned by `lvar_name`
+      def lvar_read(field)
+        if RUBY_KEYWORDS.include?(field.name)
+          "binding.local_variable_get(:#{field.name})"
+        else
+          field.name
+        end
+      end
+
+      # Return an instance variable name for use in generated code
+      def iv_name(field)
+        "@#{field.name}"
       end
 
       def initialize_required_field(field)
@@ -863,13 +882,13 @@ module ProtoBoeuf
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
           <%- for field in fields -%>
-            <%- if !field.has_oneof_index? -%>
-            @<%= field.name %> = <%= default_for(field) %>
-            <%- else -%>
+            <%- if field.has_oneof_index? && !field.proto3_optional -%>
             @<%= field.name %> = nil # oneof field
               <%- for oneof_child in field.fields -%>
             @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
               <%- end -%>
+            <%- else -%>
+            @<%= field.name %> = <%= default_for(field) %>
             <%- end -%>
           <%- end -%>
 
@@ -879,7 +898,7 @@ module ProtoBoeuf
 
           while true
             <%- fields.each do |field| -%>
-              <%- if !field.has_oneof_index? -%>
+              <%- if !field.has_oneof_index? || field.proto3_optional -%>
             if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
               <%= set_bitmask(field) if field.label == :TYPE_OPTIONAL %>
@@ -947,7 +966,7 @@ module ProtoBoeuf
 
       def initialize_signature
         self.fields.flat_map { |f|
-          if f.has_oneof_index?
+          if f.has_oneof_index? && !f.proto3_optional
             f.fields.map { |child|
               "#{child.lvar_name}: nil"
             }
@@ -1246,6 +1265,7 @@ module ProtoBoeuf
 
         tail = "\n" + modules.map { "end" }.join("\n")
 
+        #puts head + body + tail
         return SyntaxTree.format(head + body + tail)
       end
     end
@@ -1276,7 +1296,7 @@ module ProtoBoeuf
         case field.type
         when :TYPE_STRING, :TYPE_BYTES
           LEN
-        when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64, :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32
+        when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64, :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_BOOL
           VARINT
         when :TYPE_DOUBLE, :TYPE_FIXED64, :TYPE_SFIXED64
           I64
@@ -1287,7 +1307,7 @@ module ProtoBoeuf
         #when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
         #  LEN
         else
-          raise "Unknown wire type for field #{type}"
+          raise "Unknown wire type for field #{field.type}"
         end
       end
     end

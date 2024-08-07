@@ -13,7 +13,7 @@ module ProtoBoeuf
     end
 
     def test_int32
-      unit = parse_string('message Test1 { optional int32 a = 1; }')
+      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 a = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new
@@ -41,7 +41,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_class
-      unit = parse_string('message Test1 { optional int32 class = 1; }')
+      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 class = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(class: 1234)
@@ -49,7 +49,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_nil
-      unit = parse_string('message Test1 { optional int32 nil = 1; }')
+      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 nil = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(nil: 1234)
@@ -241,7 +241,6 @@ module ProtoBoeuf
 
   class ProtoCCodeGenTest < CodeGenTest
     def parse_string(string)
-      skip
       begin
         binfile = Tempfile.new
         Tempfile.create do |f|
