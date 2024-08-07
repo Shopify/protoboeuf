@@ -130,7 +130,7 @@ class ParserTest < ProtoBoeuf::Test
   def test_enum_two_fields
     unit = parse_string('enum Foo { CONST0 = 0; CONST1 = 1; }')
     assert_equal 'Foo', unit.enum_type[0].name
-    assert_equal 2, unit.enum_type[0].constants.size
+    assert_equal 2, unit.enum_type[0].value.size
   end
 
   def test_enum_collision
@@ -155,13 +155,13 @@ class ParserTest < ProtoBoeuf::Test
   def test_enum_alias
     unit = parse_string('enum Foo { option allow_alias = true; CONST0 = 0; CONST1 = 1; CONST2 = 1; }')
     assert_equal 'Foo', unit.enum_type[0].name
-    assert_equal 3, unit.enum_type[0].constants.size
+    assert_equal 3, unit.enum_type[0].value.size
   end
 
   def test_hex_enum_const
     unit = parse_string('enum Foo { FOO = 0; BAR = -0xBA; }')
     assert_equal 'Foo', unit.enum_type[0].name
-    assert_equal (-0xBA), unit.enum_type[0].constants[1].number
+    assert_equal (-0xBA), unit.enum_type[0].value[1].number
   end
 
   def test_enum_reserved

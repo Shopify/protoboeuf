@@ -64,8 +64,8 @@ module ProtoBoeuf
 
       def visit_enum(enum)
         @indent += 1
-        body = enum.constants.map { |f| f.accept self }.join("\n")
-        body += "\n" if enum.constants.length > 0
+        body = enum.value.map { |f| f.accept self }.join("\n")
+        body += "\n" if enum.value.length > 0
         @indent -= 1
         indent("enum #{enum.name} {\n") + body + indent("}")
       end

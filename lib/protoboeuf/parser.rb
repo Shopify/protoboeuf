@@ -266,7 +266,7 @@ module ProtoBoeuf
   end
 
   # Enum and enum constants
-  class Enum < Struct.new(:name, :constants, :options, :pos)
+  class Enum < Struct.new(:name, :value, :options, :pos)
     def accept(viz)
       viz.visit_enum self
     end
@@ -281,7 +281,7 @@ module ProtoBoeuf
   def self.check_enum_collision(enums)
     names = Set.new
     enums.each do |enum|
-      enum.constants.each do |const|
+      enum.value.each do |const|
         unless names.add? const.name
           raise ParseError.new("duplicate enum constant name #{const.name}", const.pos)
         end
