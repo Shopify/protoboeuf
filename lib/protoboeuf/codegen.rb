@@ -125,12 +125,15 @@ module ProtoBoeuf
       end
 
       def convert_field(field)
-        if field.oneof?
+        if field.has_oneof_index?
+          raise NotImplementedError
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
-        elsif field.repeated? || field.enum? || field.scalar? || field.map?
+        elsif field.label == :TYPE_REPEATED
           "result['#{field.name}'.to_sym] = @#{field.name}"
-        else
+        elsif field.type == :TYPE_MESSAGE
           "result['#{field.name}'.to_sym] = @#{field.name}.to_h"
+        else
+          "result['#{field.name}'.to_sym] = @#{field.name}"
         end
       end
 
@@ -143,21 +146,22 @@ module ProtoBoeuf
       end
 
       def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
-        method = if field.oneof?
-          "encode_oneof"
-        elsif field.repeated?
-          "encode_repeated"
-        elsif field.enum?
-          "encode_enum"
-        elsif field.scalar?
-          "encode_#{field.type}"
-        elsif field.map?
-          "encode_map"
+        method = if field.has_oneof_index?
+          raise NotImplementedError
         else
-          "encode_submessage"
+          if field.label == :LABEL_REPEATED
+            raise NotImplementedError
+          else
+            case field.type
+            when :TYPE_ENUM then "encode_enum"
+            when :TYPE_MESSAGE then "encode_submessage"
+            else
+              "encode_#{field.type.to_s.downcase.delete_prefix("type_")}"
+            end
+          end
         end
 
-        send(method, field, value_expr, tagged) if respond_to?(method, true)
+        send(method, field, value_expr, tagged) #if respond_to?(method, true)
       end
 
       def encode_tag(field)
@@ -168,7 +172,7 @@ module ProtoBoeuf
       def encode_length(field, len_expr)
         result = +""
 
-        if CodeGen.wire_type(field) == ProtoBoeuf::Field::LEN
+        if CodeGen.wire_type(field) == LEN
           raise "length encoded fields must have a length expression" unless len_expr
           if len_expr != "len"
             result << "len = #{len_expr}\n"
@@ -494,7 +498,7 @@ module ProtoBoeuf
       end
 
       def constants
-        message.messages.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
+        message.nested_type.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
       end
 
       def readers
@@ -502,7 +506,7 @@ module ProtoBoeuf
       end
 
       def enum_readers
-        fields = message.field.select { |field| field.field? && field.enum? }
+        fields = message.field.select { |field| field.label == :TYPE_ENUM }
         return "" if fields.empty?
 
         "  # enum readers\n" +
@@ -553,7 +557,7 @@ module ProtoBoeuf
       end
 
       def enum_writers
-        fields = message.field.select { |field| field.field? && field.enum? }
+        fields = message.field.select { |field| field.label == :TYPE_ENUM }
         return "" if fields.empty?
 
         "# enum writers\n" +
@@ -620,12 +624,10 @@ module ProtoBoeuf
           "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
           fields.map { |field|
-            if field.field?
-              initialize_field(field)
-            elsif field.oneof?
+            if field.has_oneof_index?
               initialize_oneof(field)
             else
-              raise field.inspect
+              initialize_field(field)
             end
           }.join("\n") + "\nend\n\n"
       end
@@ -648,7 +650,7 @@ module ProtoBoeuf
       def initialize_field(field)
         if field.label == :TYPE_OPTIONAL
           initialize_optional_field(field)
-        elsif field.field? && field.enum?
+        elsif field.type == :TYPE_ENUM
           initialize_enum_field(field)
         else
           initialize_required_field(field)
@@ -929,52 +931,32 @@ module ProtoBoeuf
       end
 
       def default_for(field)
-        if field.field?
-          if field.label == :TYPE_REPEATED
-            "[]"
-          else
-            if field.enum?
-              0
-            else
-              case field.type
-              when "string", "bytes"
-                '""'
-              when "uint64", "int32", "sint32", "uint32", "int64", "sint64", "fixed64", "fixed32", "sfixed64", "sfixed32"
-                0
-              when "double", "float"
-                0.0
-              when "bool"
-                false
-              when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-                'nil'
-              when MapType
-                "{}"
-              else
-                raise "Unknown field type #{field.type}"
-              end
-            end
-          end
-        elsif field.map?
-          "{}"
+        case field.type
+        when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64, :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_SFIXED32, :TYPE_SFIXED64
+          0
+        when :TYPE_STRING, :TYPE_BYTES
+          '""'
+        when :TYPE_DOUBLE, :TYPE_FLOAT
+          0.0
+        when :TYPE_BOOL
+          false
         else
-          'nil'
+          raise NotImplementedError
         end
       end
 
       def initialize_signature
         self.fields.flat_map { |f|
-          if f.field?
-            if f.label == :TYPE_OPTIONAL
-              "#{f.lvar_name}: nil"
-            else
-              "#{f.lvar_name}: #{default_for(f)}"
-            end
-          elsif f.oneof?
+          if f.has_oneof_index?
             f.fields.map { |child|
               "#{child.lvar_name}: nil"
             }
           else
-            raise NotImplementedError
+            if f.label == :TYPE_OPTIONAL
+              "#{f.name}: nil"
+            else
+              "#{f.name}: #{default_for(f)}"
+            end
           end
         }.join(", ")
       end
@@ -984,26 +966,26 @@ module ProtoBoeuf
       end
 
       def decode_subtype(field, type, dest, operator)
-        if field.enum?
+        if field.type == :TYPE_ENUM
           pull_int64(dest, operator)
         else
           case type
-          when "string" then pull_string(dest, operator)
-          when "bytes" then pull_bytes(dest, operator)
-          when "uint64" then pull_uint64(dest, operator)
-          when "int64" then pull_int64(dest, operator)
-          when "int32" then pull_int32(dest, operator)
-          when "uint32" then pull_uint32(dest, operator)
-          when "sint32" then pull_sint32(dest, operator)
-          when "sint64" then pull_sint64(dest, operator)
-          when "bool" then pull_boolean(dest, operator)
-          when "double" then pull_double(dest, operator)
-          when "fixed64" then pull_fixed_int64(dest, operator)
-          when "fixed32" then pull_fixed_int32(dest, operator)
-          when "sfixed64" then pull_fixed_int64(dest, operator)
-          when "sfixed32" then pull_fixed_int32(dest, operator)
-          when "float" then pull_float(dest, operator)
-          when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          when :TYPE_STRING   then pull_string(dest, operator)
+          when :TYPE_BYTES    then pull_bytes(dest, operator)
+          when :TYPE_UINT64   then pull_uint64(dest, operator)
+          when :TYPE_INT64    then pull_int64(dest, operator)
+          when :TYPE_INT32    then pull_int32(dest, operator)
+          when :TYPE_UINT32   then pull_uint32(dest, operator)
+          when :TYPE_SINT32   then pull_sint32(dest, operator)
+          when :TYPE_SINT64   then pull_sint64(dest, operator)
+          when :TYPE_BOOL     then pull_boolean(dest, operator)
+          when :TYPE_DOUBLE   then pull_double(dest, operator)
+          when :TYPE_FIXED64  then pull_fixed_int64(dest, operator)
+          when :TYPE_FIXED32  then pull_fixed_int32(dest, operator)
+          when :TYPE_SFIXED64 then pull_fixed_int64(dest, operator)
+          when :TYPE_SFIXED32 then pull_fixed_int32(dest, operator)
+          when :TYPE_FLOAT    then pull_float(dest, operator)
+          when :TYPE_MESSAGE
             pull_message(type, dest, operator)
           else
             raise "Unknown field type #{type}"
@@ -1239,7 +1221,7 @@ module ProtoBoeuf
       end
 
       def reads_next_tag?(field)
-        field.map? || (field.repeated? && !field.packed?)
+        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !field.packed?)
       end
     end
 
@@ -1288,22 +1270,22 @@ module ProtoBoeuf
     def self.wire_type(field)
       if field.label == :TYPE_REPEATED && field.packed?
         LEN
-      elsif field.enum?
+      elsif field.type == :TYPE_ENUM
         VARINT
       else
         case field.type
-        when "string", "bytes"
+        when :TYPE_STRING, :TYPE_BYTES
           LEN
-        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
+        when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64, :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32
           VARINT
-        when "double", "fixed64", "sfixed64"
+        when :TYPE_DOUBLE, :TYPE_FIXED64, :TYPE_SFIXED64
           I64
-        when "float", "fixed32", "sfixed32"
+        when :TYPE_FLOAT, :TYPE_FIXED32, :TYPE_SFIXED32
           I32
-        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+        when :TYPE_MESSAGE
           LEN
-        when MapType
-          LEN
+        #when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+        #  LEN
         else
           raise "Unknown wire type for field #{type}"
         end

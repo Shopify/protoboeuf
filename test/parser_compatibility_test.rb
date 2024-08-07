@@ -182,13 +182,18 @@ message OneItem {
   optional uint32 a = 1;
   repeated uint32 b = 2;
   uint32 c = 3;
+  repeated uint32 ids = 4 [packed = false];
 }
       EOPROTO
 
       theirs.file.first.message_type.first.field.each_with_index do |their_field, i|
         our_field = ours.file.first.message_type.first.field[i]
-
         assert_equal their_field.label, our_field.label
+
+        if their_field.options
+          assert_equal false, our_field.options.packed
+          assert_equal their_field.options.packed, our_field.options.packed
+        end
       end
     end
 
@@ -236,8 +241,30 @@ message MapItem {
       end
     end
 
+    def test_submessages
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message BucketObj {
+  message OrigFoo {
+    sint32 q = 1;
+  }
+  sint32 fi = 2;
+}
+      EOPROTO
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.nested_type.length
+      end
+      theirs.file.first.message_type.first.nested_type.each_with_index do |their_msg, i|
+        our_msg = ours.file.first.message_type.first.nested_type[i]
+
+        assert_equal their_msg.name, our_msg.name
+        assert_equal their_msg.field.length, our_msg.field.length
+      end
+    end
+
     def test_simple_codegen
-      skip
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";
 

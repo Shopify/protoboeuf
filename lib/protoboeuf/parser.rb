@@ -48,6 +48,7 @@ module ProtoBoeuf
     end
 
     MessageOptions = Struct.new(:map_entry)
+    FieldOptions = Struct.new(:packed)
   end
 
   # Position in a source file
@@ -140,19 +141,9 @@ module ProtoBoeuf
 
   # Qualifier is :optional, :required or :repeated
   class Field < Struct.new(:label, :type_name, :type, :name, :number, :options, :pos, :enum, :oneof_index)
-    def field?
-      true
-    end
-
-    def oneof?
-      false
-    end
-
     def has_oneof_index?
       oneof_index || false
     end
-
-    alias :enum? :enum
 
     # Return a local variable name for use in generated code
     def lvar_name
@@ -218,18 +209,6 @@ module ProtoBoeuf
       raise "not a repeated field" unless repeated?
 
       @item_field ||= self.dup.tap { |f| f.qualifier = nil }
-    end
-
-    def key_field
-      raise "not a map field" unless map?
-
-      @key_field ||= Field.new(nil, type.key_type, nil, "key", 1, {}, pos)
-    end
-
-    def value_field
-      raise "not a map field" unless map?
-
-      @value_field ||= Field.new(nil, type.value_type, nil, "value", 2, {}, pos)
     end
   end
 
@@ -438,7 +417,7 @@ module ProtoBoeuf
       input.expect ','
     end
 
-    options
+    AST::FieldOptions.new(options[:packed])
   end
 
   # Parse the reserved directive, e.g.
@@ -492,7 +471,7 @@ module ProtoBoeuf
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
-        messages << parse_message(input, msg_pos, top_enums)
+        nested_type << parse_message(input, msg_pos, top_enums, nil)
         next
       end
       if inside_message && (input.match 'enum')
@@ -548,7 +527,7 @@ module ProtoBoeuf
           get_type(type.key_type, top_enums),
           "key",
           1,
-          {},
+          nil,
           field_pos,
           nil,
           nil)
@@ -558,12 +537,12 @@ module ProtoBoeuf
           get_type(type.value_type, top_enums),
           "value",
           2,
-          {},
+          nil,
           field_pos,
           nil,
           nil)
 
-        options = AST::MessageOptions.new(true)
+        msg_options = AST::MessageOptions.new(true)
 
         nested_msg = Message.new(name.split("_").map(&:capitalize).join + "Entry",
           [key_field, value_field],
@@ -571,7 +550,7 @@ module ProtoBoeuf
           [],
           [],
           [],
-          options,
+          msg_options,
           field_pos)
 
         nested_type << nested_msg
