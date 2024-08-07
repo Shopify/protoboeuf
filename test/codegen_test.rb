@@ -2,6 +2,45 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_oneof
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestEmbeddee {
+  uint64 value = 1;
+}
+
+message TestMessageWithOneOf {
+  string id = 1;
+  uint64 shop_id = 2;
+
+  oneof oneof_field {
+    uint32 oneof_u32 = 5;
+    TestEmbeddee oneof_msg = 6;
+    string oneof_str = 7;
+  }
+
+  bool boolean = 3;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::TestMessageWithOneOf.new
+      assert_equal 0, msg.oneof_u32
+      assert_nil msg.oneof_msg
+      assert_equal "", msg.oneof_str
+      assert_nil msg.oneof_field
+
+      msg.oneof_str = "hello"
+      assert_equal "hello", msg.oneof_str
+      assert_equal :oneof_str, msg.oneof_field
+
+      msg.oneof_u32 = 123
+      assert_equal 123, msg.oneof_u32
+      assert_equal :oneof_u32, msg.oneof_field
+    end
+
     def test_make_ruby
       unit = parse_string('syntax = "proto3"; message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
       gen = CodeGen.new unit
