@@ -648,7 +648,7 @@ module ProtoBoeuf
       end
 
       def initialize_field(field)
-        if field.label == :LABEL_OPTIONAL
+        if field.label == :LABEL_OPTIONAL && field.proto3_optional
           initialize_optional_field(field)
         elsif field.type == :TYPE_ENUM
           initialize_enum_field(field)
