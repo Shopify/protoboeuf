@@ -71,7 +71,7 @@ module ProtoBoeuf
       end
 
       def convert_field_type(field)
-        convert_type(field.type, optional: field.optional?, array: field.repeated?)
+        convert_type(field.type, optional: field.label == :TYPE_OPTIONAL, array: field.label == :TYPE_REPEATED)
       end
 
       def field_to_params(field)

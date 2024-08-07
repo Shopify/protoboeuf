@@ -71,19 +71,18 @@ module ProtoBoeuf
         @generate_types = generate_types
         @has_submessage = false
 
-        mark_enum_fields
+        @required_fields = []
+        @optional_fields = []
+        @oneof_fields = []
 
-        field_types = message.field.group_by { |field|
-          if field.field?
-            field.qualifier || :required
+        message.field.each { |field|
+          if field.has_oneof_index?
+            @oneof_fields << field
+            raise NotImplementedError
           else
-            :oneof
+            @optional_fields << field
           end
         }
-
-        @required_fields = field_types[:required] || []
-        @optional_fields = field_types[:optional] || []
-        @oneof_fields = field_types[:oneof] || []
 
         @optional_fields.each_with_index { |field, i|
           @optional_field_bit_lut[field.number] = i
@@ -100,14 +99,6 @@ module ProtoBoeuf
       end
 
       private
-
-      def mark_enum_fields
-        message.field.select { |field|
-          field.field? && enum_field_types.key?(field.type)
-        }.each do |field|
-          field.enum = true
-        end
-      end
 
       def class_body
         prelude +
@@ -170,14 +161,14 @@ module ProtoBoeuf
       end
 
       def encode_tag(field)
-        tag = (field.number << 3) | field.wire_type
+        tag = (field.number << 3) | CodeGen.wire_type(field)
         "buff << #{sprintf("%#04x", tag)}\n"
       end
 
       def encode_length(field, len_expr)
         result = +""
 
-        if field.wire_type == ProtoBoeuf::Field::LEN
+        if CodeGen.wire_type(field) == ProtoBoeuf::Field::LEN
           raise "length encoded fields must have a length expression" unless len_expr
           if len_expr != "len"
             result << "len = #{len_expr}\n"
@@ -521,8 +512,9 @@ module ProtoBoeuf
       end
 
       def required_readers
-        fields = message.field.select(&:field?).reject(&:optional?).reject(&:enum?)
-        return "" if fields.empty?
+        fields = message.field.select do |field|
+          field.label == :TYPE_REQUIRED && !field.has_oneof_index? && !field.type != :TYPE_ENUM
+        end
 
         "# required field readers\n" +
         fields.map do |field|
@@ -571,7 +563,10 @@ module ProtoBoeuf
       end
 
       def required_writers
-        fields = message.field.select(&:field?).reject(&:optional?).reject(&:enum?)
+        fields = message.field.select do |field|
+          field.label == :TYPE_REQUIRED && !field.has_oneof_index? && !field.type != :TYPE_ENUM
+        end
+
         return "" if fields.empty?
 
         fields.map { |field|
@@ -651,7 +646,7 @@ module ProtoBoeuf
       end
 
       def initialize_field(field)
-        if field.optional?
+        if field.label == :TYPE_OPTIONAL
           initialize_optional_field(field)
         elsif field.field? && field.enum?
           initialize_enum_field(field)
@@ -866,7 +861,7 @@ module ProtoBoeuf
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
           <%- for field in fields -%>
-            <%- if field.field? -%>
+            <%- if !field.has_oneof_index? -%>
             @<%= field.name %> = <%= default_for(field) %>
             <%- else -%>
             @<%= field.name %> = nil # oneof field
@@ -882,12 +877,12 @@ module ProtoBoeuf
 
           while true
             <%- fields.each do |field| -%>
-              <%- if field.field? -%>
+              <%- if !field.has_oneof_index? -%>
             if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
-              <%= set_bitmask(field) if field.optional? %>
+              <%= set_bitmask(field) if field.label == :TYPE_OPTIONAL %>
               return self if index >= len
-              <%- if !field.reads_next_tag? -%>
+              <%- if !reads_next_tag?(field) -%>
               <%= pull_tag %>
               <%- end -%>
             end
@@ -935,7 +930,7 @@ module ProtoBoeuf
 
       def default_for(field)
         if field.field?
-          if field.repeated?
+          if field.label == :TYPE_REPEATED
             "[]"
           else
             if field.enum?
@@ -969,7 +964,7 @@ module ProtoBoeuf
       def initialize_signature
         self.fields.flat_map { |f|
           if f.field?
-            if f.optional?
+            if f.label == :TYPE_OPTIONAL
               "#{f.lvar_name}: nil"
             else
               "#{f.lvar_name}: #{default_for(f)}"
@@ -985,7 +980,7 @@ module ProtoBoeuf
       end
 
       def tag_for_field(field, idx)
-        sprintf("%#02x", (idx << 3 | field.wire_type))
+        sprintf("%#02x", (idx << 3 | CodeGen.wire_type(field)))
       end
 
       def decode_subtype(field, type, dest, operator)
@@ -1182,7 +1177,7 @@ module ProtoBoeuf
       end
 
       def decode_code(field)
-        if field.repeated?
+        if field.type == :TYPE_REPEATED
           if field.packed?
             PACKED_REPEATED.result(binding)
           else
@@ -1242,6 +1237,10 @@ module ProtoBoeuf
         i = @optional_field_bit_lut[field.number]
         "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
       end
+
+      def reads_next_tag?(field)
+        field.map? || (field.repeated? && !field.packed?)
+      end
     end
 
     attr_reader :generate_types
@@ -1278,6 +1277,36 @@ module ProtoBoeuf
 
       (file.package || "").split(".").filter_map do |m|
         m.split("_").map(&:capitalize).join unless m.empty?
+      end
+    end
+
+    VARINT = 0
+    I64 = 1
+    LEN = 2
+    I32 = 5
+
+    def self.wire_type(field)
+      if field.label == :TYPE_REPEATED && field.packed?
+        LEN
+      elsif field.enum?
+        VARINT
+      else
+        case field.type
+        when "string", "bytes"
+          LEN
+        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
+          VARINT
+        when "double", "fixed64", "sfixed64"
+          I64
+        when "float", "fixed32", "sfixed32"
+          I32
+        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          LEN
+        when MapType
+          LEN
+        else
+          raise "Unknown wire type for field #{type}"
+        end
       end
     end
   end

@@ -166,11 +166,88 @@ message OrigFoo {
         assert_equal their_field.name, our_field.name, "names should equal"
         assert_equal their_field.number, our_field.number, "numbers should equal"
         assert_equal their_field.has_oneof_index?, our_field.has_oneof_index?, "oneof_index should equal"
+        assert_equal their_field.label, our_field.label
 
         if their_field.has_oneof_index?
           assert_equal their_field.oneof_index, our_field.oneof_index, "oneof_index should equal"
         end
       end
+    end
+
+    def test_qualifiers
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message OneItem {
+  optional uint32 a = 1;
+  repeated uint32 b = 2;
+  uint32 c = 3;
+}
+      EOPROTO
+
+      theirs.file.first.message_type.first.field.each_with_index do |their_field, i|
+        our_field = ours.file.first.message_type.first.field[i]
+
+        assert_equal their_field.label, our_field.label
+      end
+    end
+
+    def test_map_type
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message MapItem {
+  map<string, int64> something_foo = 1;
+}
+      EOPROTO
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.first.name
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.first.type_name
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.first.label
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.first.type
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.nested_type.length
+      end
+
+      theirs.file.first.message_type.first.nested_type.each_with_index do |their_msg, i|
+        our_msg = ours.file.first.message_type.first.nested_type[i]
+
+        assert_equal their_msg.field.length, our_msg.field.length
+
+        their_msg.field.each_with_index do |their_field, j|
+          our_field = our_msg.field[j]
+          assert_equal their_field.name, our_field.name
+          assert_equal their_field.number, our_field.number
+          assert_equal their_field.label, our_field.label
+          assert_equal their_field.type, our_field.type
+        end
+      end
+    end
+
+    def test_simple_codegen
+      skip
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message OneItem {
+  uint32 a = 1;
+}
+      EOPROTO
+
+      assert_equal ProtoBoeuf::CodeGen.new(ours).to_ruby,
+                   ProtoBoeuf::CodeGen.new(theirs).to_ruby
     end
 
     private
@@ -181,6 +258,7 @@ message OrigFoo {
 
     def parse_string(str)
       [parse_string_with_protoboeuf(str), parse_string_with_protoc(str)]
+      #[nil, parse_string_with_protoc(str)]
     end
 
     def parse_string_with_protoboeuf(string)
