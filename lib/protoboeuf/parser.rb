@@ -96,7 +96,7 @@ module ProtoBoeuf
   end
 
   # The messages field is for nested/local message definitions
-  class Message < Struct.new(:name, :field, :messages, :enum_type, :pos)
+  class Message < Struct.new(:name, :field, :messages, :enum_type, :oneof_decl, :pos)
     def accept(viz)
       viz.visit_message self
     end
@@ -147,7 +147,7 @@ module ProtoBoeuf
     end
 
     def has_oneof_index?
-      oneof_index
+      oneof_index || false
     end
 
     alias :enum? :enum
@@ -349,7 +349,7 @@ module ProtoBoeuf
 
       # Message definition
       elsif ident == "message"
-        messages << parse_message(input, pos, enums)
+        messages << parse_message(input, pos, enums, nil)
 
       # Enum definition
       elsif ident == "enum"
@@ -510,11 +510,12 @@ module ProtoBoeuf
   end
 
   # Parse the body for a message or oneof
-  def self.parse_body(input, pos, inside_message, top_enums)
+  def self.parse_body(input, pos, inside_message, top_enums, oneof_index)
     fields = []
     messages = []
     enums = []
     reserved = []
+    oneof_decls = []
 
     input.expect '{'
 
@@ -549,7 +550,9 @@ module ProtoBoeuf
         # If this is a oneof field
         oneof_pos = input.pos
         if input.match 'oneof'
-          fields << parse_oneof(input, oneof_pos)
+          oneof = parse_oneof(input, oneof_pos, top_enums, oneof_decls.length)
+          fields.concat oneof.fields
+          oneof_decls << oneof
           next
         end
       end
@@ -570,7 +573,7 @@ module ProtoBoeuf
         raise ParseError.new("field number outside of valid range #{number}", field_pos)
       end
 
-      fields << Field.new(qualifier, qualify(type), get_type(type, top_enums), name, number, options, field_pos)
+      fields << Field.new(qualifier, qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index)
     end
 
     # Check that reserved field numbers are not used
@@ -624,7 +627,7 @@ module ProtoBoeuf
 
     check_enum_collision(enums)
 
-    return fields, messages, enums
+    return fields, messages, enums, oneof_decls
   end
 
   def self.qualify(name)
@@ -658,18 +661,18 @@ module ProtoBoeuf
   end
 
   # Parse a message definition
-  def self.parse_message(input, pos, enums)
+  def self.parse_message(input, pos, enums, oneof_index)
     input.eat_ws
     message_name = input.read_ident
-    fields, messages, enums = parse_body(input, pos, true, enums)
-    Message.new(message_name, fields, messages, enums, pos)
+    fields, messages, enums, oneof_decls = parse_body(input, pos, true, enums, oneof_index)
+    Message.new(message_name, fields, messages, enums, oneof_decls, pos)
   end
 
   # Parse a oneof definition
-  def self.parse_oneof(input, pos, enums)
+  def self.parse_oneof(input, pos, enums, index)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _, _ = parse_body(input, pos, false, enums)
+    fields, _, _ = parse_body(input, pos, false, enums, index)
     OneOf.new(oneof_name, fields, pos)
   end
 

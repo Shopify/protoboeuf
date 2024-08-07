@@ -133,6 +133,46 @@ message HasEnum {
       end
     end
 
+    def test_oneof_fields
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message OrigFoo {
+  oneof foo_bar_bif {
+    uint32 i = 1;
+    string s = 2;
+  }
+  sint32 q = 7;
+}
+      EOPROTO
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.oneof_decl.length
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.oneof_decl.first.name
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.length
+      end
+
+      theirs.file.first.message_type.first.field.length.times do |i|
+        their_field = theirs.file.first.message_type.first.field[i]
+        our_field = ours.file.first.message_type.first.field[i]
+
+        assert_equal their_field.type, our_field.type, "types should equal"
+        assert_equal their_field.name, our_field.name, "names should equal"
+        assert_equal their_field.number, our_field.number, "numbers should equal"
+        assert_equal their_field.has_oneof_index?, our_field.has_oneof_index?, "oneof_index should equal"
+
+        if their_field.has_oneof_index?
+          assert_equal their_field.oneof_index, our_field.oneof_index, "oneof_index should equal"
+        end
+      end
+    end
+
     private
 
     def assert_same_value(theirs, ours)
