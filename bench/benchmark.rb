@@ -2,6 +2,7 @@
 
 require "protoboeuf/parser"
 require "protoboeuf/benchmark_pb"
+require "protoboeuf-edge/benchmark_pb"
 require "upstream/benchmark_pb"
 require "benchmark/ips"
 
@@ -32,7 +33,7 @@ def gen_fake_field_val(type_map, field)
     rand() < 0.5
   when "string"
     # TODO: better random strings with variable lengths
-    "foobar" + '_foo' * rand(0..8)
+    "foobar€" + '_foo' * rand(0..8)
   when "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32"
     # TODO: we may want a normal or poisson distribution?
     # We don't care about negative integers for this benchmark (rarely used)
@@ -147,31 +148,33 @@ puts "total encoded size: #{total_bin_size} bytes"
 # Decode the messages using protoboeuf so we can re-encode them for the encoding benchmark
 # We do this because ProtoBoeuf can't directly encode Google's protobuf message classes
 decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeuf::ParkingLot.decode bin }
+edge_decoded_msgs_proto = encoded_bins.map { |bin| ProtoBoeufEdge::ParkingLot.decode bin }
 
 version = RubyVM::YJIT.enabled? ? "/jit" : "/interp"
 
-puts "=== decode ==="
-Benchmark.ips do |x|
-  x.report("upstream#{version}")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
-  x.report("protoboeuf#{version}") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
-
-  x.save!(File.join(ENV["BENCH_HOLD"], "decode.bench")) if ENV["BENCH_HOLD"]
-  x.compare!(order: :baseline)
-end
-
-puts "=== decode and read ==="
-Benchmark.ips do |x|
-  x.report("upstream#{version}")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
-  x.report("protoboeuf#{version}") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
-
-  x.save!(File.join(ENV["BENCH_HOLD"], "read.bench")) if ENV["BENCH_HOLD"]
-  x.compare!(order: :baseline)
-end
+# puts "=== decode ==="
+# Benchmark.ips do |x|
+#   x.report("upstream#{version}")  { encoded_bins.each { |bin| Upstream::ParkingLot.decode bin } }
+#   x.report("protoboeuf#{version}") { encoded_bins.each { |bin| ProtoBoeuf::ParkingLot.decode bin } }
+#
+#   x.save!(File.join(ENV["BENCH_HOLD"], "decode.bench")) if ENV["BENCH_HOLD"]
+#   x.compare!(order: :baseline)
+# end
+#
+# puts "=== decode and read ==="
+# Benchmark.ips do |x|
+#   x.report("upstream#{version}")  { encoded_bins.each { |bin| walk_ParkingLot(Upstream::ParkingLot.decode bin) } }
+#   x.report("protoboeuf#{version}") { encoded_bins.each { |bin| walk_ParkingLot(ProtoBoeuf::ParkingLot.decode bin) } }
+#
+#   x.save!(File.join(ENV["BENCH_HOLD"], "read.bench")) if ENV["BENCH_HOLD"]
+#   x.compare!(order: :baseline)
+# end
 
 puts "=== encode ==="
 Benchmark.ips do |x|
-  x.report("upstream#{version}")  { fake_msgs.each { |msg| Upstream::ParkingLot.encode(msg) } }
   x.report("protoboeuf#{version}") { decoded_msgs_proto.each { |msg| ProtoBoeuf::ParkingLot.encode(msg) } }
+  x.report("upstream#{version}")  { fake_msgs.each { |msg| Upstream::ParkingLot.encode(msg) } }
+  x.report("pboeuf-edge#{version}") { edge_decoded_msgs_proto.each { |msg| ProtoBoeufEdge::ParkingLot.encode(msg) } }
 
   x.save!(File.join(ENV["BENCH_HOLD"], "encode.bench")) if ENV["BENCH_HOLD"]
   x.compare!(order: :baseline)

@@ -10,15 +10,16 @@ module ProtoBoeuf
       attr_reader :generate_types
       include TypeHelper
 
-      def self.result(enum, generate_types:)
-        new(enum, generate_types:).result
+      def self.result(enum, generate_types:, options: {})
+        new(enum, generate_types:, options:).result
       end
 
       attr_reader :enum
 
-      def initialize(enum, generate_types:)
+      def initialize(enum, generate_types:, options: {})
         @enum = enum
         @generate_types = generate_types
+        @options = options
       end
 
       def result
@@ -55,14 +56,14 @@ module ProtoBoeuf
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types:)
-        new(message, toplevel_enums, generate_types:).result
+      def self.result(message, toplevel_enums, generate_types:, options: {})
+        new(message, toplevel_enums, generate_types:, options:).result
       end
 
       attr_reader :message, :fields, :oneof_fields
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums, generate_types:)
+      def initialize(message, toplevel_enums, generate_types:, options:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.fields
@@ -70,6 +71,7 @@ module ProtoBoeuf
         @requires = Set.new
         @generate_types = generate_types
         @has_submessage = false
+        @options = options
 
         mark_enum_fields
 
@@ -213,17 +215,6 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_bytes(field, value_expr, tagged)
-        # Empty bytes is default value, so encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if((bs = val.bytesize) > 0)
-            #{encode_tag_and_length(field, tagged, "bs")}
-            buff.concat(val.b)
-          end
-        RUBY
-      end
-
       def encode_enum(field, value_expr, tagged)
         # Zero is default value for enums, so encodes nothing
         <<~RUBY
@@ -276,13 +267,44 @@ module ProtoBoeuf
 
       def encode_string(field, value_expr, tagged)
         # Empty string is default value, so encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if((len = val.bytesize) > 0)
-            #{encode_tag_and_length(field, tagged, "len")}
-            buff << (val.ascii_only? ? val : val.b)
-          end
-        RUBY
+        if String.method_defined?(:append_bytes) && @options[:append_bytes] != false
+          <<~RUBY
+            val = #{value_expr}
+            if((len = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "len")}
+              buff.append_bytes(val)
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if((len = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "len")}
+              buff << (val.ascii_only? ? val : val.b)
+            end
+          RUBY
+        end
+      end
+
+      def encode_bytes(field, value_expr, tagged)
+        # Empty bytes is default value, so encodes nothing
+        if String.method_defined?(:append_bytes) && @options[:append_bytes] != false
+          <<~RUBY
+            val = #{value_expr}
+            if((bs = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "bs")}
+              buff.append_bytes(val)
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if((bs = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "bs")}
+              buff.concat(val.b)
+            end
+          RUBY
+        end
       end
 
       def encode_submessage(field, value_expr, tagged)
@@ -1249,7 +1271,7 @@ module ProtoBoeuf
       @generate_types = generate_types
     end
 
-    def to_ruby
+    def to_ruby(options = {})
       modules = resolve_modules
       head = "# encoding: ascii-8bit\n"
       head += "# typed: false\n" if generate_types
@@ -1257,8 +1279,8 @@ module ProtoBoeuf
       head += modules.map { |m| "module #{m}\n" }.join
 
       toplevel_enums = @ast.enums.group_by(&:name)
-      body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
+      body = @ast.enums.map { |enum| EnumCompiler.result(enum, generate_types:, options:) }.join + "\n"
+      body += @ast.messages.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, options:) }.join
 
       tail = "\n" + modules.map { "end" }.join("\n")
 
