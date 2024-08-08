@@ -295,26 +295,45 @@ module ProtoBoeuf
             # Save the buffer size before appending the submessage
             current_len = buff.bytesize
 
-            # Write dummy bytes to store encoded length
-            buff << "1234567890"
+            # Write a single dummy byte to later store encoded length
+            buff << 42 # "*"
             val._encode(buff)
 
             # Calculate the submessage's size
-            submessage_size = buff.bytesize - current_len - 10
+            submessage_size = buff.bytesize - current_len - 1
 
-            encoded_int_len = 0
+            # Hope the size fits in one byte
+            byte = submessage_size & 0x7F
+            submessage_size >>= 7
+            byte |= 0x80 if submessage_size > 0
+            buff.setbyte(current_len, byte)
 
-            # Overwrite the dummy bytes with the encoded length
-            while submessage_size != 0
-              byte = submessage_size & 0x7F
-              submessage_size >>= 7
-              byte |= 0x80 if submessage_size > 0
-              buff.setbyte(current_len, byte)
+            # If the sub message was bigger
+            if submessage_size > 0
               current_len += 1
-              encoded_int_len += 1
+
+              # compute how much we need to shift
+              encoded_int_len = 0
+              remaining_size = submessage_size
+              while remaining_size != 0
+                remaining_size >>= 7
+                encoded_int_len += 1
+              end
+
+              # Make space in the string with dummy bytes
+              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+              # Overwrite the dummy bytes with the encoded length
+              while submessage_size != 0
+                byte = submessage_size & 0x7F
+                submessage_size >>= 7
+                byte |= 0x80 if submessage_size > 0
+                buff.setbyte(current_len, byte)
+                current_len += 1
+              end
             end
 
-            buff.bytesplice(current_len, 10 - encoded_int_len, "")
+            buff
           end
         RUBY
       end
