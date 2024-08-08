@@ -648,7 +648,7 @@ module ProtoBoeuf
       when "sint64" then :TYPE_SINT64
       when MapType then :TYPE_MESSAGE
       else
-        raise NotImplementedError, type
+        :TYPE_MESSAGE
       end
     end
   end

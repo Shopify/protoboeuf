@@ -72,7 +72,7 @@ message TestMessageWithOneOf {
     end
 
     def test_fields_keyword_end
-      unit = parse_string('message Test1 { optional int32 end = 1; }')
+      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 end = 1; }')
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new(end: 1234)

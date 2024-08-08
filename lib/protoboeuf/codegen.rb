@@ -77,8 +77,7 @@ module ProtoBoeuf
 
         message.field.each { |field|
           if field.has_oneof_index? && !field.proto3_optional
-            @oneof_fields << field
-            raise NotImplementedError
+            (@oneof_fields[field.oneof_index] ||= []) << field
           else
             @optional_fields << field
           end
@@ -126,7 +125,6 @@ module ProtoBoeuf
 
       def convert_field(field)
         if field.has_oneof_index? && !field.proto3_optional
-          raise NotImplementedError
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
         elsif field.label == :TYPE_REPEATED
           "result['#{field.name}'.to_sym] = @#{field.name}"
@@ -145,19 +143,15 @@ module ProtoBoeuf
           "\nbuff\n end\n\n"
       end
 
-      def encode_subtype(field, value_expr = "@#{field.name}", tagged = true)
-        method = if field.has_oneof_index? && !field.proto3_optional
+      def encode_subtype(field, value_expr = iv_name(field), tagged = true)
+        method = if field.label == :LABEL_REPEATED
           raise NotImplementedError
         else
-          if field.label == :LABEL_REPEATED
-            raise NotImplementedError
+          case field.type
+          when :TYPE_ENUM then "encode_enum"
+          when :TYPE_MESSAGE then "encode_submessage"
           else
-            case field.type
-            when :TYPE_ENUM then "encode_enum"
-            when :TYPE_MESSAGE then "encode_submessage"
-            else
-              "encode_#{field.type.to_s.downcase.delete_prefix("type_")}"
-            end
+            "encode_#{field.type.to_s.downcase.delete_prefix("type_")}"
           end
         end
 
@@ -541,11 +535,12 @@ module ProtoBoeuf
         return "" unless oneof_fields.length > 0
 
         "# oneof field readers\n" +
-        oneof_fields.map do |field|
+        oneof_fields.map.with_index do |sub_fields, i|
+          field = message.oneof_decl[i]
           [
             reader_type_signature("Symbol"),
             "attr_reader :#{field.name}",
-            field.fields.map do |sub_field|
+            sub_fields.map do |sub_field|
               "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
             end
           ].join("\n")
@@ -605,8 +600,9 @@ module ProtoBoeuf
         return "" if oneof_fields.empty?
 
         "# BEGIN writers for oneof fields\n" +
-        oneof_fields.map { |oneof|
-          oneof.fields.map { |field|
+        oneof_fields.map.with_index { |sub_fields, i|
+          oneof = message.oneof_decl[i]
+          sub_fields.map { |field|
             <<~RUBY
               def #{field.name}=(v)
                 #{bounds_check(field, "v")}
@@ -623,28 +619,41 @@ module ProtoBoeuf
           initialize_type_signature(fields) +
           "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
+          initialize_oneofs(message) +
           fields.map { |field|
             if field.has_oneof_index? && !field.proto3_optional
-              initialize_oneof(field)
+              initialize_oneof(field, message)
             else
               initialize_field(field)
             end
           }.join("\n") + "\nend\n\n"
       end
 
-      def initialize_oneof(oneof)
-        "@#{oneof.name} = nil # oneof field\n" +
-          oneof.fields.map { |field|
-            <<~RUBY
-              if #{field.lvar_read} == nil
-                #{field.iv_name} = #{default_for(field)}
+      def initialize_oneofs(m)
+        # The AST treats "optional" fields in Proto3 as "oneof" fields.
+        # But since there is only one of each of these "oneof" fields, there
+        # is no reason to add an extra instance variable.  The "oneof_fields"
+        # list only contains non-proto3_optional fields, so we're using that
+        # to only iterate over actual "oneof" fields.
+        oneof_fields.each_with_index.map { |item, i|
+          next unless item
+          field = m.oneof_decl[i]
+          "#{iv_name(field)} = nil # oneof field"
+        }.join("\n") + "\n"
+      end
+
+      def initialize_oneof(field, msg)
+        oneof = msg.oneof_decl[field.oneof_index]
+
+        <<~RUBY
+              if #{lvar_read(field)} == nil
+                #{iv_name(field)} = #{default_for(field)}
               else
                 #{bounds_check(field, field.name)}
-                @#{oneof.name} = :#{field.name}
-                #{field.iv_name} = #{field.lvar_read}
+                #{iv_name(oneof)} = :#{field.name}
+                #{iv_name(field)} = #{lvar_read(field)}
               end
-            RUBY
-          }.join("\n")
+        RUBY
       end
 
       def initialize_field(field)
@@ -881,15 +890,14 @@ module ProtoBoeuf
       DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
-          <%- for field in fields -%>
-            <%- if field.has_oneof_index? && !field.proto3_optional -%>
+          # Initialize oneof fields
+          <%- for field in message.oneof_decl -%>
             @<%= field.name %> = nil # oneof field
-              <%- for oneof_child in field.fields -%>
-            @<%= oneof_child.name %> = <%= default_for(oneof_child) %>
-              <%- end -%>
-            <%- else -%>
+          <%- end -%>
+
+          # Initialize regular fields
+          <%- for field in fields -%>
             @<%= field.name %> = <%= default_for(field) %>
-            <%- end -%>
           <%- end -%>
 
           <%- unless fields.empty? -%>
@@ -908,14 +916,12 @@ module ProtoBoeuf
               <%- end -%>
             end
               <%- else -%>
-                <%- field.fields.each do |child| -%>
-            if tag == <%= tag_for_field(child, child.number) %>
-              <%= decode_code(child) %>
-              @<%= field.name %> = :<%= child.name %>
+            if tag == <%= tag_for_field(field, field.oneof_index) %>
+              <%= decode_code(field) %>
+              @<%= message.oneof_decl[field.oneof_index].name %> = :<%= field.name %>
               return self if index >= len
               <%= pull_tag %>
             end
-                <%- end -%>
               <%- end -%>
             <%- end -%>
 
@@ -959,7 +965,10 @@ module ProtoBoeuf
           0.0
         when :TYPE_BOOL
           false
+        when :TYPE_MESSAGE
+          'nil'
         else
+          p field
           raise NotImplementedError
         end
       end
@@ -967,9 +976,10 @@ module ProtoBoeuf
       def initialize_signature
         self.fields.flat_map { |f|
           if f.has_oneof_index? && !f.proto3_optional
-            f.fields.map { |child|
-              "#{child.lvar_name}: nil"
-            }
+            "#{f.name}: nil"
+            #f.fields.map { |child|
+            #  "#{child.lvar_name}: nil"
+            #}
           else
             if f.label == :TYPE_OPTIONAL
               "#{f.name}: nil"
@@ -1266,7 +1276,11 @@ module ProtoBoeuf
         tail = "\n" + modules.map { "end" }.join("\n")
 
         #puts head + body + tail
-        return SyntaxTree.format(head + body + tail)
+        begin
+          return SyntaxTree.format(head + body + tail)
+        rescue SyntaxTree::Parser::ParseError
+          return head + body + tail
+        end
       end
     end
 
