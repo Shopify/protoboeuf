@@ -2,15 +2,21 @@ module ProtoBoeuf
   class CodeGen
     module TypeHelper
       TYPE_MAPPING = {
-        "int32" => "Integer",
-        "sint32" => "Integer",
-        "uint32" => "Integer",
-        "int64" => "Integer",
-        "sint64" => "Integer",
-        "uint64" => "Integer",
-        "string" => "String",
-        "double" => "Float",
-        "bytes" => "String",
+        :TYPE_INT32 => "Integer",
+        :TYPE_SINT32 => "Integer",
+        :TYPE_UINT32 => "Integer",
+        :TYPE_INT64 => "Integer",
+        :TYPE_SINT64 => "Integer",
+        :TYPE_FIXED64 => "Integer",
+        :TYPE_SFIXED64 => "Integer",
+        :TYPE_FIXED32 => "Integer",
+        :TYPE_SFIXED32 => "Integer",
+        :TYPE_UINT64 => "Integer",
+        :TYPE_STRING => "String",
+        :TYPE_DOUBLE => "Float",
+        :TYPE_FLOAT => "Float",
+        :TYPE_BYTES => "String",
+        :TYPE_ENUM => "Symbol",
         "google.protobuf.BoolValue" => "ProtoBoeuf::Protobuf::BoolValue",
         "google.protobuf.Int32Value" => "ProtoBoeuf::Protobuf::Int32Value",
         "google.protobuf.Int64Value" => "ProtoBoeuf::Protobuf::Int64Value",
@@ -43,12 +49,8 @@ module ProtoBoeuf
         type_signature(params: fields_to_params(fields), newline: true)
       end
 
-      def reader_type_signature(type)
-        if type.is_a?(Field)
-          type_signature(returns: convert_field_type(type))
-        else
-          type_signature(returns: convert_type(type))
-        end
+      def reader_type_signature(field)
+        type_signature(returns: convert_field_type(field))
       end
 
       def extend_t_sig
@@ -59,19 +61,28 @@ module ProtoBoeuf
 
       private
 
-      def convert_type(type, optional: false, array: false)
-
-        converted_type = TYPE_MAPPING[type] || type
-        if type.is_a?(MapType)
-          converted_type = "T::Hash[#{convert_type(type.key_type)}, #{convert_type(type.value_type)}]"
-        end
+      def convert_type(converted_type, optional: false, array: false)
         converted_type = "T::Array[#{converted_type}]" if array
         converted_type = "T.nilable(#{converted_type})" if optional
         converted_type
       end
 
       def convert_field_type(field)
-        convert_type(field.type, optional: field.label == :TYPE_OPTIONAL, array: field.label == :TYPE_REPEATED)
+        converted_type = if map_field?(field)
+          map_type = self.map_type(field)
+          "T::Hash[#{convert_field_type(map_type.field[0])}, #{convert_field_type(map_type.field[1])}]"
+        else
+          case field.type
+          when :TYPE_BOOL
+            "T::Boolean"
+          when :TYPE_MESSAGE
+            field.type_name.delete_prefix(".").split(".").join("::")
+          else
+            TYPE_MAPPING.fetch(field.type)
+          end
+        end
+
+        convert_type(converted_type, optional: field.label == :TYPE_OPTIONAL, array: field.label == :LABEL_REPEATED && !map_field?(field))
       end
 
       def field_to_params(field)

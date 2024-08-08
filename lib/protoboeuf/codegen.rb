@@ -550,7 +550,7 @@ module ProtoBoeuf
           field = message.oneof_decl[i]
 
           [
-            reader_type_signature("Symbol"),
+            type_signature(returns: "Symbol"),
             "attr_reader :#{field.name}",
             sub_fields.map do |sub_field|
               "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
