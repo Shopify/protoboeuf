@@ -149,16 +149,13 @@ module ProtoBoeuf
 
       def encode_subtype(field, value_expr = iv_name(field), tagged = true)
         if field.label == :LABEL_REPEATED
-          encode_repeated(field, value_expr, tagged)
-        else
-          case field.type
-          when :TYPE_ENUM
-            encode_enum(field, value_expr, tagged)
-          when :TYPE_MESSAGE
-            encode_submessage(field, value_expr, tagged)
+          if map_field?(field)
+            encode_map(field, value_expr, tagged)
           else
-            encode_leaf_type(field, value_expr, tagged)
+            encode_repeated(field, value_expr, tagged)
           end
+        else
+          encode_leaf_type(field, value_expr, tagged)
         end
       end
 
@@ -235,14 +232,16 @@ module ProtoBoeuf
       end
 
       def encode_map(field, value_expr, tagged)
+        map_type = self.map_type(field)
+
         <<~RUBY
           map = #{value_expr}
           if map.size > 0
             old_buff = buff
             map.each do |key, value|
               buff = new_buffer = +''
-              #{encode_subtype(field.key_field, "key", true)}
-              #{encode_subtype(field.value_field, "value", true)}
+              #{encode_subtype(map_type.field[0], "key", true)}
+              #{encode_subtype(map_type.field[1], "value", true)}
               buff = old_buff
               #{encode_tag_and_length(field, true, "new_buffer.bytesize")}
               old_buff.concat(new_buffer)
@@ -284,7 +283,7 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_submessage(field, value_expr, tagged)
+      def encode_message(field, value_expr, tagged)
         @has_submessage = true
 
         <<~RUBY
@@ -500,7 +499,9 @@ module ProtoBoeuf
       end
 
       def constants
-        message.nested_type.map { |x| self.class.new(x, enum_field_types, generate_types:).result }.join("\n")
+        message.nested_type.reject { |x| x.options&.map_entry }.map { |x|
+          self.class.new(x, enum_field_types, generate_types:).result
+        }.join("\n")
       end
 
       def readers
@@ -544,7 +545,10 @@ module ProtoBoeuf
 
         "# oneof field readers\n" +
         oneof_fields.map.with_index do |sub_fields, i|
+          next unless sub_fields
+
           field = message.oneof_decl[i]
+
           [
             reader_type_signature("Symbol"),
             "attr_reader :#{field.name}",
@@ -609,6 +613,8 @@ module ProtoBoeuf
 
         "# BEGIN writers for oneof fields\n" +
         oneof_fields.map.with_index { |sub_fields, i|
+          next unless sub_fields
+
           oneof = message.oneof_decl[i]
           sub_fields.map { |field|
             <<~RUBY
@@ -965,7 +971,11 @@ module ProtoBoeuf
 
       def default_for(field)
         if field.label == :LABEL_REPEATED
-          '[]'
+          if map_field?(field)
+            '{}'
+          else
+            '[]'
+          end
         else
           case field.type
           when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64,
@@ -981,10 +991,23 @@ module ProtoBoeuf
           when :TYPE_MESSAGE
             'nil'
           else
-            p field
-            raise NotImplementedError
+            raise NotImplementedError, field.type.to_s
           end
         end
+      end
+
+      def map_field?(field)
+        return false unless field.label == :LABEL_REPEATED
+        map_name = field.type_name.split(".").last
+        message.nested_type.any? { |type| type.name == map_name && type.options&.map_entry }
+      end
+
+      def map_type(field)
+        return false unless field.label == :LABEL_REPEATED
+        map_name = field.type_name.split(".").last
+        message.nested_type.find { |type|
+          type.name == map_name && type.options&.map_entry
+        } || raise(ArgumentError, "Not a map field")
       end
 
       def initialize_signature
@@ -1053,15 +1076,17 @@ module ProtoBoeuf
       end
 
       def decode_map(field)
+        map_type = self.map_type(field)
+
         <<~RUBY
           ## PULL_MAP
-          map = @#{field.name}
+          map = #{iv_name(field)}
           while tag == #{tag_for_field(field, field.number)}
             #{pull_uint64("value", "=")}
             index += 1 # skip the tag, assume it's the key
-            #{decode_subtype(field, field.type.key_type, "key", "=")}
+            #{decode_subtype(field, map_type.field[0].type, "key", "=")}
             index += 1 # skip the tag, assume it's the value
-            #{decode_subtype(field, field.type.value_type, "map[key]", "=")}
+            #{decode_subtype(field, map_type.field[1].type, "map[key]", "=")}
             return self if index >= len
             #{pull_tag}
           end
@@ -1203,17 +1228,17 @@ module ProtoBoeuf
 
       def decode_code(field)
         if field.label == :LABEL_REPEATED
-          if field.options&.packed
-            PACKED_REPEATED.result(binding)
-          else
-            decode_repeated(field)
-          end
-        else
-          if field.type.is_a?(MapType)
+          if map_field?(field)
             decode_map(field)
           else
-            decode_subtype(field, field.type, "@#{field.name}", "=")
+            if field.options&.packed
+              PACKED_REPEATED.result(binding)
+            else
+              decode_repeated(field)
+            end
           end
+        else
+          decode_subtype(field, field.type, "@#{field.name}", "=")
         end
       end
 
@@ -1290,11 +1315,7 @@ module ProtoBoeuf
         tail = "\n" + modules.map { "end" }.join("\n")
 
         #puts head + body + tail
-        begin
-          return SyntaxTree.format(head + body + tail)
-        rescue SyntaxTree::Parser::ParseError
-          return head + body + tail
-        end
+        return SyntaxTree.format(head + body + tail)
       end
     end
 

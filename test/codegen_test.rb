@@ -2,6 +2,26 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_map_fields
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Test1 {
+  map<string, int32> map_field = 1;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::Test1.new
+      assert_equal({}, msg.map_field)
+
+      msg.map_field["foo"] = 1234
+
+      msg = klass::Test1.decode(klass::Test1.encode(msg))
+      assert_equal({"foo" => 1234}, msg.map_field)
+    end
+
     def test_oneof
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
@@ -98,7 +118,6 @@ message TestMessageWithOneOf {
     def test_repeated
       unit = parse_string('syntax = "proto3"; message Test1 { repeated int32 repeated_ints = 1; }')
       gen = CodeGen.new unit
-      puts gen.to_ruby
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new
       assert_equal([], obj.repeated_ints)
@@ -307,9 +326,21 @@ message TestMessageWithOneOf {
       end
     end
 
-    def parse_file(string)
-      skip
-      raise
+    def parse_file(path)
+      string = File.binread path
+
+      begin
+        binfile = Tempfile.new
+        Tempfile.create do |f|
+          f.write string
+          f.flush
+          system("protoc -o #{binfile.path} -I / #{f.path}")
+        end
+        binfile.rewind
+        Google::Protobuf::FileDescriptorSet.decode binfile.read
+      ensure
+        binfile.unlink
+      end
     end
   end
 end

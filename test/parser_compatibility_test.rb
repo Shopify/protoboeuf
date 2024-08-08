@@ -230,6 +230,8 @@ message MapItem {
         our_msg = ours.file.first.message_type.first.nested_type[i]
 
         assert_equal their_msg.field.length, our_msg.field.length
+        assert their_msg.options.map_entry
+        assert our_msg.options.map_entry
 
         their_msg.field.each_with_index do |their_field, j|
           our_field = our_msg.field[j]
