@@ -126,7 +126,7 @@ module ProtoBoeuf
       def convert_field(field)
         if field.has_oneof_index? && !field.proto3_optional
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
-        elsif field.label == :TYPE_REPEATED
+        elsif field.label == :LABEL_REPEATED
           "result['#{field.name}'.to_sym] = @#{field.name}"
         elsif field.type == :TYPE_MESSAGE
           "result['#{field.name}'.to_sym] = @#{field.name}.to_h"
@@ -144,18 +144,22 @@ module ProtoBoeuf
       end
 
       def encode_subtype(field, value_expr = iv_name(field), tagged = true)
-        method = if field.label == :LABEL_REPEATED
-          raise NotImplementedError
+        if field.label == :LABEL_REPEATED
+          encode_repeated(field, value_expr, tagged)
         else
           case field.type
-          when :TYPE_ENUM then "encode_enum"
-          when :TYPE_MESSAGE then "encode_submessage"
+          when :TYPE_ENUM
+            encode_enum(field, value_expr, tagged)
+          when :TYPE_MESSAGE
+            encode_submessage(field, value_expr, tagged)
           else
-            "encode_#{field.type.to_s.downcase.delete_prefix("type_")}"
+            encode_leaf_type(field, value_expr, tagged)
           end
         end
+      end
 
-        send(method, field, value_expr, tagged) #if respond_to?(method, true)
+      def encode_leaf_type(field, value_expr, tagged)
+        send "encode_#{field.type.to_s.downcase.delete_prefix("type_")}", field, value_expr, tagged
       end
 
       def encode_tag(field)
@@ -257,9 +261,9 @@ module ProtoBoeuf
         <<~RUBY
           list = #{value_expr}
           if list.size > 0
-            #{encode_tag_and_length(field, field.packed?, "list.size")}
+            #{encode_tag_and_length(field, field.options&.packed, "list.size")}
             list.each do |item|
-              #{encode_subtype(field.item_field, "item", !field.packed?)}
+              #{encode_leaf_type(field, "item", !field.options&.packed)}
             end
           end
         RUBY
@@ -956,20 +960,26 @@ module ProtoBoeuf
       end
 
       def default_for(field)
-        case field.type
-        when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64, :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_SFIXED32, :TYPE_SFIXED64
-          0
-        when :TYPE_STRING, :TYPE_BYTES
-          '""'
-        when :TYPE_DOUBLE, :TYPE_FLOAT
-          0.0
-        when :TYPE_BOOL
-          false
-        when :TYPE_MESSAGE
-          'nil'
+        if field.label == :LABEL_REPEATED
+          '[]'
         else
-          p field
-          raise NotImplementedError
+          case field.type
+          when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64,
+            :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_SFIXED32,
+            :TYPE_SFIXED64, :TYPE_ENUM
+            0
+          when :TYPE_STRING, :TYPE_BYTES
+            '""'
+          when :TYPE_DOUBLE, :TYPE_FLOAT
+            0.0
+          when :TYPE_BOOL
+            false
+          when :TYPE_MESSAGE
+            'nil'
+          else
+            p field
+            raise NotImplementedError
+          end
         end
       end
 
@@ -1188,8 +1198,8 @@ module ProtoBoeuf
       end
 
       def decode_code(field)
-        if field.type == :TYPE_REPEATED
-          if field.packed?
+        if field.label == :LABEL_REPEATED
+          if field.options&.packed
             PACKED_REPEATED.result(binding)
           else
             decode_repeated(field)
@@ -1250,7 +1260,7 @@ module ProtoBoeuf
       end
 
       def reads_next_tag?(field)
-        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !field.packed?)
+        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !field.options&.packed)
       end
     end
 
@@ -1302,7 +1312,7 @@ module ProtoBoeuf
     I32 = 5
 
     def self.wire_type(field)
-      if field.label == :TYPE_REPEATED && field.packed?
+      if field.label == :LABEL_REPEATED && field.options&.packed
         LEN
       elsif field.type == :TYPE_ENUM
         VARINT

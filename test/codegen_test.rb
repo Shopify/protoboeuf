@@ -95,6 +95,18 @@ message TestMessageWithOneOf {
       assert_equal 1234, obj.nil
     end
 
+    def test_repeated
+      unit = parse_string('syntax = "proto3"; message Test1 { repeated int32 repeated_ints = 1; }')
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      obj = klass::Test1.new
+      assert_equal([], obj.repeated_ints)
+      obj.repeated_ints << 123
+
+      obj = klass::Test1.decode(klass::Test1.encode(obj))
+      assert_equal([123], obj.repeated_ints)
+    end
+
     def test_generate_types
       proto = File.read("test/fixtures/typed_test.proto")
       unit = parse_string(proto)

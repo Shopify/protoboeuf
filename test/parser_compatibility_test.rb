@@ -291,6 +291,25 @@ message OneItem {
       assert_equal 2, our_message.oneof_decl.length
     end
 
+    def test_options
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+message Test1 {
+  repeated int32 a = 1 [packed = false];
+  repeated int32 b = 2 [packed = true];
+  repeated int32 c = 3;
+}
+      EOPROTO
+
+      2.times do |i|
+        assert_equal theirs.file.first.message_type.first.field[i].options.packed,
+          ours.file.first.message_type.first.field[i].options.packed
+      end
+
+      assert_nil theirs.file.first.message_type.first.field[2].options
+      assert_nil ours.file.first.message_type.first.field[2].options
+    end
+
     def test_simple_codegen
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";

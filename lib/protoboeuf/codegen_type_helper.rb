@@ -75,13 +75,7 @@ module ProtoBoeuf
       end
 
       def field_to_params(field)
-        if field.oneof?
-          field.fields.flat_map { |field| field_to_params(field) }
-        elsif field.field?
-          [field.name, convert_field_type(field)]
-        else
-          raise "Unsupported field #{f.inspect}"
-        end
+        [field.name, convert_field_type(field)]
       end
 
       def fields_to_params(fields)

@@ -172,18 +172,6 @@ module ProtoBoeuf
       qualifier == :repeated
     end
 
-    def packed?
-      # fields default to packed
-      if options.key?(:packed)
-        options[:packed]
-      else
-        # only scalar types that are not "string" or "bytes" are allowed
-        # to be packed.
-        # https://protobuf.dev/programming-guides/encoding/#packed
-        PACKED_TYPES.include?(type)
-      end
-    end
-
     def scalar?
       SCALAR_TYPES.include?(type)
     end
@@ -374,7 +362,7 @@ module ProtoBoeuf
 
     # If there are no options, stop
     if !input.match '['
-      return options
+      return nil
     end
 
     loop do
