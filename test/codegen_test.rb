@@ -98,6 +98,7 @@ message TestMessageWithOneOf {
     def test_repeated
       unit = parse_string('syntax = "proto3"; message Test1 { repeated int32 repeated_ints = 1; }')
       gen = CodeGen.new unit
+      puts gen.to_ruby
       klass = Class.new { self.class_eval gen.to_ruby }
       obj = klass::Test1.new
       assert_equal([], obj.repeated_ints)

@@ -79,7 +79,11 @@ module ProtoBoeuf
           if field.has_oneof_index? && !field.proto3_optional
             (@oneof_fields[field.oneof_index] ||= []) << field
           else
-            @optional_fields << field
+            if field.proto3_optional
+              @optional_fields << field
+            else
+              @required_fields << field
+            end
           end
         }
 
@@ -504,18 +508,18 @@ module ProtoBoeuf
       end
 
       def enum_readers
-        fields = message.field.select { |field| field.label == :TYPE_ENUM }
+        fields = message.field.select { |field| field.type == :TYPE_ENUM }
         return "" if fields.empty?
 
         "  # enum readers\n" +
           fields.map { |field|
-            "def #{field.name}; #{field.type}.lookup(@#{field.name}) || @#{field.name}; end"
+            "def #{field.name}; #{field.type}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
           }.join("\n") + "\n"
       end
 
       def required_readers
-        fields = message.field.select do |field|
-          field.label == :TYPE_REQUIRED && !field.has_oneof_index? && !field.type != :TYPE_ENUM
+        fields = @required_fields.select do |field|
+          !field.type != :TYPE_ENUM
         end
 
         "# required field readers\n" +
