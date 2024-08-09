@@ -13,31 +13,7 @@ message ManyOptional {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field[0].proto3_optional
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        !!obj.file.first.message_type.first.field[1].proto3_optional
-      end
-
-      2.times do |i|
-        assert_same_value(theirs, ours) do |obj|
-          obj.file.first.message_type.first.field[i].label
-        end
-
-        assert_same_value(theirs, ours) do |obj|
-          obj.file.first.message_type.first.field[i].type
-        end
-
-        assert_same_value(theirs, ours) do |obj|
-          !!obj.file.first.message_type.first.field[i].has_oneof_index?
-        end
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_required_field
@@ -48,11 +24,7 @@ message Test1 {
 }
       EOPROTO
 
-      assert_equal 0, theirs.file.first.message_type.first.oneof_decl.length
-      assert_equal 0, ours.file.first.message_type.first.oneof_decl.length
-
-      assert_equal theirs.file.first.message_type.first.field.first.label,
-        ours.file.first.message_type.first.field.first.label
+      assert_same_tree(theirs, ours)
     end
 
     def test_file
@@ -65,7 +37,7 @@ enum SimpleEnum {
   TWO = 2;
 }
       EOPROTO
-      assert_equal theirs.file.length, ours.file.length
+      assert_same_tree(theirs, ours)
     end
 
     def test_top_level_enum
@@ -78,22 +50,7 @@ enum SimpleEnum {
   TWO = 2;
 }
       EOPROTO
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.enum_type.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.enum_type.first.value.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.enum_type.first.value[1].name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.enum_type.first.value[1].number
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_simple_types
@@ -119,21 +76,7 @@ message AllTypes {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.length
-      end
-
-      theirs.file.first.message_type.first.field.length.times do |i|
-        item_a = theirs.file.first.message_type.first.field[i]
-        item_b = ours.file.first.message_type.first.field[i]
-
-        assert_equal item_a.type, item_b.type
-        assert_equal item_a.name, item_b.name
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_enum_field
@@ -152,37 +95,7 @@ message HasEnum {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.number
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.type_name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.type
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field[1].type
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_oneof_fields
@@ -198,32 +111,7 @@ message OrigFoo {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.oneof_decl.length
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.oneof_decl.first.name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.length
-      end
-
-      theirs.file.first.message_type.first.field.length.times do |i|
-        their_field = theirs.file.first.message_type.first.field[i]
-        our_field = ours.file.first.message_type.first.field[i]
-
-        assert_equal their_field.type, our_field.type, "types should equal"
-        assert_equal their_field.name, our_field.name, "names should equal"
-        assert_equal their_field.number, our_field.number, "numbers should equal"
-        assert_equal their_field.has_oneof_index?, our_field.has_oneof_index?, "oneof_index should equal"
-        assert_equal their_field.label, our_field.label
-
-        if their_field.has_oneof_index?
-          assert_equal their_field.oneof_index, our_field.oneof_index, "oneof_index should equal"
-        end
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_qualifiers
@@ -238,15 +126,7 @@ message OneItem {
 }
       EOPROTO
 
-      theirs.file.first.message_type.first.field.each_with_index do |their_field, i|
-        our_field = ours.file.first.message_type.first.field[i]
-        assert_equal their_field.label, our_field.label
-
-        if their_field.options
-          assert_equal false, our_field.options.packed
-          assert_equal their_field.options.packed, our_field.options.packed
-        end
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_map_type
@@ -258,41 +138,7 @@ message MapItem {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.type_name
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.label
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.field.first.type
-      end
-
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.nested_type.length
-      end
-
-      theirs.file.first.message_type.first.nested_type.each_with_index do |their_msg, i|
-        our_msg = ours.file.first.message_type.first.nested_type[i]
-
-        assert_equal their_msg.field.length, our_msg.field.length
-        assert their_msg.options.map_entry
-        assert our_msg.options.map_entry
-
-        their_msg.field.each_with_index do |their_field, j|
-          our_field = our_msg.field[j]
-          assert_equal their_field.name, our_field.name
-          assert_equal their_field.number, our_field.number
-          assert_equal their_field.label, our_field.label
-          assert_equal their_field.type, our_field.type
-        end
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_submessages
@@ -307,15 +153,7 @@ message BucketObj {
 }
       EOPROTO
 
-      assert_same_value(theirs, ours) do |obj|
-        obj.file.first.message_type.first.nested_type.length
-      end
-      theirs.file.first.message_type.first.nested_type.each_with_index do |their_msg, i|
-        our_msg = ours.file.first.message_type.first.nested_type[i]
-
-        assert_equal their_msg.name, our_msg.name
-        assert_equal their_msg.field.length, our_msg.field.length
-      end
+      assert_same_tree(theirs, ours)
     end
 
     def test_optional
@@ -328,21 +166,7 @@ message OneItem {
 }
       EOPROTO
 
-      their_message = theirs.file.first.message_type.first
-      our_message = ours.file.first.message_type.first
-
-      their_oneof = their_message.oneof_decl.first
-      our_oneof = our_message.oneof_decl.first
-
-      their_field = their_message.field.last
-      our_field = our_message.field.last
-
-      assert_equal their_field.oneof_index, our_field.oneof_index
-
-      assert their_field.proto3_optional
-      assert our_field.proto3_optional
-
-      assert_equal 2, our_message.oneof_decl.length
+      assert_same_tree(theirs, ours)
     end
 
     def test_options
@@ -355,13 +179,7 @@ message Test1 {
 }
       EOPROTO
 
-      2.times do |i|
-        assert_equal theirs.file.first.message_type.first.field[i].options.packed,
-          ours.file.first.message_type.first.field[i].options.packed
-      end
-
-      assert_nil theirs.file.first.message_type.first.field[2].options
-      assert_nil ours.file.first.message_type.first.field[2].options
+      assert_same_tree(theirs, ours)
     end
 
     def test_simple_codegen
@@ -379,8 +197,93 @@ message OneItem {
 
     private
 
-    def assert_same_value(theirs, ours)
-      assert_equal(yield(theirs), yield(ours))
+    def assert_same_tree(expected, actual)
+      assert_equal expected.file.length, actual.file.length
+      expected.file.each_with_index do |file, i|
+        assert_same_file file, actual.file[i]
+      end
+    end
+
+    def assert_same_file(expected, actual)
+      # check messages
+      assert_equal expected.message_type.length, actual.message_type.length
+
+      expected.message_type.each_with_index do |msg, i|
+        assert_same_message(msg, actual.message_type[i])
+      end
+
+      # check enum types
+      assert_equal expected.enum_type.length, actual.enum_type.length
+
+      expected.enum_type.each_with_index do |msg, i|
+        assert_same_enum(msg, actual.enum_type[i])
+      end
+    end
+
+    def assert_same_enum(expected, actual)
+      assert_equal expected.name, actual.name
+      assert_equal expected.value.length, actual.value.length
+
+      expected.value.each_with_index do |enum_value, i|
+        assert_same_enum_value(enum_value, actual.value[i])
+      end
+    end
+
+    def assert_same_enum_value(expected, actual)
+      assert_equal expected.name, actual.name
+      assert_equal expected.number, actual.number
+    end
+
+    def assert_same_oneof(expected, actual)
+      assert_equal expected.name, actual.name
+    end
+
+    def assert_same_message(expected, actual)
+      assert_equal expected.name, actual.name
+      assert_equal expected.field.length, actual.field.length
+
+      expected.field.each_with_index do |field, i|
+        assert_same_field(field, actual.field[i])
+      end
+
+      # check oneof decls
+      assert_equal expected.oneof_decl.length, actual.oneof_decl.length
+
+      expected.oneof_decl.each_with_index do |oneof, i|
+        assert_same_oneof(oneof, actual.oneof_decl[i])
+      end
+
+      # check enum types
+      assert_equal expected.enum_type.length, actual.enum_type.length
+
+      expected.enum_type.each_with_index do |msg, i|
+        assert_same_enum(msg, actual.enum_type[i])
+      end
+
+      # check nested types
+      assert_equal expected.nested_type.length, actual.nested_type.length
+
+      expected.nested_type.each_with_index do |msg, i|
+        assert_same_message(msg, actual.nested_type[i])
+      end
+    end
+
+    def assert_same_field(expected, actual)
+      assert_equal expected.name, actual.name
+      assert_equal expected.number, actual.number
+      assert_equal expected.label, actual.label
+      assert_equal expected.type, actual.type
+      assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?)
+      if expected.has_oneof_index?
+        assert_equal(expected.oneof_index, actual.oneof_index)
+      end
+      assert_equal(!!expected.proto3_optional, !!actual.proto3_optional)
+
+      if expected.options
+        assert_equal(!!expected.options.packed, !!actual.options.packed)
+      else
+        refute !!actual.options
+      end
     end
 
     def parse_string(str)
