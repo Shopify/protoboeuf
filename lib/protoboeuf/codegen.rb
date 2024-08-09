@@ -74,6 +74,8 @@ module ProtoBoeuf
         @required_fields = []
         @optional_fields = []
         @oneof_fields = []
+        @enum_fields = []
+        @oneof_selection_fields = []
 
         message.field.each { |field|
           if field.has_oneof_index? && !field.proto3_optional
@@ -82,9 +84,22 @@ module ProtoBoeuf
             if field.proto3_optional
               @optional_fields << field
             else
-              @required_fields << field
+              if field.type == :TYPE_ENUM
+                @enum_fields << field
+              else
+                @required_fields << field
+              end
             end
           end
+        }
+
+        # The AST treats "optional" fields in Proto3 as "oneof" fields.
+        # But since there is only one of each of these "oneof" fields, there
+        # is no reason to add an extra instance variable.  The "oneof_fields"
+        # list only contains non-proto3_optional fields, so we're using that
+        # to only iterate over actual "oneof" fields.
+        @oneof_selection_fields = @oneof_fields.each_with_index.map { |item, i|
+          item && message.oneof_decl[i]
         }
 
         @optional_fields.each_with_index { |field, i|
@@ -131,11 +146,11 @@ module ProtoBoeuf
         if field.has_oneof_index? && !field.proto3_optional
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
         elsif field.label == :LABEL_REPEATED
-          "result['#{field.name}'.to_sym] = @#{field.name}"
+          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
         elsif field.type == :TYPE_MESSAGE
-          "result['#{field.name}'.to_sym] = @#{field.name}.to_h"
+          "result['#{field.name}'.to_sym] = #{iv_name(field)}.to_h"
         else
-          "result['#{field.name}'.to_sym] = @#{field.name}"
+          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
         end
       end
 
@@ -509,13 +524,17 @@ module ProtoBoeuf
       end
 
       def enum_readers
-        fields = message.field.select { |field| field.type == :TYPE_ENUM }
+        fields = @enum_fields
         return "" if fields.empty?
 
         "  # enum readers\n" +
           fields.map { |field|
-            "def #{field.name}; #{field.type}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
+            "def #{field.name}; #{class_name(field)}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
           }.join("\n") + "\n"
+      end
+
+      def class_name(field)
+        field.type_name.delete_prefix(".").gsub(".", "::")
       end
 
       def required_readers
@@ -564,25 +583,24 @@ module ProtoBoeuf
       end
 
       def enum_writers
-        fields = message.field.select { |field| field.label == :TYPE_ENUM }
+        fields = @enum_fields
         return "" if fields.empty?
 
         "# enum writers\n" +
           fields.map { |field|
-            "def #{field.name}=(v); @#{field.name} = #{field.type}.resolve(v) || v; end"
+            "def #{field.name}=(v); @#{field.name} = #{class_name(field)}.resolve(v) || v; end"
           }.join("\n") + "\n\n"
       end
 
       def required_writers
-        fields = @required_fields.select do |field|
-          !field.type != :TYPE_ENUM
-        end
+        fields = @required_fields
 
         return "" if fields.empty?
 
+        "# required_writers writers\n" +
         fields.map { |field|
           <<~RUBY
-            #{type_signature(params: {v: field.type})}
+            #{type_signature(params: {v: convert_field_type(field)})}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               @#{field.name} = v
@@ -597,7 +615,7 @@ module ProtoBoeuf
         "# BEGIN writers for optional fields\n" +
         optional_fields.map { |field|
           <<~RUBY
-            #{type_signature(params: {v: field.type})}
+            #{type_signature(params: {v: convert_field_type(field)})}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               #{set_bitmask(field)}
@@ -630,10 +648,10 @@ module ProtoBoeuf
       end
 
       def initialize_code
-          initialize_type_signature(fields) +
+        initialize_type_signature(fields) +
           "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
-          initialize_oneofs(message) +
+          initialize_oneofs +
           fields.map { |field|
             if field.has_oneof_index? && !field.proto3_optional
               initialize_oneof(field, message)
@@ -643,15 +661,8 @@ module ProtoBoeuf
           }.join("\n") + "\nend\n\n"
       end
 
-      def initialize_oneofs(m)
-        # The AST treats "optional" fields in Proto3 as "oneof" fields.
-        # But since there is only one of each of these "oneof" fields, there
-        # is no reason to add an extra instance variable.  The "oneof_fields"
-        # list only contains non-proto3_optional fields, so we're using that
-        # to only iterate over actual "oneof" fields.
-        oneof_fields.each_with_index.map { |item, i|
-          next unless item
-          field = m.oneof_decl[i]
+      def initialize_oneofs
+        @oneof_selection_fields.map { |field|
           "#{iv_name(field)} = nil # oneof field"
         }.join("\n") + "\n"
       end
@@ -719,7 +730,7 @@ module ProtoBoeuf
       end
 
       def initialize_enum_field(field)
-        "@#{field.name} = #{field.type}.resolve(#{field.name}) || #{field.name}"
+        "#{iv_name(field)} = #{class_name(field)}.resolve(#{field.name}) || #{field.name}"
       end
 
       def extra_api

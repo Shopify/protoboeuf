@@ -3,6 +3,43 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_optional_and_non_optional_field
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message ManyOptional {
+  optional uint64 b = 2;
+  uint64 c = 3;
+}
+      EOPROTO
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field.length
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        obj.file.first.message_type.first.field[0].proto3_optional
+      end
+
+      assert_same_value(theirs, ours) do |obj|
+        !!obj.file.first.message_type.first.field[1].proto3_optional
+      end
+
+      2.times do |i|
+        assert_same_value(theirs, ours) do |obj|
+          obj.file.first.message_type.first.field[i].label
+        end
+
+        assert_same_value(theirs, ours) do |obj|
+          obj.file.first.message_type.first.field[i].type
+        end
+
+        assert_same_value(theirs, ours) do |obj|
+          !!obj.file.first.message_type.first.field[i].has_oneof_index?
+        end
+      end
+    end
+
     def test_required_field
       ours, theirs = parse_string(<<-EOPROTO)
 message Test1 {

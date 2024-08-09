@@ -516,7 +516,11 @@ module ProtoBoeuf
           oneof_decls << AST::OneOfDescriptor.new("_" + name)
           fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, is_proto3)
         else
-          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, false)
+          if inside_message
+            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, nil, false)
+          else
+            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_decls.length, false)
+          end
         end
       end
     end

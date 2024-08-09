@@ -2,6 +2,44 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_optional_fields
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message ManyOptional {
+  optional uint64 b = 2;
+  uint64 c = 3;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+    end
+
+    def test_enum_field
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+enum TestEnum {
+  FOO = 0;
+  BAR = 1;
+  BAZ = 2;
+}
+
+message Test1 {
+  TestEnum enum_1 = 1;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::Test1.new
+      assert_equal :FOO, msg.enum_1
+      msg.enum_1 = :BAR
+
+      msg = klass::Test1.decode(klass::Test1.encode(msg))
+      assert_equal :BAR, msg.enum_1
+    end
+
     def test_required_field
       unit = parse_string(<<-EOPROTO)
 message Test1 {
