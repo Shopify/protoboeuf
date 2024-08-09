@@ -2,6 +2,25 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_required_field
+      unit = parse_string(<<-EOPROTO)
+message Test1 {
+  required uint32 u32 = 1;
+  optional int32 i32 = 2;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::Test1.new
+      msg.u32 = 1234
+      msg.i32 = 1234
+
+      msg = klass::Test1.decode(klass::Test1.encode(msg))
+      assert_equal(1234, msg.u32)
+      assert_equal(1234, msg.i32)
+    end
+
     def test_map_fields
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";

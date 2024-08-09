@@ -574,8 +574,8 @@ module ProtoBoeuf
       end
 
       def required_writers
-        fields = message.field.select do |field|
-          field.label == :TYPE_REQUIRED && !field.has_oneof_index? && !field.type != :TYPE_ENUM
+        fields = @required_fields.select do |field|
+          !field.type != :TYPE_ENUM
         end
 
         return "" if fields.empty?
@@ -714,7 +714,7 @@ module ProtoBoeuf
       def initialize_required_field(field)
         <<~RUBY
           #{bounds_check(field, field.name).chomp}
-          @#{field.name} = #{field.name}
+          #{iv_name(field)} = #{field.name}
         RUBY
       end
 
@@ -751,12 +751,12 @@ module ProtoBoeuf
       end
 
       TYPE_BOUNDS = {
-        "uint32" => [0, 4_294_967_295],
-        "int32" => [-2_147_483_648,  2_147_483_647],
-        "sint32" => [-2_147_483_648,  2_147_483_647],
-        "uint64" => [0, 18_446_744_073_709_551_615],
-        "int64" => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
-        "sint64" => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+        :TYPE_UINT32 => [0, 4_294_967_295],
+        :TYPE_INT32 => [-2_147_483_648,  2_147_483_647],
+        :TYPE_SINT32 => [-2_147_483_648,  2_147_483_647],
+        :TYPE_UINT64 => [0, 18_446_744_073_709_551_615],
+        :TYPE_INT64 => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+        :TYPE_SINT64 => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
       }.freeze
 
       PULL_VARINT = ERB.new(<<~ERB, trim_mode: '-')
@@ -1266,7 +1266,7 @@ module ProtoBoeuf
         return "" unless bounds
 
         lower_bound, upper_bound = bounds
-        if field.repeated?
+        if field.label == :LABEL_REPEATED
           <<~RUBY
             #{value_name}.each do |v|
               unless #{lower_bound} <= v && v <= #{upper_bound}

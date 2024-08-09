@@ -147,39 +147,12 @@ module ProtoBoeuf
       oneof_index || false
     end
 
-    # Return a local variable name for use in generated code
-    def lvar_name
-      name
-    end
-
-    def map?
-      MapType === type
-    end
-
     def accept(viz)
       viz.visit_field self
     end
 
     def fold(viz, seed)
       viz.fold_field self, seed
-    end
-
-    def optional?
-      qualifier == :optional
-    end
-
-    def repeated?
-      qualifier == :repeated
-    end
-
-    def scalar?
-      SCALAR_TYPES.include?(type)
-    end
-
-    def item_field
-      raise "not a repeated field" unless repeated?
-
-      @item_field ||= self.dup.tap { |f| f.qualifier = nil }
     end
   end
 
@@ -225,6 +198,7 @@ module ProtoBoeuf
     imports = []
     messages = []
     enums = []
+    proto3 = false
 
     loop do
       input.eat_ws
@@ -245,6 +219,7 @@ module ProtoBoeuf
         if mode != "proto3"
           raise ParseError.new("syntax mode must be proto3", pos)
         end
+        proto3 = true
 
       elsif ident == "package"
         if package != nil
@@ -267,7 +242,7 @@ module ProtoBoeuf
 
       # Message definition
       elsif ident == "message"
-        messages << parse_message(input, pos, enums, nil)
+        messages << parse_message(input, pos, enums, nil, proto3)
 
       # Enum definition
       elsif ident == "enum"
@@ -428,7 +403,7 @@ module ProtoBoeuf
   end
 
   # Parse the body for a message or oneof
-  def self.parse_body(input, pos, inside_message, top_enums, oneof_index, message_name)
+  def self.parse_body(input, pos, inside_message, top_enums, oneof_index, message_name, is_proto3)
     fields = []
     messages = []
     enums = []
@@ -442,7 +417,7 @@ module ProtoBoeuf
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
-        nested_type << parse_message(input, msg_pos, top_enums, nil)
+        nested_type << parse_message(input, msg_pos, top_enums, nil, is_proto3)
         next
       end
       if inside_message && (input.match 'enum')
@@ -469,7 +444,7 @@ module ProtoBoeuf
         # If this is a oneof field
         oneof_pos = input.pos
         if input.match 'oneof'
-          oneof = parse_oneof(input, oneof_pos, top_enums, oneof_decls.length, message_name)
+          oneof = parse_oneof(input, oneof_pos, top_enums, oneof_decls.length, message_name, is_proto3)
           fields.concat oneof.fields
           oneof_decls << oneof
           next
@@ -536,10 +511,10 @@ module ProtoBoeuf
 
         fields << map_field
       else
-        if qualifier == :optional
+        if qualifier == :optional && is_proto3
           oneof_index = oneof_decls.length
           oneof_decls << AST::OneOfDescriptor.new("_" + name)
-          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, true)
+          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, is_proto3)
         else
           fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, false)
         end
@@ -604,6 +579,7 @@ module ProtoBoeuf
     case qualifier
     when :optional then :LABEL_OPTIONAL
     when :repeated then :LABEL_REPEATED
+    when :required then :LABEL_REQUIRED
     when nil then :LABEL_OPTIONAL
     else
       raise NotImplementedError, qualifier.to_s
@@ -642,18 +618,18 @@ module ProtoBoeuf
   end
 
   # Parse a message definition
-  def self.parse_message(input, pos, enums, oneof_index)
+  def self.parse_message(input, pos, enums, oneof_index, is_proto3)
     input.eat_ws
     message_name = input.read_ident
-    fields, messages, enums, oneof_decls, nested_type = parse_body(input, pos, true, enums, oneof_index, message_name)
+    fields, messages, enums, oneof_decls, nested_type = parse_body(input, pos, true, enums, oneof_index, message_name, is_proto3)
     Message.new(message_name, fields, messages, enums, oneof_decls, nested_type, nil, pos)
   end
 
   # Parse a oneof definition
-  def self.parse_oneof(input, pos, enums, index, message_name)
+  def self.parse_oneof(input, pos, enums, index, message_name, is_proto3)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _, _ = parse_body(input, pos, false, enums, index, message_name)
+    fields, _, _ = parse_body(input, pos, false, enums, index, message_name, is_proto3)
     OneOf.new(oneof_name, fields, pos)
   end
 

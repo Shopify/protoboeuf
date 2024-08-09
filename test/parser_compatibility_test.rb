@@ -3,6 +3,21 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_required_field
+      ours, theirs = parse_string(<<-EOPROTO)
+message Test1 {
+  required uint32 u32 = 1;
+  optional int32 i32 = 2;
+}
+      EOPROTO
+
+      assert_equal 0, theirs.file.first.message_type.first.oneof_decl.length
+      assert_equal 0, ours.file.first.message_type.first.oneof_decl.length
+
+      assert_equal theirs.file.first.message_type.first.field.first.label,
+        ours.file.first.message_type.first.field.first.label
+    end
+
     def test_file
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";
