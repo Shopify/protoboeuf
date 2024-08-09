@@ -470,7 +470,7 @@ module ProtoBoeuf
       if type.is_a?(MapType)
         key_field = Field.new(:LABEL_OPTIONAL,
           nil,
-          get_type(type.key_type, top_enums),
+          get_type(type.key_type, top_enums + enums),
           "key",
           1,
           nil,
@@ -480,7 +480,7 @@ module ProtoBoeuf
 
         value_field = Field.new(:LABEL_OPTIONAL,
           nil,
-          get_type(type.value_type, top_enums),
+          get_type(type.value_type, top_enums + enums),
           "value",
           2,
           nil,
@@ -490,7 +490,12 @@ module ProtoBoeuf
 
         msg_options = AST::MessageOptions.new(true)
 
-        nested_msg = Message.new(name.split("_").map(&:capitalize).join + "Entry",
+        derived_message_name = name.split("_").map { |part|
+          part[0] = part[0].upcase
+          part
+        }.join + "Entry"
+
+        nested_msg = Message.new(derived_message_name,
           [key_field, value_field],
           nil,
           [],
@@ -504,7 +509,7 @@ module ProtoBoeuf
         map_field = Field.new(
           label(:repeated),
           qualify([message_name, nested_msg.name].join(".")),
-          get_type(type, top_enums),
+          get_type(type, top_enums + enums),
           name,
           number,
           options, field_pos, nil, oneof_index)
@@ -514,12 +519,12 @@ module ProtoBoeuf
         if qualifier == :optional && is_proto3
           oneof_index = oneof_decls.length
           oneof_decls << AST::OneOfDescriptor.new("_" + name)
-          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_index, is_proto3)
+          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, oneof_index, is_proto3)
         else
           if inside_message
-            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, nil, false)
+            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, false)
           else
-            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums), name, number, options, field_pos, nil, oneof_decls.length, false)
+            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, oneof_decls.length, false)
           end
         end
       end

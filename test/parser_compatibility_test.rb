@@ -3,6 +3,23 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_nested_enum
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Test1 {
+  enum NestedEnum {
+    FOO = 0;
+    BAR = 1;
+  }
+
+  NestedEnum kind = 1;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
     def test_optional_and_non_optional_field
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";
@@ -195,6 +212,12 @@ message OneItem {
                    ProtoBoeuf::CodeGen.new(theirs).to_ruby
     end
 
+    def test_fixture_file
+      ours, theirs = parse_string(File.binread('./test/fixtures/test.proto'))
+
+      assert_same_tree theirs, ours
+    end
+
     private
 
     def assert_same_tree(expected, actual)
@@ -239,29 +262,29 @@ message OneItem {
     end
 
     def assert_same_message(expected, actual)
-      assert_equal expected.name, actual.name
-      assert_equal expected.field.length, actual.field.length
+      assert_equal expected.name, actual.name, "Message name should match"
+      assert_equal expected.field.length, actual.field.length, "field length should match"
 
       expected.field.each_with_index do |field, i|
         assert_same_field(field, actual.field[i])
       end
 
       # check oneof decls
-      assert_equal expected.oneof_decl.length, actual.oneof_decl.length
+      assert_equal expected.oneof_decl.length, actual.oneof_decl.length, "oneof_decl length should match"
 
       expected.oneof_decl.each_with_index do |oneof, i|
         assert_same_oneof(oneof, actual.oneof_decl[i])
       end
 
       # check enum types
-      assert_equal expected.enum_type.length, actual.enum_type.length
+      assert_equal expected.enum_type.length, actual.enum_type.length, "enum_type length should match"
 
       expected.enum_type.each_with_index do |msg, i|
         assert_same_enum(msg, actual.enum_type[i])
       end
 
       # check nested types
-      assert_equal expected.nested_type.length, actual.nested_type.length
+      assert_equal expected.nested_type.length, actual.nested_type.length, "nested_type length should match"
 
       expected.nested_type.each_with_index do |msg, i|
         assert_same_message(msg, actual.nested_type[i])
@@ -269,18 +292,18 @@ message OneItem {
     end
 
     def assert_same_field(expected, actual)
-      assert_equal expected.name, actual.name
-      assert_equal expected.number, actual.number
-      assert_equal expected.label, actual.label
-      assert_equal expected.type, actual.type
-      assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?)
+      assert_equal expected.name, actual.name, "Names should match"
+      assert_equal expected.number, actual.number, "Number should match"
+      assert_equal expected.label, actual.label, "Label should match"
+      assert_equal expected.type, actual.type, "Type should match on #{expected.name}"
+      assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?, "has_oneof_index? should match")
       if expected.has_oneof_index?
-        assert_equal(expected.oneof_index, actual.oneof_index)
+        assert_equal(expected.oneof_index, actual.oneof_index, "oneof_index should match")
       end
-      assert_equal(!!expected.proto3_optional, !!actual.proto3_optional)
+      assert_equal(!!expected.proto3_optional, !!actual.proto3_optional, "proto3_optional should match")
 
       if expected.options
-        assert_equal(!!expected.options.packed, !!actual.options.packed)
+        assert_equal(!!expected.options.packed, !!actual.options.packed, "packed option should match")
       else
         refute !!actual.options
       end
