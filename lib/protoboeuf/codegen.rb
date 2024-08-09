@@ -904,12 +904,9 @@ module ProtoBoeuf
       DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
-          # Initialize oneof fields
           <%- for field in message.oneof_decl -%>
             @<%= field.name %> = nil # oneof field
           <%- end -%>
-
-          # Initialize regular fields
           <%- for field in fields -%>
             @<%= field.name %> = <%= default_for(field) %>
           <%- end -%>
