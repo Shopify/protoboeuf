@@ -3,6 +3,31 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_oneof_embedded
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestEmbeddee {
+  uint64 value = 1;
+}
+
+message TestMessageWithOneOf {
+  string id = 1;
+  uint64 shop_id = 2;
+
+  oneof oneof_field {
+    uint32 oneof_u32 = 5;
+    TestEmbeddee oneof_msg = 6;
+    string oneof_str = 7;
+  }
+
+  bool boolean = 3;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
     def test_oneof_enum
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";

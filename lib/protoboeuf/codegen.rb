@@ -938,7 +938,7 @@ module ProtoBoeuf
               <%- end -%>
             end
               <%- else -%>
-            if tag == <%= tag_for_field(field, field.oneof_index) %>
+            if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
               @<%= message.oneof_decl[field.oneof_index].name %> = :<%= field.name %>
               return self if index >= len

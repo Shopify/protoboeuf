@@ -2,6 +2,23 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_oneof_decoding
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestMessageWithOneOf {
+  oneof oneof_field {
+    string oneof_str = 7;
+  }
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::TestMessageWithOneOf.new(oneof_str: "hello")
+      klass::TestMessageWithOneOf.decode klass::TestMessageWithOneOf.encode msg
+    end
+
     def test_optional_fields
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
