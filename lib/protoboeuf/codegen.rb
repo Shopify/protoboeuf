@@ -1060,7 +1060,11 @@ module ProtoBoeuf
           when :TYPE_SFIXED32 then pull_fixed_int32(dest, operator)
           when :TYPE_FLOAT    then pull_float(dest, operator)
           when :TYPE_MESSAGE
-            pull_message(type, dest, operator)
+            if field.type_name.start_with?(".google")
+              pull_message(field.type_name, dest, operator)
+            else
+              pull_message(field.type_name.sub(/^\./, '').gsub(".", "::"), dest, operator)
+            end
           else
             raise "Unknown field type #{type}"
           end
@@ -1115,52 +1119,52 @@ module ProtoBoeuf
       end
 
       def pull_message(type, dest, operator)
-        if type == "google.protobuf.BoolValue"
+        if type == ".google.protobuf.BoolValue"
           @requires << "protoboeuf/protobuf/boolvalue"
           type = "ProtoBoeuf::Protobuf::BoolValue"
         end
 
-        if type == "google.protobuf.Int32Value"
+        if type == ".google.protobuf.Int32Value"
           @requires << "protoboeuf/protobuf/int32value"
           type = "ProtoBoeuf::Protobuf::Int32Value"
         end
 
-        if type == "google.protobuf.Int64Value"
+        if type == ".google.protobuf.Int64Value"
           @requires << "protoboeuf/protobuf/int64value"
           type = "ProtoBoeuf::Protobuf::Int64Value"
         end
 
-        if type == "google.protobuf.UInt32Value"
+        if type == ".google.protobuf.UInt32Value"
           @requires << "protoboeuf/protobuf/uint32value"
           type = "ProtoBoeuf::Protobuf::UInt32Value"
         end
 
-        if type == "google.protobuf.UInt64Value"
+        if type == ".google.protobuf.UInt64Value"
           @requires << "protoboeuf/protobuf/uint64value"
           type = "ProtoBoeuf::Protobuf::UInt64Value"
         end
 
-        if type == "google.protobuf.FloatValue"
+        if type == ".google.protobuf.FloatValue"
           @requires << "protoboeuf/protobuf/floatvalue"
           type = "ProtoBoeuf::Protobuf::FloatValue"
         end
 
-        if type == "google.protobuf.DoubleValue"
+        if type == ".google.protobuf.DoubleValue"
           @requires << "protoboeuf/protobuf/doublevalue"
           type = "ProtoBoeuf::Protobuf::DoubleValue"
         end
 
-        if type == "google.protobuf.StringValue"
+        if type == ".google.protobuf.StringValue"
           @requires << "protoboeuf/protobuf/stringvalue"
           type = "ProtoBoeuf::Protobuf::StringValue"
         end
 
-        if type == "google.protobuf.BytesValue"
+        if type == ".google.protobuf.BytesValue"
           @requires << "protoboeuf/protobuf/bytesvalue"
           type = "ProtoBoeuf::Protobuf::BytesValue"
         end
 
-        if type == "google.protobuf.Timestamp"
+        if type == ".google.protobuf.Timestamp"
           @requires << "protoboeuf/protobuf/timestamp"
           type = "ProtoBoeuf::Protobuf::Timestamp"
         end
