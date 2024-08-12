@@ -9,7 +9,7 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
+        obj._encode("".b)
       end
       # required field readers
 

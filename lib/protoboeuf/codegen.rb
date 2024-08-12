@@ -470,7 +470,7 @@ module ProtoBoeuf
 
           #{type_signature(params: {obj: message.name}, returns: "String")}
           def self.encode(obj)
-            obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
+            obj._encode("".b)
           end
         RUBY
       end
@@ -824,7 +824,7 @@ module ProtoBoeuf
       PULL_BYTES = ERB.new(<<~ERB, trim_mode: '-')
         value = <%= pull_varint %>
 
-        <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
+        <%= dest %> <%= operator %> buff.byteslice(index, value)
         index += value
       ERB
 

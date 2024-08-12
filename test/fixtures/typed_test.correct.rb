@@ -66,7 +66,7 @@ class Test1
 
   sig { params(obj: Test1).returns(String) }
   def self.encode(obj)
-    obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
+    obj._encode("".b)
   end
   # required field readers
   sig { returns(Integer) }
@@ -844,8 +844,7 @@ class Test1
             raise "integer decoding error"
           end
 
-        @bytes_field =
-          buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
+        @bytes_field = buff.byteslice(index, value)
         index += value
 
         ## END PULL_BYTES

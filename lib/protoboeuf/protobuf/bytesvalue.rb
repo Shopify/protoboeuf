@@ -9,7 +9,7 @@ module ProtoBoeuf
       end
 
       def self.encode(obj)
-        obj._encode(+"").force_encoding(Encoding::ASCII_8BIT)
+        obj._encode("".b)
       end
       # required field readers
 
@@ -87,8 +87,7 @@ module ProtoBoeuf
                 raise "integer decoding error"
               end
 
-            @value =
-              buff.byteslice(index, value).force_encoding(Encoding::ASCII_8BIT)
+            @value = buff.byteslice(index, value)
             index += value
 
             ## END PULL_BYTES
