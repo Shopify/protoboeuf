@@ -1348,12 +1348,16 @@ module ProtoBoeuf
     LEN = 2
     I32 = 5
 
+    PACKED_TYPES = %i{ TYPE_DOUBLE TYPE_FLOAT TYPE_INT32 TYPE_INT64 TYPE_UINT32
+    TYPE_UINT64 TYPE_SINT32 TYPE_SINT64 TYPE_FIXED32 TYPE_FIXED64 TYPE_SFIXED32
+    TYPE_SFIXED64 TYPE_BOOL }.to_set.freeze
+
     # Returns whether or not a repeated field is packed.
     # In Proto3 documents, repeated fields default to packed
     def self.packed?(field)
       raise ArgumentError unless field.label == :LABEL_REPEATED
 
-      return true unless field.options
+      return PACKED_TYPES.include?(field.type) unless field.options
 
       field.options.packed
     end

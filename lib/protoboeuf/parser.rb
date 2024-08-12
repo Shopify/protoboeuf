@@ -129,15 +129,6 @@ module ProtoBoeuf
     end
   end
 
-  PACKED_TYPES = %w{
-    double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
-    sfixed32 sfixed64 bool
-  }.to_set.freeze
-
-  SCALAR_TYPES = (PACKED_TYPES.to_a + %w{
-    string bytes
-  }).to_set.freeze
-
   # Represents the type of map<key_type, value_type>
   MapType = Struct.new(:key_type, :value_type)
 
