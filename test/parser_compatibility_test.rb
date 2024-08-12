@@ -3,6 +3,31 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_oneof_enum
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+enum TestEnum {
+  FOO = 0;
+}
+
+message Test1 {
+  optional string string_field = 1;
+  optional string string_field2 = 2;
+
+  oneof oneof_field {
+    TestEnum enum_1 = 3;
+  }
+
+  oneof oneof_field2 {
+    TestEnum enum_2 = 4;
+  }
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
     def test_nested_enum
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";
@@ -214,7 +239,11 @@ message OneItem {
 
     def test_fixture_file
       ours, theirs = parse_string(File.binread('./test/fixtures/test.proto'))
+      assert_same_tree theirs, ours
+    end
 
+    def test_typed_file
+      ours, theirs = parse_string(File.binread('./test/fixtures/typed_test.proto'))
       assert_same_tree theirs, ours
     end
 
@@ -263,17 +292,19 @@ message OneItem {
 
     def assert_same_message(expected, actual)
       assert_equal expected.name, actual.name, "Message name should match"
-      assert_equal expected.field.length, actual.field.length, "field length should match"
-
-      expected.field.each_with_index do |field, i|
-        assert_same_field(field, actual.field[i])
-      end
 
       # check oneof decls
       assert_equal expected.oneof_decl.length, actual.oneof_decl.length, "oneof_decl length should match"
 
       expected.oneof_decl.each_with_index do |oneof, i|
         assert_same_oneof(oneof, actual.oneof_decl[i])
+      end
+
+      # check fields
+      assert_equal expected.field.length, actual.field.length, "field length should match"
+
+      expected.field.each_with_index do |field, i|
+        assert_same_field(field, actual.field[i])
       end
 
       # check enum types
@@ -296,7 +327,7 @@ message OneItem {
       assert_equal expected.number, actual.number, "Number should match"
       assert_equal expected.label, actual.label, "Label should match"
       assert_equal expected.type, actual.type, "Type should match on #{expected.name}"
-      assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?, "has_oneof_index? should match")
+      assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?, "has_oneof_index? should match on #{actual.inspect}")
       if expected.has_oneof_index?
         assert_equal(expected.oneof_index, actual.oneof_index, "oneof_index should match")
       end
