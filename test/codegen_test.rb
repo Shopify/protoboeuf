@@ -2,6 +2,33 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_decode_repeated
+      skip "fixme"
+
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestRepeatedField {
+  repeated uint32 e = 1;
+  int64 another_value = 2;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::TestRepeatedField.new(e: [1, 2, 3, 0xFF], another_value: 0xCAFE)
+
+      data = ::TestRepeatedField.encode(::TestRepeatedField.new.tap { |x|
+        x.e[0] = 1
+        x.e[1] = 2
+        x.e[2] = 3
+        x.e[3] = 0xFF
+        x.another_value = 0xCAFE
+      })
+
+      assert_equal data.bytes, klass::TestRepeatedField.encode(msg).bytes
+    end
+
     def test_oneof_decoding
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";

@@ -3,6 +3,19 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_repeated
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestRepeatedField {
+  repeated uint32 e = 1;
+  int64 another_value = 2;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
     def test_oneof_embedded
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";

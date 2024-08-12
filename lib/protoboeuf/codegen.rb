@@ -279,9 +279,9 @@ module ProtoBoeuf
         <<~RUBY
           list = #{value_expr}
           if list.size > 0
-            #{encode_tag_and_length(field, field.options&.packed, "list.size")}
+            #{encode_tag_and_length(field, CodeGen.packed?(field), "list.size")}
             list.each do |item|
-              #{encode_leaf_type(field, "item", !field.options&.packed)}
+              #{encode_leaf_type(field, "item", !CodeGen.packed?(field))}
             end
           end
         RUBY
@@ -1239,7 +1239,7 @@ module ProtoBoeuf
           if map_field?(field)
             decode_map(field)
           else
-            if field.options&.packed
+            if CodeGen.packed?(field)
               PACKED_REPEATED.result(binding)
             else
               decode_repeated(field)
@@ -1297,7 +1297,7 @@ module ProtoBoeuf
       end
 
       def reads_next_tag?(field)
-        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !field.options&.packed)
+        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !CodeGen.packed?(field))
       end
     end
 
@@ -1344,8 +1344,18 @@ module ProtoBoeuf
     LEN = 2
     I32 = 5
 
+    # Returns whether or not a repeated field is packed.
+    # In Proto3 documents, repeated fields default to packed
+    def self.packed?(field)
+      raise ArgumentError unless field.label == :LABEL_REPEATED
+
+      return true unless field.options
+
+      field.options.packed
+    end
+
     def self.wire_type(field)
-      if field.label == :LABEL_REPEATED && field.options&.packed
+      if field.label == :LABEL_REPEATED && packed?(field)
         LEN
       elsif field.type == :TYPE_ENUM
         VARINT
