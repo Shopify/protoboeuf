@@ -2,6 +2,34 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_decode_embedder
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TestEmbeddee {
+  uint64 value = 1;
+}
+
+message TestEmbedder {
+  // Comment between fields
+  TestEmbeddee value = 2;
+  string message = 3;
+}
+      EOPROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      data = klass::TestEmbedder.encode(klass::TestEmbedder.new.tap { |x|
+        x.value = klass::TestEmbeddee.new(value: 5678)
+        x.message = "hello world"
+      })
+
+      obj = klass::TestEmbedder.decode data
+      assert_equal 5678, obj.value.value
+      assert_equal "hello world", obj.message
+    end
+
     def test_decode_repeated
       skip "fixme"
 

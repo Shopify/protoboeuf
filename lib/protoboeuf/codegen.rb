@@ -145,7 +145,7 @@ module ProtoBoeuf
       def convert_field(field)
         if field.has_oneof_index? && !field.proto3_optional
           "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
-        elsif field.label == :LABEL_REPEATED
+        elsif repeated?(field)
           "result['#{field.name}'.to_sym] = #{iv_name(field)}"
         elsif field.type == :TYPE_MESSAGE
           "result['#{field.name}'.to_sym] = #{iv_name(field)}.to_h"
@@ -1301,7 +1301,11 @@ module ProtoBoeuf
       end
 
       def reads_next_tag?(field)
-        field.type == :TYPE_MESSAGE || (field.label == :LABEL_REPEATED && !CodeGen.packed?(field))
+        map_field?(field) || (repeated?(field) && !CodeGen.packed?(field))
+      end
+
+      def repeated?(field)
+        field.label == :LABEL_REPEATED
       end
     end
 
