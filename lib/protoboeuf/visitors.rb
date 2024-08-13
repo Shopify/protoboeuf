@@ -135,7 +135,6 @@ module ProtoBoeuf
         else
           field.type.to_s.sub(/^TYPE_/, '').downcase
         end
-        #case field.type
       end
     end
   end

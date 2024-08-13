@@ -603,7 +603,6 @@ module ProtoBoeuf
 
         return "" if fields.empty?
 
-        "# required_writers writers\n" +
         fields.map { |field|
           <<~RUBY
             #{type_signature(params: {v: convert_field_type(field)})}
