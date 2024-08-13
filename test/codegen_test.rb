@@ -2,6 +2,29 @@ require "helper"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_map_complex_types
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Foo {
+  message Bar {
+    string test = 1;
+  }
+
+  map<string, Bar> attributes = 5;
+}
+      EOPROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      foo = klass::Foo.new
+      foo.attributes["bar"] = klass::Foo::Bar.new
+      foo.attributes["bar"].test = "hello"
+
+      foo = klass::Foo.decode klass::Foo.encode foo
+    end
+
     def test_decode_embedder
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";

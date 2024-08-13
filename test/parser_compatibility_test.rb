@@ -3,6 +3,48 @@ require "google/protobuf"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
+    def test_map_complex_types
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Foo {
+  message Bar {
+    string test = 1;
+  }
+
+  map<string, Bar> attributes = 5;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
+    def test_message_name_resolution
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Foo {
+  uint64 value = 1;
+
+  message Bar {
+    uint64 value = 1;
+  }
+}
+
+message TestEmbeds {
+  message Baz {
+    uint64 value = 1;
+  }
+
+  Baz baz = 3;
+  Foo foo = 1;
+  Foo.Bar bar = 2;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
     def test_repeated
       ours, theirs = parse_string(<<-EOPROTO)
 syntax = "proto3";
@@ -77,6 +119,27 @@ message Test1 {
   }
 
   NestedEnum kind = 1;
+}
+      EOPROTO
+
+      assert_same_tree(theirs, ours)
+    end
+
+    def test_very_nested_enum
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Test1 {
+  message Test2 {
+    message Test3 {
+      enum NestedEnum {
+        FOO = 0;
+        BAR = 1;
+      }
+
+      NestedEnum kind = 1;
+    }
+  }
 }
       EOPROTO
 
@@ -365,6 +428,13 @@ message OneItem {
       assert_equal expected.number, actual.number, "Number should match"
       assert_equal expected.label, actual.label, "Label should match"
       assert_equal expected.type, actual.type, "Type should match on #{expected.name}"
+
+      if expected.type_name.nil?
+        assert_nil actual.type_name
+      else
+        assert_equal expected.type_name, actual.type_name
+      end
+
       assert_equal(!!expected.has_oneof_index?, !!actual.has_oneof_index?, "has_oneof_index? should match on #{actual.inspect}")
       if expected.has_oneof_index?
         assert_equal(expected.oneof_index, actual.oneof_index, "oneof_index should match")

@@ -233,7 +233,7 @@ module ProtoBoeuf
 
       # Message definition
       elsif ident == "message"
-        messages << parse_message(input, pos, enums, proto3)
+        messages << parse_message(input, pos, enums, messages, [], proto3)
 
       # Enum definition
       elsif ident == "enum"
@@ -394,7 +394,7 @@ module ProtoBoeuf
   end
 
   # Parse the body for a message or oneof
-  def self.parse_body(input, pos, inside_message, top_enums, message_name, oneof_decls, is_proto3)
+  def self.parse_body(input, pos, inside_message, top_enums, top_messages, name_stack, oneof_decls, is_proto3)
     fields = []
     messages = []
     enums = []
@@ -407,7 +407,7 @@ module ProtoBoeuf
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
-        nested_type << parse_message(input, msg_pos, top_enums, is_proto3)
+        nested_type << parse_message(input, msg_pos, top_enums, top_messages, name_stack, is_proto3)
         next
       end
       if inside_message && (input.match 'enum')
@@ -434,7 +434,14 @@ module ProtoBoeuf
         # If this is a oneof field
         oneof_pos = input.pos
         if input.match 'oneof'
-          oneof = parse_oneof(input, oneof_pos, top_enums, message_name, oneof_decls, is_proto3)
+          oneof = parse_oneof(input, oneof_pos, top_enums, top_messages, name_stack, oneof_decls, is_proto3)
+          # fix oneof field names
+          oneof.fields.each do |field|
+            if field.type_name.count(".") == 1
+              type = field.type_name.delete_prefix(".")
+              field.type_name = qualify(top_messages + top_enums, nested_type + enums, name_stack, type)
+            end
+          end
           fields.concat oneof.fields
           oneof_decls << oneof
           next
@@ -459,7 +466,7 @@ module ProtoBoeuf
 
       if type.is_a?(MapType)
         key_field = Field.new(:LABEL_OPTIONAL,
-          qualify(type.key_type),
+          qualify(top_messages + top_enums, nested_type + enums, name_stack, type.key_type),
           get_type(type.key_type, top_enums + enums),
           "key",
           1,
@@ -469,7 +476,7 @@ module ProtoBoeuf
           nil)
 
         value_field = Field.new(:LABEL_OPTIONAL,
-          qualify(type.value_type),
+          qualify(top_messages + top_enums, nested_type + enums, name_stack, type.value_type),
           get_type(type.value_type, top_enums + enums),
           "value",
           2,
@@ -498,7 +505,7 @@ module ProtoBoeuf
 
         map_field = Field.new(
           label(:repeated),
-          qualify([message_name, nested_msg.name].join(".")),
+          qualify(top_messages + top_enums, nested_type, name_stack, derived_message_name),
           get_type(type, top_enums + enums),
           name,
           number,
@@ -507,12 +514,12 @@ module ProtoBoeuf
         fields << map_field
       else
         if qualifier == :optional && is_proto3
-          fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, is_proto3)
+          fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, is_proto3)
         else
           if inside_message
-            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, false)
+            fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, false)
           else
-            fields << Field.new(label(qualifier), qualify(type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, oneof_decls.length, false)
+            fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, oneof_decls.length, false)
           end
         end
       end
@@ -583,14 +590,30 @@ module ProtoBoeuf
     end
   end
 
-  def self.qualify(name)
+  def self.qualify(top_messages, sibling_messages, stack, name)
     case name
+      # if the type is simple, we don't need to qualify it
     when "uint32", "bool", "double", "float", "int64", "uint64", "int32",
       "fixed64", "fixed32", "string", "bytes", "sfixed32", "sfixed64",
       "sint32", "sint64"
       ""
     else
-      "." + name
+      if name =~ /\./ # if the name has dots, we'll assume it's fully qualified
+        "." + name
+      else
+        # If it's in a sibling, then use our current context
+        if sibling_messages.find { |msg| msg.name == name }
+          "." + (stack + [name]).join(".")
+        else
+          # If it's not a top level message, use the current context
+          if !top_messages.find { |msg| msg.name == name }
+            "." + (stack + [name]).join(".")
+          else
+            # Assume it's a top level type
+            "." + name
+          end
+        end
+      end
     end
   end
 
@@ -622,11 +645,11 @@ module ProtoBoeuf
   end
 
   # Parse a message definition
-  def self.parse_message(input, pos, enums, is_proto3)
+  def self.parse_message(input, pos, enums, top_messages, name_stack, is_proto3)
     input.eat_ws
     message_name = input.read_ident
     oneof_decls = []
-    fields, messages, enums, nested_type = parse_body(input, pos, true, enums, message_name, oneof_decls, is_proto3)
+    fields, messages, enums, nested_type = parse_body(input, pos, true, enums, top_messages, name_stack + [message_name], oneof_decls, is_proto3)
 
     # Add optional fields for proto3 optional fields
     fields.find_all { |field|
@@ -639,10 +662,10 @@ module ProtoBoeuf
   end
 
   # Parse a oneof definition
-  def self.parse_oneof(input, pos, enums, message_name, oneof_decls, is_proto3)
+  def self.parse_oneof(input, pos, enums, top_messages, name_stack, oneof_decls, is_proto3)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _, _ = parse_body(input, pos, false, enums, message_name, oneof_decls, is_proto3)
+    fields, _, _ = parse_body(input, pos, false, enums, top_messages, name_stack, oneof_decls, is_proto3)
     OneOf.new(oneof_name, fields, pos)
   end
 

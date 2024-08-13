@@ -1099,9 +1099,9 @@ module ProtoBoeuf
           while tag == #{tag_for_field(field, field.number)}
             #{pull_uint64("value", "=")}
             index += 1 # skip the tag, assume it's the key
-            #{decode_subtype(field, map_type.field[0].type, "key", "=")}
+            #{decode_subtype(map_type.field[0], map_type.field[0].type, "key", "=")}
             index += 1 # skip the tag, assume it's the value
-            #{decode_subtype(field, map_type.field[1].type, "map[key]", "=")}
+            #{decode_subtype(map_type.field[1], map_type.field[1].type, "map[key]", "=")}
             return self if index >= len
             #{pull_tag}
           end
