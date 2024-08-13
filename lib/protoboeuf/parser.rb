@@ -50,7 +50,7 @@ module ProtoBoeuf
     end
 
     MessageOptions = Struct.new(:map_entry)
-    FieldOptions = Struct.new(:packed)
+    FieldOptions = Struct.new(:packed, :deprecated)
   end
 
   # Position in a source file
@@ -354,7 +354,7 @@ module ProtoBoeuf
       input.expect ','
     end
 
-    AST::FieldOptions.new(options[:packed])
+    AST::FieldOptions.new(options[:packed], options[:deprecated])
   end
 
   # Parse the reserved directive, e.g.
@@ -459,7 +459,7 @@ module ProtoBoeuf
 
       if type.is_a?(MapType)
         key_field = Field.new(:LABEL_OPTIONAL,
-          nil,
+          qualify(type.key_type),
           get_type(type.key_type, top_enums + enums),
           "key",
           1,
@@ -469,7 +469,7 @@ module ProtoBoeuf
           nil)
 
         value_field = Field.new(:LABEL_OPTIONAL,
-          nil,
+          qualify(type.value_type),
           get_type(type.value_type, top_enums + enums),
           "value",
           2,
@@ -584,7 +584,14 @@ module ProtoBoeuf
   end
 
   def self.qualify(name)
-    "." + name
+    case name
+    when "uint32", "bool", "double", "float", "int64", "uint64", "int32",
+      "fixed64", "fixed32", "string", "bytes", "sfixed32", "sfixed64",
+      "sint32", "sint64"
+      ""
+    else
+      "." + name
+    end
   end
 
   def self.get_type(type, enums)

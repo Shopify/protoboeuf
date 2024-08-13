@@ -87,6 +87,7 @@ message Aaron {
   oneof thing {
     uint64 id = 1;
   }
+
 }
       eoproto
       unit = ProtoBoeuf.parse_string(proto)

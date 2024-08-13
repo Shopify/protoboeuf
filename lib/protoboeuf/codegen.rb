@@ -132,20 +132,26 @@ module ProtoBoeuf
       end
 
       def conversion
+        fields = self.fields.reject { |field|
+          field.has_oneof_index? && !field.proto3_optional
+        }
+
+        oneofs = @oneof_selection_fields.map { |field|
+          "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
+        }
+
         <<~RUBY
           #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
           def to_h
             result = {}
-            #{fields.map { |field| convert_field(field) }.join("\n")}
+            #{(oneofs + fields.map { |field| convert_field(field) }).join("\n")}
             result
           end
         RUBY
       end
 
       def convert_field(field)
-        if field.has_oneof_index? && !field.proto3_optional
-          "send('#{field.name}').tap { |f| result[f.to_sym] = send(f) if f }"
-        elsif repeated?(field)
+        if repeated?(field)
           "result['#{field.name}'.to_sym] = #{iv_name(field)}"
         elsif field.type == :TYPE_MESSAGE
           "result['#{field.name}'.to_sym] = #{iv_name(field)}.to_h"
