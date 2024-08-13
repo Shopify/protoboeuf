@@ -82,15 +82,15 @@ class Test1
   attr_reader :bytes_field
 
   # optional field readers
-  sig { returns(T.nilable(String)) }
+  sig { returns(String) }
   attr_reader :string_field
 
   # oneof field readers
   sig { returns(Symbol) }
   attr_reader :oneof_field
-  sig { returns(TestEnum) }
+  sig { returns(Symbol) }
   attr_reader :enum_1
-  sig { returns(TestEnum2) }
+  sig { returns(Symbol) }
   attr_reader :enum_2
 
   sig { params(v: Integer).void }
@@ -103,7 +103,7 @@ class Test1
     @int_field = v
   end
 
-  sig { params(v: Integer).void }
+  sig { params(v: T::Array[Integer]).void }
   def repeated_ints=(v)
     v.each do |v|
       unless -2_147_483_648 <= v && v <= 2_147_483_647
@@ -148,9 +148,9 @@ class Test1
   sig do
     params(
       int_field: Integer,
-      string_field: T.nilable(String),
-      enum_1: TestEnum,
-      enum_2: TestEnum2,
+      string_field: String,
+      enum_1: Symbol,
+      enum_2: Symbol,
       repeated_ints: T::Array[Integer],
       map_field: T::Hash[String, Integer],
       bytes_field: String
@@ -167,6 +167,7 @@ class Test1
   )
     @_bitmask = 0
 
+    @oneof_field = nil # oneof field
     unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
@@ -180,16 +181,15 @@ class Test1
       @string_field = string_field
     end
 
-    @oneof_field = nil # oneof field
     if enum_1 == nil
-      @enum_1 = nil
+      @enum_1 = 0
     else
       @oneof_field = :enum_1
       @enum_1 = enum_1
     end
 
     if enum_2 == nil
-      @enum_2 = nil
+      @enum_2 = 0
     else
       @oneof_field = :enum_2
       @enum_2 = enum_2
@@ -217,11 +217,11 @@ class Test1
   def decode_from(buff, index, len)
     @_bitmask = 0
 
+    @oneof_field = nil # oneof field
     @int_field = 0
     @string_field = ""
-    @oneof_field = nil # oneof field
-    @enum_1 = nil
-    @enum_2 = nil
+    @enum_1 = 0
+    @enum_2 = 0
     @repeated_ints = []
     @map_field = {}
     @bytes_field = ""
@@ -361,10 +361,9 @@ class Test1
         tag = buff.getbyte(index)
         index += 1
       end
-      if tag == 0x1a
-        ## PULL_MESSAGE
-        ## PULL_UINT64
-        msg_len =
+      if tag == 0x18
+        ## PULL_INT64
+        @enum_1 =
           if (byte0 = buff.getbyte(index)) < 0x80
             index += 1
             byte0
@@ -405,28 +404,36 @@ class Test1
           elsif (byte9 = buff.getbyte(index + 9)) < 0x80
             index += 10
 
-            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
-              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            # Negative 32 bit integers are still encoded with 10 bytes
+            # handle 2's complement negative numbers
+            # If the top bit is 1, then it must be negative.
+            -(
+              (
+                (
+                  ~(
+                    (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                      ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  )
+                ) & 0xFFFF_FFFF_FFFF_FFFF
+              ) + 1
+            )
           else
             raise "integer decoding error"
           end
 
-        ## END PULL_UINT64
-
-        @enum_1 = TestEnum.allocate.decode_from(buff, index, index += msg_len)
-        ## END PULL_MESSAGE
+        ## END PULL_INT64
 
         @oneof_field = :enum_1
         return self if index >= len
         tag = buff.getbyte(index)
         index += 1
       end
-      if tag == 0x22
-        ## PULL_MESSAGE
-        ## PULL_UINT64
-        msg_len =
+      if tag == 0x20
+        ## PULL_INT64
+        @enum_2 =
           if (byte0 = buff.getbyte(index)) < 0x80
             index += 1
             byte0
@@ -467,18 +474,27 @@ class Test1
           elsif (byte9 = buff.getbyte(index + 9)) < 0x80
             index += 10
 
-            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
-              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+            # Negative 32 bit integers are still encoded with 10 bytes
+            # handle 2's complement negative numbers
+            # If the top bit is 1, then it must be negative.
+            -(
+              (
+                (
+                  ~(
+                    (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                      ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  )
+                ) & 0xFFFF_FFFF_FFFF_FFFF
+              ) + 1
+            )
           else
             raise "integer decoding error"
           end
 
-        ## END PULL_UINT64
-
-        @enum_2 = TestEnum2.allocate.decode_from(buff, index, index += msg_len)
-        ## END PULL_MESSAGE
+        ## END PULL_INT64
 
         @oneof_field = :enum_2
         return self if index >= len
@@ -890,103 +906,27 @@ class Test1
       buff << (val.ascii_only? ? val : val.b)
     end
 
-    if @oneof_field == :"enum_1"
-      val = @enum_1
-      if val
-        buff << 0x1a
+    val = @enum_1
+    if val != 0
+      buff << 0x18
 
-        # Save the buffer size before appending the submessage
-        current_len = buff.bytesize
-
-        # Write a single dummy byte to later store encoded length
-        buff << 42 # "*"
-        val._encode(buff)
-
-        # Calculate the submessage's size
-        submessage_size = buff.bytesize - current_len - 1
-
-        # Hope the size fits in one byte
-        byte = submessage_size & 0x7F
-        submessage_size >>= 7
-        byte |= 0x80 if submessage_size > 0
-        buff.setbyte(current_len, byte)
-
-        # If the sub message was bigger
-        if submessage_size > 0
-          current_len += 1
-
-          # compute how much we need to shift
-          encoded_int_len = 0
-          remaining_size = submessage_size
-          while remaining_size != 0
-            remaining_size >>= 7
-            encoded_int_len += 1
-          end
-
-          # Make space in the string with dummy bytes
-          buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
-
-          # Overwrite the dummy bytes with the encoded length
-          while submessage_size != 0
-            byte = submessage_size & 0x7F
-            submessage_size >>= 7
-            byte |= 0x80 if submessage_size > 0
-            buff.setbyte(current_len, byte)
-            current_len += 1
-          end
-        end
-
-        buff
+      while val != 0
+        byte = val & 0x7F
+        val >>= 7
+        byte |= 0x80 if val > 0
+        buff << byte
       end
     end
 
-    if @oneof_field == :"enum_2"
-      val = @enum_2
-      if val
-        buff << 0x22
+    val = @enum_2
+    if val != 0
+      buff << 0x20
 
-        # Save the buffer size before appending the submessage
-        current_len = buff.bytesize
-
-        # Write a single dummy byte to later store encoded length
-        buff << 42 # "*"
-        val._encode(buff)
-
-        # Calculate the submessage's size
-        submessage_size = buff.bytesize - current_len - 1
-
-        # Hope the size fits in one byte
-        byte = submessage_size & 0x7F
-        submessage_size >>= 7
-        byte |= 0x80 if submessage_size > 0
-        buff.setbyte(current_len, byte)
-
-        # If the sub message was bigger
-        if submessage_size > 0
-          current_len += 1
-
-          # compute how much we need to shift
-          encoded_int_len = 0
-          remaining_size = submessage_size
-          while remaining_size != 0
-            remaining_size >>= 7
-            encoded_int_len += 1
-          end
-
-          # Make space in the string with dummy bytes
-          buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
-
-          # Overwrite the dummy bytes with the encoded length
-          while submessage_size != 0
-            byte = submessage_size & 0x7F
-            submessage_size >>= 7
-            byte |= 0x80 if submessage_size > 0
-            buff.setbyte(current_len, byte)
-            current_len += 1
-          end
-        end
-
-        buff
+      while val != 0
+        byte = val & 0x7F
+        val >>= 7
+        byte |= 0x80 if val > 0
+        buff << byte
       end
     end
 
@@ -1090,9 +1030,9 @@ class Test1
   sig { returns(T::Hash[Symbol, T.untyped]) }
   def to_h
     result = {}
+    send("oneof_field").tap { |f| result[f.to_sym] = send(f) if f }
     result["int_field".to_sym] = @int_field
     result["string_field".to_sym] = @string_field
-    send("oneof_field").tap { |f| result[f.to_sym] = send(f) if f }
     result["repeated_ints".to_sym] = @repeated_ints
     result["map_field".to_sym] = @map_field
     result["bytes_field".to_sym] = @bytes_field
