@@ -1172,6 +1172,11 @@ module ProtoBoeuf
           type = "ProtoBoeuf::Protobuf::Timestamp"
         end
 
+        if type == ".google.protobuf.Any"
+          @requires << "protoboeuf/protobuf/any"
+          type = "ProtoBoeuf::Protobuf::Any"
+        end
+
         <<~RUBY
           ## PULL_MESSAGE
           #{pull_uint64("msg_len", "=")}

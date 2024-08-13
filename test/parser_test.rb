@@ -60,10 +60,11 @@ class ParserTest < ProtoBoeuf::Test
   end
 
   def test_msg_optional
-    unit = parse_string('message Test1 { optional int32 a = 1; }')
+    unit = parse_string('syntax = "proto3"; message Test1 { optional int32 a = 1; }')
     assert_equal 'Test1', unit.message_type[0].name
     assert_equal 'a', unit.message_type[0].field[0].name
-    assert_equal :optional, unit.message_type[0].field[0].qualifier
+    assert_equal :LABEL_OPTIONAL, unit.message_type[0].field[0].label
+    assert unit.message_type[0].field[0].proto3_optional
   end
 
   def test_hex_field_num
@@ -102,7 +103,8 @@ class ParserTest < ProtoBoeuf::Test
     unit = parse_string('message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }')
     assert_equal 3, unit.message_type[0].field.length
     assert_equal 'id', unit.message_type[0].field[0].name
-    assert_nil unit.message_type[0].field[0].qualifier
+    assert_equal :LABEL_OPTIONAL, unit.message_type[0].field[0].label
+    refute unit.message_type[0].field[0].proto3_optional
   end
 
   def test_msg_map_type
