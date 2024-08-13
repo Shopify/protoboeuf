@@ -131,7 +131,7 @@ module ProtoBoeuf
         if field.type == :TYPE_MESSAGE
           field.type_name.delete_prefix(".")
         elsif field.type == :TYPE_ENUM
-          field.type_name.delete_prefix(".")
+          field.type_name.split(".").last
         else
           field.type.to_s.sub(/^TYPE_/, '').downcase
         end
