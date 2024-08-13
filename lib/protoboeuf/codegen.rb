@@ -915,7 +915,7 @@ module ProtoBoeuf
       DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
-          <%- for field in message.oneof_decl -%>
+          <%- for field in @oneof_selection_fields -%>
             @<%= field.name %> = nil # oneof field
           <%- end -%>
           <%- for field in fields -%>
@@ -931,7 +931,7 @@ module ProtoBoeuf
               <%- if !field.has_oneof_index? || field.proto3_optional -%>
             if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
-              <%= set_bitmask(field) if field.label == :TYPE_OPTIONAL %>
+              <%= set_bitmask(field) if field.proto3_optional %>
               return self if index >= len
               <%- if !reads_next_tag?(field) -%>
               <%= pull_tag %>
@@ -1022,11 +1022,8 @@ module ProtoBoeuf
         self.fields.flat_map { |f|
           if f.has_oneof_index? && !f.proto3_optional
             "#{f.name}: nil"
-            #f.fields.map { |child|
-            #  "#{child.lvar_name}: nil"
-            #}
           else
-            if f.label == :TYPE_OPTIONAL
+            if f.proto3_optional
               "#{f.name}: nil"
             else
               "#{f.name}: #{default_for(f)}"
