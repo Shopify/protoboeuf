@@ -1,4 +1,6 @@
 require "helper"
+require "tempfile"
+require "google/protobuf/descriptor_pb"
 
 module ProtoBoeuf
   class CodeGenTest < Test
@@ -107,7 +109,7 @@ message ManyOptional {
 }
       EOPROTO
       gen = CodeGen.new unit
-      klass = Class.new { self.class_eval gen.to_ruby }
+      assert Class.new { self.class_eval gen.to_ruby }
     end
 
     def test_enum_field
@@ -458,9 +460,6 @@ message TestMessageWithOneOf {
       ProtoBoeuf.parse_file string
     end
   end
-
-  require "tempfile"
-  require "google/protobuf"
 
   class ProtoCCodeGenTest < CodeGenTest
     def parse_string(string)

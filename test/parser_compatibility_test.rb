@@ -1,5 +1,6 @@
 require "helper"
-require "google/protobuf"
+require "tempfile"
+require "google/protobuf/descriptor_pb"
 
 module ProtoBoeuf
   class ParserCompatibilityTest < Test
