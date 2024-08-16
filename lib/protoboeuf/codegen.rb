@@ -51,23 +51,23 @@ module ProtoBoeuf
     end
 
     class MessageCompiler
-      attr_reader :generate_types
+      attr_reader :generate_types, :requires
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types:)
-        new(message, toplevel_enums, generate_types:).result
+      def self.result(message, toplevel_enums, generate_types:, requires:)
+        new(message, toplevel_enums, generate_types:, requires:).result
       end
 
       attr_reader :message, :fields, :oneof_fields
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums, generate_types:)
+      def initialize(message, toplevel_enums, generate_types:, requires:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field
         @enum_field_types = toplevel_enums.merge(message.enum_type.group_by(&:name))
-        @requires = Set.new
+        @requires = requires
         @generate_types = generate_types
         @has_submessage = false
 
@@ -108,12 +108,7 @@ module ProtoBoeuf
       end
 
       def result
-        body = "class #{message.name}\n" + class_body + "end\n"
-        if @requires.empty?
-          body
-        else
-          @requires.map { |r| "require #{r.dump}" }.join("\n") + "\n\n" + body
-        end
+        "class #{message.name}\n" + class_body + "end\n"
       end
 
       private
@@ -521,7 +516,7 @@ module ProtoBoeuf
 
       def constants
         message.nested_type.reject { |x| x.options&.map_entry }.map { |x|
-          self.class.new(x, enum_field_types, generate_types:).result
+          self.class.new(x, enum_field_types, generate_types:, requires:).result
         }.join("\n")
       end
 
@@ -1349,17 +1344,20 @@ module ProtoBoeuf
       @generate_types = generate_types
     end
 
-    def to_ruby
+    def to_ruby(this_file = nil)
+      requires = Set.new
       @ast.file.each do |file|
         modules = resolve_modules(file)
         head = "# encoding: ascii-8bit\n"
         head += "# typed: false\n" if generate_types
         head += "# frozen_string_literal: true\n\n"
-        head += modules.map { |m| "module #{m}\n" }.join
 
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:) }.join
+        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:) }.join
+
+        head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
+        head += modules.map { |m| "module #{m}\n" }.join
 
         tail = "\n" + modules.map { "end" }.join("\n")
 
