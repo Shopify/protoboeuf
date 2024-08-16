@@ -1197,6 +1197,11 @@ module ProtoBoeuf
           type = "ProtoBoeuf::Protobuf::Duration"
         end
 
+        if type == ".google.protobuf.FieldMask"
+          @requires << "protoboeuf/protobuf/field_mask"
+          type = "ProtoBoeuf::Protobuf::FieldMask"
+        end
+
         <<~RUBY
           ## PULL_MESSAGE
           #{pull_uint64("msg_len", "=")}
