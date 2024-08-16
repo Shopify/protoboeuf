@@ -22,12 +22,19 @@ CLOBBER.append WELL_KNOWN_PB
 rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
 
-  unit = ProtoBoeuf.parse_file t.source
+  require "tempfile"
+  unit = Tempfile.create(File.basename(t.source)) do |f|
+    File.unlink f.path
+    sh "protoc -I #{File.dirname(t.source)} #{File.basename(t.source)} -o #{f.path}"
+    require "google/protobuf/descriptor_pb"
+    Google::Protobuf::FileDescriptorSet.decode File.binread(f.path)
+  end
+
   # force the package to be our own so we generate classes insode our namespace
   unit.file.each { |f| f.package = "proto_boeuf.protobuf" }
 
   puts "writing #{t.name}"
-  File.binwrite t.name, unit.to_ruby
+  File.binwrite t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby
 end
 
 task :well_known_types => WELL_KNOWN_PB
