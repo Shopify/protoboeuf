@@ -1197,6 +1197,21 @@ module ProtoBoeuf
           type = "ProtoBoeuf::Protobuf::FieldMask"
         end
 
+        if type == ".google.protobuf.Struct"
+          @requires << "protoboeuf/protobuf/struct"
+          type = "ProtoBoeuf::Protobuf::Struct"
+        end
+
+        if type == ".google.protobuf.Value"
+          @requires << "protoboeuf/protobuf/struct"
+          type = "ProtoBoeuf::Protobuf::Value"
+        end
+
+        if type == ".google.protobuf.ListValue"
+          @requires << "protoboeuf/protobuf/struct"
+          type = "ProtoBoeuf::Protobuf::ListValue"
+        end
+
         <<~RUBY
           ## PULL_MESSAGE
           #{pull_uint64("msg_len", "=")}

@@ -60,6 +60,38 @@ message Foo {
     assert_equal 1234, v.value
   end
 
+  def test_struct
+    unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+message Foo {
+  google.protobuf.Struct struct_value = 1;
+  google.protobuf.Value value = 2;
+  google.protobuf.ListValue list_value = 3;
+}
+    EOPROTO
+
+    gen = ProtoBoeuf::CodeGen.new unit
+    klass = Class.new { self.class_eval gen.to_ruby }
+
+    foo = klass::Foo.new.tap do |x|
+      x.value = ProtoBoeuf::Protobuf::Value.new(string_value: "one")
+      x.list_value = ProtoBoeuf::Protobuf::ListValue.new.tap do |v|
+        v.values = %w[two three].map do |s|
+          ProtoBoeuf::Protobuf::Value.new(string_value: s)
+        end
+      end
+      x.struct_value = ProtoBoeuf::Protobuf::Struct.new(fields: {
+        "key" => ProtoBoeuf::Protobuf::Value.new(string_value: "f1"),
+        "value" => ProtoBoeuf::Protobuf::Value.new(string_value: "f2"),
+      })
+    end
+
+    foo = klass::Foo.decode klass::Foo.encode foo
+    assert_equal("one", foo.value.string_value)
+    assert_equal(%w[two three], foo.list_value.values.map(&:string_value))
+    assert_equal({"key" => "f1", "value" => "f2"}, foo.struct_value.fields.map { |k,v| [k, v.string_value] }.to_h)
+  end
+
   private
 
   def parse_string(string)
