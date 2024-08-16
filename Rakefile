@@ -34,7 +34,8 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   unit.file.each { |f| f.package = "proto_boeuf.protobuf" }
 
   puts "writing #{t.name}"
-  File.binwrite t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby
+  dest = Pathname.new(t.name).relative_path_from(File.join(BASE_DIR, "lib")).to_s.delete_suffix(".rb")
+  File.binwrite t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby(dest)
 end
 
 task :well_known_types => WELL_KNOWN_PB

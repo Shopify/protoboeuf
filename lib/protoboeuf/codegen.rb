@@ -1344,7 +1344,7 @@ module ProtoBoeuf
       @generate_types = generate_types
     end
 
-    def to_ruby
+    def to_ruby(this_file = nil)
       requires = Set.new
       @ast.file.each do |file|
         modules = resolve_modules(file)
@@ -1356,7 +1356,7 @@ module ProtoBoeuf
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
         body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:) }.join
 
-        head += requires.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
+        head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
 
         tail = "\n" + modules.map { "end" }.join("\n")
