@@ -427,7 +427,7 @@ message OneItem {
     def assert_same_field(expected, actual)
       assert_equal expected.name, actual.name, "Names should match"
       assert_equal expected.number, actual.number, "Number should match"
-      assert_equal expected.label, actual.label, "Label should match"
+      assert_equal expected.label, actual.label, "Label should match #{expected.name} #{actual.class}"
       assert_equal expected.type, actual.type, "Type should match on #{expected.name}"
 
       if expected.type_name.nil?
@@ -451,26 +451,52 @@ message OneItem {
 
     def parse_string(str)
       [parse_string_with_protoboeuf(str), parse_string_with_protoc(str)]
-      #[nil, parse_string_with_protoc(str)]
     end
 
     def parse_string_with_protoboeuf(string)
       ProtoBoeuf.parse_string(string)
     end
 
-    def parse_string_with_protoc(string)
-      begin
-        binfile = Tempfile.new
-        Tempfile.create do |f|
-          f.write string
-          f.flush
-          system("protoc -o #{binfile.path} -I / #{f.path}")
-        end
-        binfile.rewind
-        Google::Protobuf::FileDescriptorSet.decode binfile.read
-      ensure
-        binfile.unlink
+    def make_binary_proto(string)
+      binfile = Tempfile.new
+      Tempfile.create do |f|
+        f.write string
+        f.flush
+        system("protoc -o #{binfile.path} -I / #{f.path}")
       end
+      binfile.rewind
+      binfile.read
+    ensure
+      binfile.unlink
+    end
+
+    def parse_string_with_protoc(string)
+      data = make_binary_proto(string)
+      decode_file_descriptor_set data
+    end
+
+    def decode_file_descriptor_set(data)
+      Google::Protobuf::FileDescriptorSet.decode data
+    end
+  end
+
+  class ASTCompatibility < ParserCompatibilityTest
+    def test_fixture_file
+      skip
+      super
+    end
+
+    private
+
+    def decode_file_descriptor_set(data)
+      theirs = super
+      require "protoboeuf/protobuf/descriptor"
+
+      ours = ProtoBoeuf::Protobuf::FileDescriptorSet.decode data
+
+      assert_same_tree(theirs, ours)
+
+      theirs
     end
   end
 end

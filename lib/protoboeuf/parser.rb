@@ -94,7 +94,7 @@ module ProtoBoeuf
   end
 
   # Whole unit of input (e.g. one source file)
-  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type)
+  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type, :syntax)
     def accept(viz)
       viz.visit_unit self
     end
@@ -248,7 +248,7 @@ module ProtoBoeuf
     end
 
     check_enum_collision(enums)
-    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums)]
+    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums, "proto3")]
   end
 
   # Parse the name of a field type

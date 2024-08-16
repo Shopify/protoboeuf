@@ -55,14 +55,14 @@ module ProtoBoeuf
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types:, requires:)
-        new(message, toplevel_enums, generate_types:, requires:).result
+      def self.result(message, toplevel_enums, generate_types:, requires:, syntax:)
+        new(message, toplevel_enums, generate_types:, requires:, syntax:).result
       end
 
-      attr_reader :message, :fields, :oneof_fields
+      attr_reader :message, :fields, :oneof_fields, :syntax
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums, generate_types:, requires:)
+      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field
@@ -70,6 +70,7 @@ module ProtoBoeuf
         @requires = requires
         @generate_types = generate_types
         @has_submessage = false
+        @syntax = syntax
 
         @required_fields = []
         @optional_fields = []
@@ -77,12 +78,18 @@ module ProtoBoeuf
         @enum_fields = []
         @oneof_selection_fields = []
 
+        proto3 = "proto3" == syntax
+
         message.field.each { |field|
           if field.has_oneof_index? && !field.proto3_optional
             (@oneof_fields[field.oneof_index] ||= []) << field
           else
-            if field.proto3_optional
-              @optional_fields << field
+            if field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
+              if field.type == :TYPE_ENUM
+                @enum_fields << field
+              else
+                @optional_fields << field
+              end
             else
               if field.type == :TYPE_ENUM
                 @enum_fields << field
@@ -516,7 +523,7 @@ module ProtoBoeuf
 
       def constants
         message.nested_type.reject { |x| x.options&.map_entry }.map { |x|
-          self.class.new(x, enum_field_types, generate_types:, requires:).result
+          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:).result
         }.join("\n")
       end
 
@@ -535,8 +542,7 @@ module ProtoBoeuf
       end
 
       def class_name(field)
-        #p field.type_name.delete_prefix(".").gsub(".", "::")
-        field.type_name.delete_prefix(".").gsub(".", "::")
+        translate_well_known(field.type_name).delete_prefix(".").gsub(".", "::")
       end
 
       def required_readers
@@ -1490,7 +1496,7 @@ module ProtoBoeuf
 
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:) }.join
+        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax) }.join
 
         head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
