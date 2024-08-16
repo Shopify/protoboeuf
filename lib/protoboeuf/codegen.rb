@@ -535,6 +535,7 @@ module ProtoBoeuf
       end
 
       def class_name(field)
+        #p field.type_name.delete_prefix(".").gsub(".", "::")
         field.type_name.delete_prefix(".").gsub(".", "::")
       end
 
@@ -1131,86 +1132,206 @@ module ProtoBoeuf
         RUBY
       end
 
-      def pull_message(type, dest, operator)
+      def translate_well_known(type)
+        return type unless type =~ /^[.]google[.]protobuf/
+
+        if type == ".google.protobuf.Duration"
+          @requires << "protoboeuf/protobuf/duration"
+        end
+
         if type == ".google.protobuf.BoolValue"
           @requires << "protoboeuf/protobuf/boolvalue"
-          type = "ProtoBoeuf::Protobuf::BoolValue"
         end
 
         if type == ".google.protobuf.Int32Value"
           @requires << "protoboeuf/protobuf/int32value"
-          type = "ProtoBoeuf::Protobuf::Int32Value"
         end
 
         if type == ".google.protobuf.Int64Value"
           @requires << "protoboeuf/protobuf/int64value"
-          type = "ProtoBoeuf::Protobuf::Int64Value"
         end
 
         if type == ".google.protobuf.UInt32Value"
           @requires << "protoboeuf/protobuf/uint32value"
-          type = "ProtoBoeuf::Protobuf::UInt32Value"
         end
 
         if type == ".google.protobuf.UInt64Value"
           @requires << "protoboeuf/protobuf/uint64value"
-          type = "ProtoBoeuf::Protobuf::UInt64Value"
         end
 
         if type == ".google.protobuf.FloatValue"
           @requires << "protoboeuf/protobuf/floatvalue"
-          type = "ProtoBoeuf::Protobuf::FloatValue"
         end
 
         if type == ".google.protobuf.DoubleValue"
           @requires << "protoboeuf/protobuf/doublevalue"
-          type = "ProtoBoeuf::Protobuf::DoubleValue"
         end
 
         if type == ".google.protobuf.StringValue"
           @requires << "protoboeuf/protobuf/stringvalue"
-          type = "ProtoBoeuf::Protobuf::StringValue"
         end
 
         if type == ".google.protobuf.BytesValue"
           @requires << "protoboeuf/protobuf/bytesvalue"
-          type = "ProtoBoeuf::Protobuf::BytesValue"
         end
 
         if type == ".google.protobuf.Timestamp"
           @requires << "protoboeuf/protobuf/timestamp"
-          type = "ProtoBoeuf::Protobuf::Timestamp"
         end
 
         if type == ".google.protobuf.Any"
           @requires << "protoboeuf/protobuf/any"
-          type = "ProtoBoeuf::Protobuf::Any"
         end
 
-        if type == ".google.protobuf.Duration"
-          @requires << "protoboeuf/protobuf/duration"
-          type = "ProtoBoeuf::Protobuf::Duration"
+        if type == ".google.protobuf.DescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumValueDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumValueOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ExtensionRangeOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSet"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSetDefaults"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FileDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FileOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.GeneratedCodeInfo"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MessageOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MethodDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MethodOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.OneofDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.OneofOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ServiceDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ServiceOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.SourceCodeInfo"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.UninterpretedOption"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.DescriptorProto.ExtensionRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.DescriptorProto.ReservedRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumDescriptorProto.EnumReservedRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ExtensionRangeOptions.Declaration"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions.EditionDefault"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions.FeatureSupport"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.GeneratedCodeInfo.Annotation"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.SourceCodeInfo.Location"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.UninterpretedOption.NamePart"
+          @requires << "protoboeuf/protobuf/descriptor"
         end
 
         if type == ".google.protobuf.FieldMask"
           @requires << "protoboeuf/protobuf/field_mask"
-          type = "ProtoBoeuf::Protobuf::FieldMask"
         end
 
         if type == ".google.protobuf.Struct"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::Struct"
         end
 
         if type == ".google.protobuf.Value"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::Value"
         end
 
         if type == ".google.protobuf.ListValue"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::ListValue"
         end
+
+        "ProtoBoeuf::Protobuf::" + type.split(".").drop(3).join("::")
+      end
+
+      def pull_message(type, dest, operator)
+        type = translate_well_known(type)
 
         <<~RUBY
           ## PULL_MESSAGE
@@ -1376,8 +1497,12 @@ module ProtoBoeuf
 
         tail = "\n" + modules.map { "end" }.join("\n")
 
-        #puts head + body + tail
-        return SyntaxTree.format(head + body + tail)
+        begin
+          return SyntaxTree.format(head + body + tail)
+        rescue
+          $stderr.puts head + body + tail
+          raise
+        end
       end
     end
 

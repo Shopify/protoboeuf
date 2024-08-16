@@ -23,6 +23,8 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
 
   require "tempfile"
+  require "pathname"
+
   unit = Tempfile.create(File.basename(t.source)) do |f|
     File.unlink f.path
     sh "protoc -I #{File.dirname(t.source)} #{File.basename(t.source)} -o #{f.path}"
