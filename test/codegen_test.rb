@@ -344,6 +344,24 @@ message TestMessageWithOneOf {
       assert klass::Example::Ruby::Package::Foo.new
     end
 
+    def test_requires
+      skip("no implicit well known type for protoc tests") if self.class == ProtoBoeuf::ProtoCCodeGenTest
+
+      unit = parse_string(<<~PROTO)
+        package example.proto;
+
+        message Foo {
+          optional google.protobuf.StringValue s = 1;
+        }
+      PROTO
+
+      gen = CodeGen.new unit
+      path = "protoboeuf/protobuf/stringvalue"
+      require_line = %r{require ['"]#{path}['"]}
+      assert ruby_script_header(gen.to_ruby.to_s).match?(require_line), "require should be in header"
+      refute gen.to_ruby(path).to_s.match?(require_line), "require should not be present"
+    end
+
     def test_bounds_checks
       proto = <<~PROTO
         message Test1 {
@@ -478,6 +496,10 @@ message TestMessageWithOneOf {
 
     def parse_file(string)
       ProtoBoeuf.parse_file string
+    end
+
+    def ruby_script_header(string)
+      string.split(/^(module|class)/).first
     end
   end
 
