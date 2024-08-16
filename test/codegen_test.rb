@@ -4,6 +4,26 @@ require "google/protobuf/descriptor_pb"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_uppercase_field_name
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Foo {
+  uint64 FieldName = 1;
+}
+      EOPROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      foo = klass::Foo.new
+      assert_equal 0, foo.FieldName
+      foo.FieldName = 1
+
+      foo = klass::Foo.decode klass::Foo.encode foo
+      assert_equal 1, foo.FieldName
+    end
+
     def test_map_complex_types
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";

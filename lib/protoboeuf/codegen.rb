@@ -274,8 +274,8 @@ module ProtoBoeuf
       def encode_oneof(field, value_expr, tagged)
         field.fields.map do |f|
           <<~RUBY
-            if @#{field.name} == :"#{f.name}"
-              #{encode_subtype(f, "@#{f.name}")}
+            if #{iv_name(field)} == :"#{f.name}"
+              #{encode_subtype(f, iv_name(f))}
             end
           RUBY
         end.join("\n")
@@ -594,7 +594,7 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map { |field|
-            "def #{field.name}=(v); @#{field.name} = #{class_name(field)}.resolve(v) || v; end"
+            "def #{field.name}=(v); #{iv_name(field)} = #{class_name(field)}.resolve(v) || v; end"
           }.join("\n") + "\n\n"
       end
 
@@ -608,7 +608,7 @@ module ProtoBoeuf
             #{type_signature(params: {v: convert_field_type(field)})}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
-              @#{field.name} = v
+              #{iv_name(field)} = v
             end
           RUBY
         }.join("\n") + "\n"
@@ -624,7 +624,7 @@ module ProtoBoeuf
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               #{set_bitmask(field)}
-              @#{field.name} = v
+              #{iv_name(field)} = v
             end
           RUBY
         }.join("\n") +
@@ -644,7 +644,7 @@ module ProtoBoeuf
               def #{field.name}=(v)
                 #{bounds_check(field, "v")}
                 @#{oneof.name} = :#{field.name}
-                @#{field.name} = v
+                #{iv_name(field)} = v
               end
             RUBY
           }.join("\n")
@@ -679,7 +679,7 @@ module ProtoBoeuf
               if #{lvar_read(field)} == nil
                 #{iv_name(field)} = #{default_for(field)}
               else
-                #{bounds_check(field, field.name)}
+                #{bounds_check(field, lvar_read(field))}
                 #{iv_name(oneof)} = :#{field.name}
                 #{iv_name(field)} = #{lvar_read(field)}
               end
@@ -718,7 +718,23 @@ module ProtoBoeuf
         if RUBY_KEYWORDS.include?(field.name)
           "binding.local_variable_get(:#{field.name})"
         else
+          if field.name =~ /^[A-Z_]/
+            "_#{field.name}"
+          else
+            field.name
+          end
+        end
+      end
+
+      def lvar_name(field)
+        if RUBY_KEYWORDS.include?(field.name)
           field.name
+        else
+          if field.name =~ /^[A-Z_]/
+            "_#{field.name}"
+          else
+            field.name
+          end
         end
       end
 
@@ -729,13 +745,13 @@ module ProtoBoeuf
 
       def initialize_required_field(field)
         <<~RUBY
-          #{bounds_check(field, field.name).chomp}
-          #{iv_name(field)} = #{field.name}
+          #{bounds_check(field, lvar_read(field)).chomp}
+          #{iv_name(field)} = #{lvar_read(field)}
         RUBY
       end
 
       def initialize_enum_field(field)
-        "#{iv_name(field)} = #{class_name(field)}.resolve(#{field.name}) || #{field.name}"
+        "#{iv_name(field)} = #{class_name(field)}.resolve(#{field.name}) || #{lvar_read(field)}"
       end
 
       def extra_api
@@ -921,10 +937,10 @@ module ProtoBoeuf
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
           <%- for field in @oneof_selection_fields -%>
-            @<%= field.name %> = nil # oneof field
+            <%= iv_name(field) %> = nil # oneof field
           <%- end -%>
           <%- for field in fields -%>
-            @<%= field.name %> = <%= default_for(field) %>
+            <%= iv_name(field) %> = <%= default_for(field) %>
           <%- end -%>
 
           <%- unless fields.empty? -%>
@@ -960,7 +976,7 @@ module ProtoBoeuf
       PACKED_REPEATED = ERB.new(<<~ERB)
         <%= pull_uint64("value", "=") %>
         goal = index + value
-        list = @<%= field.name %>
+        list = <%= iv_name(field) %>
         while true
           break if index >= goal
           <%= decode_subtype(field, field.type, "list", "<<") %>
@@ -1026,12 +1042,12 @@ module ProtoBoeuf
       def initialize_signature
         self.fields.flat_map { |f|
           if f.has_oneof_index? && !f.proto3_optional
-            "#{f.name}: nil"
+            "#{lvar_name(f)}: nil"
           else
             if f.proto3_optional
-              "#{f.name}: nil"
+              "#{lvar_name(f)}: nil"
             else
-              "#{f.name}: #{default_for(f)}"
+              "#{lvar_name(f)}: #{default_for(f)}"
             end
           end
         }.join(", ")
@@ -1110,7 +1126,7 @@ module ProtoBoeuf
       def decode_repeated(field)
         <<~RUBY
           ## DECODE REPEATED
-          list = @#{field.name}
+          list = #{iv_name(field)}
           while true
             #{decode_subtype(field, field.type, "list", "<<")}
             #{pull_tag}
@@ -1257,7 +1273,7 @@ module ProtoBoeuf
             end
           end
         else
-          decode_subtype(field, field.type, "@#{field.name}", "=")
+          decode_subtype(field, field.type, iv_name(field), "=")
         end
       end
 
