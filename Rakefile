@@ -23,6 +23,8 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
 
   unit = ProtoBoeuf.parse_file t.source
+  # force the package to be our own so we generate classes insode our namespace
+  unit.file.each { |f| f.package = "proto_boeuf.protobuf" }
 
   puts "writing #{t.name}"
   File.binwrite t.name, unit.to_ruby

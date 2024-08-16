@@ -1192,6 +1192,11 @@ module ProtoBoeuf
           type = "ProtoBoeuf::Protobuf::Any"
         end
 
+        if type == ".google.protobuf.Duration"
+          @requires << "protoboeuf/protobuf/duration"
+          type = "ProtoBoeuf::Protobuf::Duration"
+        end
+
         <<~RUBY
           ## PULL_MESSAGE
           #{pull_uint64("msg_len", "=")}
