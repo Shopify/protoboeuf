@@ -12,6 +12,47 @@
 require 'set'
 
 module ProtoBoeuf
+  module AST
+    class FileDescriptorSet
+      attr_reader :file
+
+      def initialize(files)
+        @file = files
+      end
+
+      def accept(viz)
+        viz.visit_file_descriptor_set(self)
+      end
+
+      def to_ruby
+        ProtoBoeuf::CodeGen.new(self).to_ruby
+      end
+    end
+
+    OneOfDescriptor = Struct.new(:name)
+
+    class FileOptions
+      def initialize
+        @options = []
+      end
+
+      def ruby_package
+        @options.find { |opt| opt.name == __method__.to_s }&.value
+      end
+
+      def <<(option)
+        @options << option
+      end
+
+      def [](i)
+        @options[i]
+      end
+    end
+
+    MessageOptions = Struct.new(:map_entry)
+    FieldOptions = Struct.new(:packed, :deprecated)
+  end
+
   # Position in a source file
   # Numbers start from 1
   class SrcPos
@@ -47,13 +88,9 @@ module ProtoBoeuf
   end
 
   # Whole unit of input (e.g. one source file)
-  class Unit < Struct.new(:package, :options, :imports, :messages, :enums)
+  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type)
     def accept(viz)
       viz.visit_unit self
-    end
-
-    def to_ruby
-      ProtoBoeuf::CodeGen.new(self).to_ruby
     end
   end
 
@@ -64,7 +101,7 @@ module ProtoBoeuf
   end
 
   # The messages field is for nested/local message definitions
-  class Message < Struct.new(:name, :fields, :messages, :enums, :pos)
+  class Message < Struct.new(:name, :field, :messages, :enum_type, :oneof_decl, :nested_type, :options, :pos)
     def accept(viz)
       viz.visit_message self
     end
@@ -92,60 +129,13 @@ module ProtoBoeuf
     end
   end
 
-  PACKED_TYPES = %w{
-    double float int32 int64 uint32 uint64 sint32 sint64 fixed32 fixed64
-    sfixed32 sfixed64 bool
-  }.to_set.freeze
-
-  SCALAR_TYPES = (PACKED_TYPES.to_a + %w{
-    string bytes
-  }).to_set.freeze
-
   # Represents the type of map<key_type, value_type>
   MapType = Struct.new(:key_type, :value_type)
 
   # Qualifier is :optional, :required or :repeated
-  class Field < Struct.new(:qualifier, :type, :name, :number, :options, :pos, :enum)
-    def field?
-      true
-    end
-
-    def oneof?
-      false
-    end
-
-    alias :enum? :enum
-
-    # Return a local variable name for use in generated code
-    def lvar_name
-      name
-    end
-
-    RUBY_KEYWORDS = %w{ __ENCODING__ __LINE__ __FILE__ BEGIN END alias and
-    begin break case class def defined?  do else elsif end ensure false for if
-    in module next nil not or redo rescue retry return self super then true
-    undef unless until when while yield }.to_set
-
-    # Return code for reading the local variable returned by `lvar_name`
-    def lvar_read
-      if RUBY_KEYWORDS.include?(name)
-        "binding.local_variable_get(:#{name})"
-      else
-        name
-      end
-    end
-
-    # Return an instance variable name for use in generated code
-    def iv_name
-      "@#{name}"
-    end
-
-    def map?
-      MapType === type
-    end
-
-    def reads_next_tag?
-      map? || (repeated? && !packed?)
+  class Field < Struct.new(:label, :type_name, :type, :name, :number, :options, :pos, :enum, :oneof_index, :proto3_optional)
+    def has_oneof_index?
+      oneof_index || false
     end
 
     def accept(viz)
@@ -155,82 +145,10 @@ module ProtoBoeuf
     def fold(viz, seed)
       viz.fold_field self, seed
     end
-
-    def optional?
-      qualifier == :optional
-    end
-
-    def repeated?
-      qualifier == :repeated
-    end
-
-    def packed?
-      # fields default to packed
-      if options.key?(:packed)
-        options[:packed]
-      else
-        # only scalar types that are not "string" or "bytes" are allowed
-        # to be packed.
-        # https://protobuf.dev/programming-guides/encoding/#packed
-        PACKED_TYPES.include?(type)
-      end
-    end
-
-    def scalar?
-      SCALAR_TYPES.include?(type)
-    end
-
-    def item_field
-      raise "not a repeated field" unless repeated?
-
-      @item_field ||= self.dup.tap { |f| f.qualifier = nil }
-    end
-
-    def key_field
-      raise "not a map field" unless map?
-
-      @key_field ||= Field.new(nil, type.key_type, "key", 1, {}, pos)
-    end
-
-    def value_field
-      raise "not a map field" unless map?
-
-      @value_field ||= Field.new(nil, type.value_type, "value", 2, {}, pos)
-    end
-
-    VARINT = 0
-    I64 = 1
-    LEN = 2
-    I32 = 5
-
-    def wire_type
-      if repeated? && packed?
-        LEN
-      elsif enum?
-        VARINT
-      else
-        case type
-        when "string", "bytes"
-          LEN
-        when "int64", "int32", "uint64", "bool", "sint32", "sint64", "uint32"
-          VARINT
-        when "double", "fixed64", "sfixed64"
-          I64
-        when "float", "fixed32", "sfixed32"
-          I32
-        when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-          LEN
-        when MapType
-          LEN
-        else
-          raise "Unknown wire type for field #{type}"
-        end
-      end
-    end
   end
 
   # Enum and enum constants
-  class Enum < Struct.new(:name, :constants, :options, :pos)
+  class Enum < Struct.new(:name, :value, :options, :pos)
     def accept(viz)
       viz.visit_enum self
     end
@@ -245,7 +163,7 @@ module ProtoBoeuf
   def self.check_enum_collision(enums)
     names = Set.new
     enums.each do |enum|
-      enum.constants.each do |const|
+      enum.value.each do |const|
         unless names.add? const.name
           raise ParseError.new("duplicate enum constant name #{const.name}", const.pos)
         end
@@ -267,10 +185,11 @@ module ProtoBoeuf
   # Parse an entire source unit (e.g. input file)
   def self.parse_unit(input)
     package = nil
-    options = []
+    options = nil
     imports = []
     messages = []
     enums = []
+    proto3 = false
 
     loop do
       input.eat_ws
@@ -291,6 +210,7 @@ module ProtoBoeuf
         if mode != "proto3"
           raise ParseError.new("syntax mode must be proto3", pos)
         end
+        proto3 = true
 
       elsif ident == "package"
         if package != nil
@@ -301,6 +221,7 @@ module ProtoBoeuf
 
       # Option
       elsif ident == "option"
+        options ||= AST::FileOptions.new
         options << parse_option(input, pos)
 
       # Import
@@ -312,7 +233,7 @@ module ProtoBoeuf
 
       # Message definition
       elsif ident == "message"
-        messages << parse_message(input, pos)
+        messages << parse_message(input, pos, enums, messages, [], proto3)
 
       # Enum definition
       elsif ident == "enum"
@@ -321,7 +242,7 @@ module ProtoBoeuf
     end
 
     check_enum_collision(enums)
-    Unit.new(package, options, imports, messages, enums)
+    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums)]
   end
 
   # Parse the name of a field type
@@ -407,7 +328,7 @@ module ProtoBoeuf
 
     # If there are no options, stop
     if !input.match '['
-      return options
+      return nil
     end
 
     loop do
@@ -433,7 +354,7 @@ module ProtoBoeuf
       input.expect ','
     end
 
-    options
+    AST::FieldOptions.new(options[:packed], options[:deprecated])
   end
 
   # Parse the reserved directive, e.g.
@@ -473,11 +394,12 @@ module ProtoBoeuf
   end
 
   # Parse the body for a message or oneof
-  def self.parse_body(input, pos, inside_message)
+  def self.parse_body(input, pos, inside_message, top_enums, top_messages, name_stack, oneof_decls, is_proto3)
     fields = []
     messages = []
     enums = []
     reserved = []
+    nested_type = []
 
     input.expect '{'
 
@@ -485,7 +407,7 @@ module ProtoBoeuf
       # Nested/local message and enum definitions
       if inside_message && (input.match 'message')
         msg_pos = input.pos
-        messages << parse_message(input, msg_pos)
+        nested_type << parse_message(input, msg_pos, top_enums, top_messages, name_stack, is_proto3)
         next
       end
       if inside_message && (input.match 'enum')
@@ -512,7 +434,16 @@ module ProtoBoeuf
         # If this is a oneof field
         oneof_pos = input.pos
         if input.match 'oneof'
-          fields << parse_oneof(input, oneof_pos)
+          oneof = parse_oneof(input, oneof_pos, top_enums, top_messages, name_stack, oneof_decls, is_proto3)
+          # fix oneof field names
+          oneof.fields.each do |field|
+            if field.type_name.count(".") == 1
+              type = field.type_name.delete_prefix(".")
+              field.type_name = qualify(top_messages + top_enums, nested_type + enums, name_stack, type)
+            end
+          end
+          fields.concat oneof.fields
+          oneof_decls << oneof
           next
         end
       end
@@ -533,7 +464,65 @@ module ProtoBoeuf
         raise ParseError.new("field number outside of valid range #{number}", field_pos)
       end
 
-      fields << Field.new(qualifier, type, name, number, options, field_pos)
+      if type.is_a?(MapType)
+        key_field = Field.new(:LABEL_OPTIONAL,
+          qualify(top_messages + top_enums, nested_type + enums, name_stack, type.key_type),
+          get_type(type.key_type, top_enums + enums),
+          "key",
+          1,
+          nil,
+          field_pos,
+          nil,
+          nil)
+
+        value_field = Field.new(:LABEL_OPTIONAL,
+          qualify(top_messages + top_enums, nested_type + enums, name_stack, type.value_type),
+          get_type(type.value_type, top_enums + enums),
+          "value",
+          2,
+          nil,
+          field_pos,
+          nil,
+          nil)
+
+        msg_options = AST::MessageOptions.new(true)
+
+        derived_message_name = name.split("_").map { |part|
+          part[0] = part[0].upcase
+          part
+        }.join + "Entry"
+
+        nested_msg = Message.new(derived_message_name,
+          [key_field, value_field],
+          nil,
+          [],
+          [],
+          [],
+          msg_options,
+          field_pos)
+
+        nested_type << nested_msg
+
+        map_field = Field.new(
+          label(:repeated),
+          qualify(top_messages + top_enums, nested_type, name_stack, derived_message_name),
+          get_type(type, top_enums + enums),
+          name,
+          number,
+          options, field_pos, nil, nil)
+
+        fields << map_field
+      else
+        if qualifier == :optional && is_proto3
+          fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, is_proto3)
+        else
+          if inside_message
+            fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, nil, false)
+          else
+            fields << Field.new(label(qualifier), qualify(top_messages + top_enums, nested_type + enums, name_stack, type), get_type(type, top_enums + enums), name, number, options, field_pos, nil, oneof_decls.length, false)
+          end
+        end
+      end
     end
 
     # Check that reserved field numbers are not used
@@ -587,22 +576,96 @@ module ProtoBoeuf
 
     check_enum_collision(enums)
 
-    return fields, messages, enums
+    return fields, messages, enums, nested_type
+  end
+
+  def self.label(qualifier)
+    case qualifier
+    when :optional then :LABEL_OPTIONAL
+    when :repeated then :LABEL_REPEATED
+    when :required then :LABEL_REQUIRED
+    when nil then :LABEL_OPTIONAL
+    else
+      raise NotImplementedError, qualifier.to_s
+    end
+  end
+
+  def self.qualify(top_messages, sibling_messages, stack, name)
+    case name
+      # if the type is simple, we don't need to qualify it
+    when "uint32", "bool", "double", "float", "int64", "uint64", "int32",
+      "fixed64", "fixed32", "string", "bytes", "sfixed32", "sfixed64",
+      "sint32", "sint64"
+      ""
+    else
+      if name =~ /\./ # if the name has dots, we'll assume it's fully qualified
+        "." + name
+      else
+        # If it's in a sibling, then use our current context
+        if sibling_messages.find { |msg| msg.name == name }
+          "." + (stack + [name]).join(".")
+        else
+          # If it's not a top level message, use the current context
+          if !top_messages.find { |msg| msg.name == name }
+            "." + (stack + [name]).join(".")
+          else
+            # Assume it's a top level type
+            "." + name
+          end
+        end
+      end
+    end
+  end
+
+  def self.get_type(type, enums)
+    if enums.any? { |e| e.name == type }
+      :TYPE_ENUM
+    else
+      case type
+      when "uint32" then :TYPE_UINT32
+      when "bool" then :TYPE_BOOL
+      when "double" then :TYPE_DOUBLE
+      when "float" then :TYPE_FLOAT
+      when "int64" then :TYPE_INT64
+      when "uint64" then :TYPE_UINT64
+      when "int32" then :TYPE_INT32
+      when "fixed64" then :TYPE_FIXED64
+      when "fixed32" then :TYPE_FIXED32
+      when "string" then :TYPE_STRING
+      when "bytes" then :TYPE_BYTES
+      when "sfixed32" then :TYPE_SFIXED32
+      when "sfixed64" then :TYPE_SFIXED64
+      when "sint32" then :TYPE_SINT32
+      when "sint64" then :TYPE_SINT64
+      when MapType then :TYPE_MESSAGE
+      else
+        :TYPE_MESSAGE
+      end
+    end
   end
 
   # Parse a message definition
-  def self.parse_message(input, pos)
+  def self.parse_message(input, pos, enums, top_messages, name_stack, is_proto3)
     input.eat_ws
     message_name = input.read_ident
-    fields, messages, enums = parse_body(input, pos, inside_message = true)
-    Message.new(message_name, fields, messages, enums, pos)
+    oneof_decls = []
+    fields, messages, enums, nested_type = parse_body(input, pos, true, enums, top_messages, name_stack + [message_name], oneof_decls, is_proto3)
+
+    # Add optional fields for proto3 optional fields
+    fields.find_all { |field|
+      field.label == :LABEL_OPTIONAL && field.proto3_optional
+    }.each { |optional|
+      optional.oneof_index = oneof_decls.length
+      oneof_decls << AST::OneOfDescriptor.new("_" + optional.name)
+    }
+    Message.new(message_name, fields, messages, enums, oneof_decls, nested_type, nil, pos)
   end
 
   # Parse a oneof definition
-  def self.parse_oneof(input, pos)
+  def self.parse_oneof(input, pos, enums, top_messages, name_stack, oneof_decls, is_proto3)
     input.eat_ws
     oneof_name = input.read_ident
-    fields, _, _ = parse_body(input, pos, inside_message = false)
+    fields, _, _ = parse_body(input, pos, false, enums, top_messages, name_stack, oneof_decls, is_proto3)
     OneOf.new(oneof_name, fields, pos)
   end
 
