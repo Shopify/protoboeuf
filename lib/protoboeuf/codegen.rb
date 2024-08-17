@@ -78,18 +78,20 @@ module ProtoBoeuf
         @enum_fields = []
         @oneof_selection_fields = []
 
-        proto3 = "proto3" == syntax
+        optional_field_count = 0
 
         message.field.each { |field|
           if field.has_oneof_index? && !field.proto3_optional
             (@oneof_fields[field.oneof_index] ||= []) << field
           else
-            if field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
+            if optional_field?(field)
               if field.type == :TYPE_ENUM
                 @enum_fields << field
               else
                 @optional_fields << field
               end
+              @optional_field_bit_lut[field.number] = optional_field_count
+              optional_field_count += 1
             else
               if field.type == :TYPE_ENUM
                 @enum_fields << field
@@ -108,10 +110,11 @@ module ProtoBoeuf
         @oneof_selection_fields = @oneof_fields.each_with_index.map { |item, i|
           item && message.oneof_decl[i]
         }
+      end
 
-        @optional_fields.each_with_index { |field, i|
-          @optional_field_bit_lut[field.number] = i
-        }
+      def optional_field?(field)
+        proto3 = "proto3" == syntax
+        field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
       end
 
       def result
@@ -951,10 +954,10 @@ module ProtoBoeuf
 
           while true
             <%- fields.each do |field| -%>
-              <%- if !field.has_oneof_index? || field.proto3_optional -%>
+              <%- if !field.has_oneof_index? || optional_field?(field) -%>
             if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
-              <%= set_bitmask(field) if field.proto3_optional %>
+              <%= set_bitmask(field) if optional_field?(field) %>
               return self if index >= len
               <%- if !reads_next_tag?(field) -%>
               <%= pull_tag %>
@@ -1439,7 +1442,7 @@ module ProtoBoeuf
       end
 
       def set_bitmask(field)
-        i = @optional_field_bit_lut[field.number]
+        i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
         "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
       end
 
@@ -1466,7 +1469,7 @@ module ProtoBoeuf
       end
 
       def test_bitmask(field)
-        i = @optional_field_bit_lut[field.number]
+        i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
         "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
       end
 
