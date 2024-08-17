@@ -12,6 +12,24 @@
 require 'set'
 
 module ProtoBoeuf
+  class Parser
+    class Error < StandardError
+      attr_reader :pos
+
+      def initialize(msg, pos)
+        @pos = pos
+        super(msg)
+      end
+
+      def to_s
+        "#{super}@#{@pos}"
+      end
+    end
+
+    class SyntaxVersionError < Error
+    end
+  end
+
   module AST
     class FileDescriptorSet
       attr_reader :file
@@ -75,20 +93,8 @@ module ProtoBoeuf
     end
   end
 
-  class ParseError < StandardError
-    attr_reader :pos
-    def initialize(msg, pos)
-      @pos = pos
-      super(msg)
-    end
-
-    def to_s
-      "#{super}@#{@pos}"
-    end
-  end
-
   # Whole unit of input (e.g. one source file)
-  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type)
+  class Unit < Struct.new(:package, :options, :imports, :message_type, :enum_type, :syntax)
     def accept(viz)
       viz.visit_unit self
     end
@@ -165,7 +171,7 @@ module ProtoBoeuf
     enums.each do |enum|
       enum.value.each do |const|
         unless names.add? const.name
-          raise ParseError.new("duplicate enum constant name #{const.name}", const.pos)
+          raise Parser::Error.new("duplicate enum constant name #{const.name}", const.pos)
         end
       end
     end
@@ -208,13 +214,13 @@ module ProtoBoeuf
         mode = input.read_string
         input.expect ';'
         if mode != "proto3"
-          raise ParseError.new("syntax mode must be proto3", pos)
+          raise Parser::SyntaxVersionError.new("syntax mode must be proto3", pos)
         end
         proto3 = true
 
       elsif ident == "package"
         if package != nil
-          raise ParseError.new("only one package name can be specified", pos)
+          raise Parser::Error.new("only one package name can be specified", pos)
         end
         package = parse_package_name(input)
         input.expect ';'
@@ -242,7 +248,7 @@ module ProtoBoeuf
     end
 
     check_enum_collision(enums)
-    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums)]
+    AST::FileDescriptorSet.new [Unit.new(package, options, imports, messages, enums, "proto3")]
   end
 
   # Parse the name of a field type
@@ -310,7 +316,7 @@ module ProtoBoeuf
       return input.read_ident
     end
 
-    raise ParseError.new("unknown option value type", input.pos)
+    raise Parser::Error.new("unknown option value type", input.pos)
   end
 
   # Parse a configuration option
@@ -461,7 +467,7 @@ module ProtoBoeuf
       input.expect ';'
 
       if number < 1 || number > 536_870_911
-        raise ParseError.new("field number outside of valid range #{number}", field_pos)
+        raise Parse::Error.new("field number outside of valid range #{number}", field_pos)
       end
 
       if type.is_a?(MapType)
@@ -534,7 +540,7 @@ module ProtoBoeuf
           # For each reserved range
           reserved.each do |r|
             if (r.respond_to?(:include?) && r.include?(field.number)) || r == field.number
-              raise ParseError.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+              raise Parse::Error.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
             end
           end
         end
@@ -550,7 +556,7 @@ module ProtoBoeuf
           check_dup_fields.call(field.fields)
         else
           if nums_used.include? field.number
-            raise ParseError.new("field number #{field.number} already in use", field.pos)
+            raise Parse::Error.new("field number #{field.number} already in use", field.pos)
           end
           nums_used.add(field.number)
         end
@@ -566,7 +572,7 @@ module ProtoBoeuf
           check_dup_names.call(field.fields)
         else
           if names_used.include? field.name
-            raise ParseError.new("field name #{field.name} already in use", field.pos)
+            raise Parse::Error.new("field name #{field.name} already in use", field.pos)
           end
           names_used.add(field.name)
         end
@@ -706,22 +712,22 @@ module ProtoBoeuf
       input.expect ';'
 
       if name != name.upcase
-        raise ParseError.new("enum constants should be uppercase identifiers", const_pos)
+        raise Parser::Error.new("enum constants should be uppercase identifiers", const_pos)
       end
 
       if constants.empty? && number != 0
-        raise ParseError.new("the first enum constant should always have value 0", const_pos)
+        raise Parser::Error.new("the first enum constant should always have value 0", const_pos)
       end
 
       if number < -0x80_00_00_00 || number > 0x7F_FF_FF_FF
-        raise ParseError.new("enum constants should be in int32 range", const_pos)
+        raise Parser::Error.new("enum constants should be in int32 range", const_pos)
       end
 
       # Check for duplicate constant names
       names_taken = Set.new
       constants.each do |cst|
         if names_taken.include? cst.name
-          raise ParseError.new("duplicate enum constant name #{cst.name}", cst.pos)
+          raise Parser::Error.new("duplicate enum constant name #{cst.name}", cst.pos)
         end
         names_taken.add cst.name
       end
@@ -734,7 +740,7 @@ module ProtoBoeuf
     numbers_taken = Set.new
     constants.each do |constant|
       if (numbers_taken.include? constant.number) && !allow_alias
-        raise ParseError.new("two constants use the number #{constant.number}", constant.pos)
+        raise Parser::Error.new("two constants use the number #{constant.number}", constant.pos)
       end
       numbers_taken.add(constant.number)
     end
@@ -744,7 +750,7 @@ module ProtoBoeuf
       # For each reserved range
       reserved.each do |r|
         if (r.respond_to?(:include?) && r.include?(constant.number)) || r == constant.number
-          raise ParseError.new("constant #{constant.name} uses reserved constant number #{constant.number}", constant.pos)
+          raise Parser::Error.new("constant #{constant.name} uses reserved constant number #{constant.number}", constant.pos)
         end
       end
     end
@@ -804,7 +810,7 @@ module ProtoBoeuf
     # Raise an exception if we can't match a specific string
     def expect(str)
       if !match(str)
-        raise ParseError.new("expected \"#{str}\"", pos)
+        raise Parser::Error.new("expected \"#{str}\"", pos)
       end
     end
 
@@ -850,11 +856,11 @@ module ProtoBoeuf
         if match_exact("/*")
           loop do
             if eof?
-              raise ParseError.new("end of input inside block comment", pos)
+              raise Parser::Error.new("end of input inside block comment", pos)
             end
 
             if match_exact("/*")
-              raise ParseError.new("encountered '/*' inside block comment", pos)
+              raise Parser::Error.new("encountered '/*' inside block comment", pos)
             end
 
             if match_exact("*/")
@@ -894,7 +900,7 @@ module ProtoBoeuf
       end
 
       if name.empty?
-        raise ParseError.new("expected identifier", pos)
+        raise Parser::Error.new("expected identifier", pos)
       end
 
       return name
@@ -910,7 +916,7 @@ module ProtoBoeuf
 
       loop do
         if eof?
-          raise ParseError.new("unexpected end of input inside string constant", pos)
+          raise Parser::Error.new("unexpected end of input inside string constant", pos)
         end
 
         # End of string
@@ -938,7 +944,7 @@ module ProtoBoeuf
           elsif match("t")
             str << "\t"
           else
-            raise ParseError.new("unknown escape sequence in string constant", pos)
+            raise Parser::Error.new("unknown escape sequence in string constant", pos)
           end
           next
         end
@@ -987,7 +993,7 @@ module ProtoBoeuf
       end
 
       if num_digits == 0
-        raise ParseError.new("expected integer", pos)
+        raise Parser::Error.new("expected integer", pos)
       end
 
       sign * value

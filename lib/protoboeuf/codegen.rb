@@ -55,14 +55,14 @@ module ProtoBoeuf
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types:, requires:)
-        new(message, toplevel_enums, generate_types:, requires:).result
+      def self.result(message, toplevel_enums, generate_types:, requires:, syntax:)
+        new(message, toplevel_enums, generate_types:, requires:, syntax:).result
       end
 
-      attr_reader :message, :fields, :oneof_fields
+      attr_reader :message, :fields, :oneof_fields, :syntax
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums, generate_types:, requires:)
+      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field
@@ -70,6 +70,7 @@ module ProtoBoeuf
         @requires = requires
         @generate_types = generate_types
         @has_submessage = false
+        @syntax = syntax
 
         @required_fields = []
         @optional_fields = []
@@ -77,12 +78,20 @@ module ProtoBoeuf
         @enum_fields = []
         @oneof_selection_fields = []
 
+        optional_field_count = 0
+
         message.field.each { |field|
           if field.has_oneof_index? && !field.proto3_optional
             (@oneof_fields[field.oneof_index] ||= []) << field
           else
-            if field.proto3_optional
-              @optional_fields << field
+            if optional_field?(field)
+              if field.type == :TYPE_ENUM
+                @enum_fields << field
+              else
+                @optional_fields << field
+              end
+              @optional_field_bit_lut[field.number] = optional_field_count
+              optional_field_count += 1
             else
               if field.type == :TYPE_ENUM
                 @enum_fields << field
@@ -101,10 +110,11 @@ module ProtoBoeuf
         @oneof_selection_fields = @oneof_fields.each_with_index.map { |item, i|
           item && message.oneof_decl[i]
         }
+      end
 
-        @optional_fields.each_with_index { |field, i|
-          @optional_field_bit_lut[field.number] = i
-        }
+      def optional_field?(field)
+        proto3 = "proto3" == syntax
+        field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
       end
 
       def result
@@ -516,7 +526,7 @@ module ProtoBoeuf
 
       def constants
         message.nested_type.reject { |x| x.options&.map_entry }.map { |x|
-          self.class.new(x, enum_field_types, generate_types:, requires:).result
+          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:).result
         }.join("\n")
       end
 
@@ -535,7 +545,7 @@ module ProtoBoeuf
       end
 
       def class_name(field)
-        field.type_name.delete_prefix(".").gsub(".", "::")
+        translate_well_known(field.type_name).delete_prefix(".").gsub(".", "::")
       end
 
       def required_readers
@@ -944,10 +954,10 @@ module ProtoBoeuf
 
           while true
             <%- fields.each do |field| -%>
-              <%- if !field.has_oneof_index? || field.proto3_optional -%>
+              <%- if !field.has_oneof_index? || optional_field?(field) -%>
             if tag == <%= tag_for_field(field, field.number) %>
               <%= decode_code(field) %>
-              <%= set_bitmask(field) if field.proto3_optional %>
+              <%= set_bitmask(field) if optional_field?(field) %>
               return self if index >= len
               <%- if !reads_next_tag?(field) -%>
               <%= pull_tag %>
@@ -1131,86 +1141,206 @@ module ProtoBoeuf
         RUBY
       end
 
-      def pull_message(type, dest, operator)
+      def translate_well_known(type)
+        return type unless type =~ /^[.]google[.]protobuf/
+
+        if type == ".google.protobuf.Duration"
+          @requires << "protoboeuf/protobuf/duration"
+        end
+
         if type == ".google.protobuf.BoolValue"
           @requires << "protoboeuf/protobuf/boolvalue"
-          type = "ProtoBoeuf::Protobuf::BoolValue"
         end
 
         if type == ".google.protobuf.Int32Value"
           @requires << "protoboeuf/protobuf/int32value"
-          type = "ProtoBoeuf::Protobuf::Int32Value"
         end
 
         if type == ".google.protobuf.Int64Value"
           @requires << "protoboeuf/protobuf/int64value"
-          type = "ProtoBoeuf::Protobuf::Int64Value"
         end
 
         if type == ".google.protobuf.UInt32Value"
           @requires << "protoboeuf/protobuf/uint32value"
-          type = "ProtoBoeuf::Protobuf::UInt32Value"
         end
 
         if type == ".google.protobuf.UInt64Value"
           @requires << "protoboeuf/protobuf/uint64value"
-          type = "ProtoBoeuf::Protobuf::UInt64Value"
         end
 
         if type == ".google.protobuf.FloatValue"
           @requires << "protoboeuf/protobuf/floatvalue"
-          type = "ProtoBoeuf::Protobuf::FloatValue"
         end
 
         if type == ".google.protobuf.DoubleValue"
           @requires << "protoboeuf/protobuf/doublevalue"
-          type = "ProtoBoeuf::Protobuf::DoubleValue"
         end
 
         if type == ".google.protobuf.StringValue"
           @requires << "protoboeuf/protobuf/stringvalue"
-          type = "ProtoBoeuf::Protobuf::StringValue"
         end
 
         if type == ".google.protobuf.BytesValue"
           @requires << "protoboeuf/protobuf/bytesvalue"
-          type = "ProtoBoeuf::Protobuf::BytesValue"
         end
 
         if type == ".google.protobuf.Timestamp"
           @requires << "protoboeuf/protobuf/timestamp"
-          type = "ProtoBoeuf::Protobuf::Timestamp"
         end
 
         if type == ".google.protobuf.Any"
           @requires << "protoboeuf/protobuf/any"
-          type = "ProtoBoeuf::Protobuf::Any"
         end
 
-        if type == ".google.protobuf.Duration"
-          @requires << "protoboeuf/protobuf/duration"
-          type = "ProtoBoeuf::Protobuf::Duration"
+        if type == ".google.protobuf.DescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumValueDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumValueOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ExtensionRangeOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSet"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSetDefaults"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FileDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FileOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.GeneratedCodeInfo"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MessageOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MethodDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.MethodOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.OneofDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.OneofOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ServiceDescriptorProto"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ServiceOptions"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.SourceCodeInfo"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.UninterpretedOption"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.DescriptorProto.ExtensionRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.DescriptorProto.ReservedRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.EnumDescriptorProto.EnumReservedRange"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.ExtensionRangeOptions.Declaration"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions.EditionDefault"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.FieldOptions.FeatureSupport"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.GeneratedCodeInfo.Annotation"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.SourceCodeInfo.Location"
+          @requires << "protoboeuf/protobuf/descriptor"
+        end
+
+        if type == ".google.protobuf.UninterpretedOption.NamePart"
+          @requires << "protoboeuf/protobuf/descriptor"
         end
 
         if type == ".google.protobuf.FieldMask"
           @requires << "protoboeuf/protobuf/field_mask"
-          type = "ProtoBoeuf::Protobuf::FieldMask"
         end
 
         if type == ".google.protobuf.Struct"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::Struct"
         end
 
         if type == ".google.protobuf.Value"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::Value"
         end
 
         if type == ".google.protobuf.ListValue"
           @requires << "protoboeuf/protobuf/struct"
-          type = "ProtoBoeuf::Protobuf::ListValue"
         end
+
+        "ProtoBoeuf::Protobuf::" + type.split(".").drop(3).join("::")
+      end
+
+      def pull_message(type, dest, operator)
+        type = translate_well_known(type)
 
         <<~RUBY
           ## PULL_MESSAGE
@@ -1312,7 +1442,7 @@ module ProtoBoeuf
       end
 
       def set_bitmask(field)
-        i = @optional_field_bit_lut[field.number]
+        i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
         "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
       end
 
@@ -1339,7 +1469,7 @@ module ProtoBoeuf
       end
 
       def test_bitmask(field)
-        i = @optional_field_bit_lut[field.number]
+        i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
         "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
       end
 
@@ -1369,15 +1499,19 @@ module ProtoBoeuf
 
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:) }.join
+        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax) }.join
 
         head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
 
         tail = "\n" + modules.map { "end" }.join("\n")
 
-        #puts head + body + tail
-        return SyntaxTree.format(head + body + tail)
+        begin
+          return SyntaxTree.format(head + body + tail)
+        rescue
+          $stderr.puts head + body + tail
+          raise
+        end
       end
     end
 
