@@ -1336,6 +1336,10 @@ module ProtoBoeuf
           @requires << "protoboeuf/protobuf/struct"
         end
 
+        if type == ".google.protobuf.NullValue"
+          @requires << "protoboeuf/protobuf/struct"
+        end
+
         "ProtoBoeuf::Protobuf::" + type.split(".").drop(3).join("::")
       end
 
