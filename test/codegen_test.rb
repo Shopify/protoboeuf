@@ -1,6 +1,7 @@
 require "helper"
 require "tempfile"
 require "google/protobuf/descriptor_pb"
+require_relative "./fixtures/package_test_pb.rb"
 
 module ProtoBoeuf
   class CodeGenTest < Test
@@ -344,6 +345,35 @@ message TestMessageWithOneOf {
       assert klass::Example::Ruby::Package::Foo.new
     end
 
+    def test_type_name_to_class_name
+      unit = parse_string(<<~PROTO)
+        package example_foo.proto;
+        import "package_test.proto";
+
+        message Foo {
+          required package_test.proto3.Test1 t = 1;
+        }
+      PROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+      msg = klass::ExampleFoo::Proto::Foo.new(
+        # Just put anything so that the "t" field goes through the encode/decode.
+        t: Object.new.tap { |o| def o._encode(*); end }
+      )
+
+      # ProtoBoeuf expects decode_from but the protoc version won't define that method.
+      # We just want to test that there are no other errors from the class we
+      # just generated so make this a no-op.
+      unless PackageTest::Proto3::Test1.instance_methods.include?(:decode_from)
+        PackageTest::Proto3::Test1.define_method(:decode_from) { |*| :ok }
+      end
+
+      assert klass::ExampleFoo::Proto::Foo.decode(
+        klass::ExampleFoo::Proto::Foo.encode(msg)
+      )
+    end
+
     def test_requires
       skip("no implicit well known type for protoc tests") if self.class == ProtoBoeuf::ProtoCCodeGenTest
 
@@ -504,13 +534,17 @@ message TestMessageWithOneOf {
   end
 
   class ProtoCCodeGenTest < CodeGenTest
+    def import_path
+      File.expand_path("fixtures", __dir__)
+    end
+
     def parse_string(string)
       begin
         binfile = Tempfile.new
         Tempfile.create do |f|
           f.write string
           f.flush
-          system("protoc -o #{binfile.path} -I / #{f.path}")
+          system("protoc -o #{binfile.path} -I/:'#{import_path}' #{f.path}")
         end
         binfile.rewind
         Google::Protobuf::FileDescriptorSet.decode binfile.read
@@ -527,7 +561,7 @@ message TestMessageWithOneOf {
         Tempfile.create do |f|
           f.write string
           f.flush
-          system("protoc -o #{binfile.path} -I / #{f.path}")
+          system("protoc -o #{binfile.path} -I/:'#{import_path}' #{f.path}")
         end
         binfile.rewind
         Google::Protobuf::FileDescriptorSet.decode binfile.read

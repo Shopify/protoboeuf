@@ -544,8 +544,15 @@ module ProtoBoeuf
           }.join("\n") + "\n"
       end
 
+      # Translate ".package.name::NestedMessage" into "Package::Name::NestedMessage".
       def class_name(type)
-        translate_well_known(type).delete_prefix(".").gsub(".", "::")
+        translate_well_known(type).delete_prefix(".").split(/\.|::/).map do |part|
+          part.split("_").map do |s|
+            # We need to "constantize" the fields that don't look like constants
+            # but if they already do we don't want to break the casing.
+            s.match?(/^[A-Z]/) ? s : s.capitalize
+          end.join("")
+        end.join("::")
       end
 
       def required_readers
