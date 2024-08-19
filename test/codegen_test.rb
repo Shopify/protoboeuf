@@ -29,6 +29,49 @@ message Vehicle
       assert_equal :SPORTS_CAR, msg.type
     end
 
+    def test_too_many_fields_multiple
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TooManyFieldsAgain {
+  uint32 a = 31;
+  uint32 b = 36;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::TooManyFieldsAgain.new(a: 0xFF, b: 456)
+      data = klass::TooManyFieldsAgain.encode(msg)
+
+      assert_equal ::TooManyFieldsAgain.encode(::TooManyFieldsAgain.new(a: 0xFF, b: 456)), data
+
+      msg = klass::TooManyFieldsAgain.decode(data)
+      assert_equal 0xFF, msg.a
+      assert_equal 456, msg.b
+    end
+
+    def test_too_many_fields
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message TooManyFields {
+  uint32 a = 32;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::TooManyFields.new(a: 123)
+      data = klass::TooManyFields.encode(msg)
+      assert_equal ::TooManyFields.encode(::TooManyFields.new(a: 123)), data
+
+      msg = klass::TooManyFields.decode(data)
+      assert_equal 123, msg.a
+    end
+
     def test_uppercase_field_name
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
