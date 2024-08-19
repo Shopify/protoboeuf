@@ -287,15 +287,68 @@ module ProtoBoeuf
       end
 
       def encode_repeated(field, value_expr, tagged)
-        <<~RUBY
+        if CodeGen.packed?(field)
+          <<~RUBY
           list = #{value_expr}
           if list.size > 0
-            #{encode_tag_and_length(field, CodeGen.packed?(field), "list.size")}
+            #{encode_tag(field)}
+
+            # Save the buffer size before appending the repeated bytes
+            current_len = buff.bytesize
+
+            # Write a single dummy byte to later store encoded length
+            buff << 42 # "*"
+
+            # write each item
             list.each do |item|
-              #{encode_leaf_type(field, "item", !CodeGen.packed?(field))}
+              #{encode_leaf_type(field, "item", false)}
+            end
+
+            # Calculate the submessage's size
+            submessage_size = buff.bytesize - current_len - 1
+
+            # Hope the size fits in one byte
+            byte = submessage_size & 0x7F
+            submessage_size >>= 7
+            byte |= 0x80 if submessage_size > 0
+            buff.setbyte(current_len, byte)
+
+            # If the sub message was bigger
+            if submessage_size > 0
+              current_len += 1
+
+              # compute how much we need to shift
+              encoded_int_len = 0
+              remaining_size = submessage_size
+              while remaining_size != 0
+                remaining_size >>= 7
+                encoded_int_len += 1
+              end
+
+              # Make space in the string with dummy bytes
+              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+              # Overwrite the dummy bytes with the encoded length
+              while submessage_size != 0
+                byte = submessage_size & 0x7F
+                submessage_size >>= 7
+                byte |= 0x80 if submessage_size > 0
+                buff.setbyte(current_len, byte)
+                current_len += 1
+              end
             end
           end
-        RUBY
+          RUBY
+        else
+          <<~RUBY
+          list = #{value_expr}
+          if list.size > 0
+            list.each do |item|
+              #{encode_leaf_type(field, "item", true)}
+            end
+          end
+          RUBY
+        end
       end
 
       def encode_string(field, value_expr, tagged)
