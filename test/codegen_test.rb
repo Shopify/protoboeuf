@@ -75,9 +75,34 @@ message TestEmbedder {
       assert_equal "hello world", obj.message
     end
 
-    def test_decode_repeated
-      skip "fixme"
+    def test_decode_repeated_unpacked
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
 
+message UnpackedFields {
+  uint32 a = 1;
+  repeated uint32 ids = 2 [packed = false];
+  int64 b = 3;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::UnpackedFields.new(a: 123, ids: [1, 2, 0xFF, 0xFF], b: 0xCAFE)
+
+      data = ::UnpackedFields.encode(::UnpackedFields.new.tap { |x|
+        x.a = 123
+        x.ids[0] = 1
+        x.ids[1] = 2
+        x.ids[2] = 0xFF
+        x.ids[3] = 0xFF
+        x.b = 0xCAFE
+      })
+
+      assert_equal data.bytes, klass::UnpackedFields.encode(msg).bytes
+    end
+
+    def test_decode_repeated
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
 
@@ -89,12 +114,12 @@ message TestRepeatedField {
       gen = CodeGen.new unit
       klass = Class.new { self.class_eval gen.to_ruby }
 
-      msg = klass::TestRepeatedField.new(e: [1, 2, 3, 0xFF], another_value: 0xCAFE)
+      msg = klass::TestRepeatedField.new(e: [1, 2, 0xFF, 0xFF], another_value: 0xCAFE)
 
       data = ::TestRepeatedField.encode(::TestRepeatedField.new.tap { |x|
         x.e[0] = 1
         x.e[1] = 2
-        x.e[2] = 3
+        x.e[2] = 0xFF
         x.e[3] = 0xFF
         x.another_value = 0xCAFE
       })
