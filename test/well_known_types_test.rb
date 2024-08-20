@@ -2,6 +2,29 @@ require "helper"
 require "protoboeuf/protobuf/uint64value"
 
 class WellKnownTypesTest < ProtoBoeuf::Test
+  def test_any
+    unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Foo {
+  google.protobuf.Any any = 1;
+}
+    EOPROTO
+
+    gen = ProtoBoeuf::CodeGen.new unit
+    klass = Class.new { self.class_eval gen.to_ruby }
+
+    foo = klass::Foo.new
+    foo.any = ProtoBoeuf::Protobuf::Any.new(
+      type_url: "url",
+      value: "val",
+    )
+
+    foo = klass::Foo.decode klass::Foo.encode foo
+    assert_equal("url", foo.any.type_url)
+    assert_equal("val", foo.any.value)
+  end
+
   def test_field_mask
     unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
