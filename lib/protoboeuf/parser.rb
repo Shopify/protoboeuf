@@ -467,7 +467,7 @@ module ProtoBoeuf
       input.expect ';'
 
       if number < 1 || number > 536_870_911
-        raise Parse::Error.new("field number outside of valid range #{number}", field_pos)
+        raise Parser::Error.new("field number outside of valid range #{number}", field_pos)
       end
 
       if type.is_a?(MapType)
@@ -540,7 +540,7 @@ module ProtoBoeuf
           # For each reserved range
           reserved.each do |r|
             if (r.respond_to?(:include?) && r.include?(field.number)) || r == field.number
-              raise Parse::Error.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
+              raise Parser::Error.new("field #{field.name} uses reserved field number #{field.number}", field.pos)
             end
           end
         end
@@ -556,7 +556,7 @@ module ProtoBoeuf
           check_dup_fields.call(field.fields)
         else
           if nums_used.include? field.number
-            raise Parse::Error.new("field number #{field.number} already in use", field.pos)
+            raise Parser::Error.new("field number #{field.number} already in use", field.pos)
           end
           nums_used.add(field.number)
         end
@@ -572,7 +572,7 @@ module ProtoBoeuf
           check_dup_names.call(field.fields)
         else
           if names_used.include? field.name
-            raise Parse::Error.new("field name #{field.name} already in use", field.pos)
+            raise Parser::Error.new("field name #{field.name} already in use", field.pos)
           end
           names_used.add(field.name)
         end
