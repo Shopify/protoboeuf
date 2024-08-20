@@ -1,6 +1,8 @@
 require "helper"
 
 class ParserTest < ProtoBoeuf::Test
+  ParserError = ProtoBoeuf::Parser::Error
+
   def test_parse_empty_unit
     parse_string('')
   end
@@ -8,13 +10,13 @@ class ParserTest < ProtoBoeuf::Test
   def block_comments
     parse_string('syntax = "proto3" /*hey*/;')
     parse_string("syntax = \"proto3\"; /*hey\nyou*/ message Foo {}")
-    assert_raises { parse_string('syntax = "proto3"; /*hi/*') }
-    assert_raises { parse_string('syntax = "proto3"; /*hi /*nested*/ */') }
+    assert_raises(ParserError) { parse_string('syntax = "proto3"; /*hi/*') }
+    assert_raises(ParserError) { parse_string('syntax = "proto3"; /*hi /*nested*/ */') }
   end
 
   def test_syntax_mode
     parse_string('syntax = "proto3";')
-    assert_raises { parse_string('syntax = "proto0";') }
+    assert_raises(ParserError) { parse_string('syntax = "proto0";') }
   end
 
   def test_option_str
@@ -47,7 +49,7 @@ class ParserTest < ProtoBoeuf::Test
   end
 
   def test_msg_eos
-    assert_raises { parse_string('message Foo {') }
+    assert_raises(ParserError) { parse_string('message Foo {') }
   end
 
   def test_regress_newline
@@ -76,27 +78,27 @@ class ParserTest < ProtoBoeuf::Test
 
   def test_message_reserved
     parse_string('message Test1 { int32 a = 1; reserved 2; }')
-    assert_raises { parse_string('message Test1 { int32 a = 1; reserved 1; }') }
-    assert_raises { parse_string('message Test1 { int32 a = 2; reserved 1 to 10; }') }
-    assert_raises { parse_string('message Test1 { int32 a = 2; reserved 1 to max; }') }
-    assert_raises { parse_string('message Test1 { int32 a = 3; reserved 1, 2, 3, 4; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 1; reserved 1; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 2; reserved 1 to 10; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 2; reserved 1 to max; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 3; reserved 1, 2, 3, 4; }') }
   end
 
   def test_negative_field_num
-    assert_raises { parse_string('message Test1 { optional int32 a = -1; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { optional int32 a = -1; }') }
   end
 
   def test_duplicate_field_num
-    assert_raises { parse_string('message Test1 { int32 a = 1; int32 b = 1; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 1; int32 b = 1; }') }
   end
 
   def test_duplicate_field_names
-    assert_raises { parse_string('message Test1 { int32 a = 1; int32 a = 2; }') }
-    assert_raises { parse_string('message Test1 { int32 a = 1; oneof { int32 a = 2; } }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 1; int32 a = 2; }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 1; oneof { int32 a = 2; } }') }
   end
 
   def test_duplicate_enum_const_names
-    assert_raises { parse_string('message Enum { FOO=1; FOO=2; }') }
+    assert_raises(ParserError) { parse_string('message Enum { FOO=1; FOO=2; }') }
   end
 
   def test_msg_multiple_fields
@@ -116,7 +118,7 @@ class ParserTest < ProtoBoeuf::Test
     parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 3; } }')
 
     # Duplicate field number
-    assert_raises { parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 1; } }') }
+    assert_raises(ParserError) { parse_string('message Test1 { int32 a = 1; oneof foo { int32 b = 2; int32 c = 1; } }') }
   end
 
   def test_enum
@@ -136,22 +138,22 @@ class ParserTest < ProtoBoeuf::Test
   end
 
   def test_enum_collision
-    assert_raises { parse_string('enum Foo1 { BAR=0; } enum Foo2 { BAR=0; }') }
+    assert_raises(ParserError) { parse_string('enum Foo1 { BAR=0; } enum Foo2 { BAR=0; }') }
 
     parse_string('message Msg { enum Foo1 { BAR=0; } enum Foo2 { BAR2=0; } }')
-    assert_raises { parse_string('message Msg { enum Foo1 { BAR=0; } enum Foo2 { BAR=0; } }') }
+    assert_raises(ParserError) { parse_string('message Msg { enum Foo1 { BAR=0; } enum Foo2 { BAR=0; } }') }
   end
 
   def test_enum_zero_const
     # Should always have an enum constant with value 0
-     assert_raises { parse_string('enum Foo { CONST0 = 1; }') }
+     assert_raises(ParserError) { parse_string('enum Foo { CONST0 = 1; }') }
 
      # The first constant needs to have value 0
-     assert_raises { parse_string('enum Foo { BAR = 1; FOO = 0; }') }
+     assert_raises(ParserError) { parse_string('enum Foo { BAR = 1; FOO = 0; }') }
   end
 
   def test_enum_duplicate
-    assert_raises { parse_string('enum Foo { CONST0 = 0; CONST1 = 0; }') }
+    assert_raises(ParserError) { parse_string('enum Foo { CONST0 = 0; CONST1 = 0; }') }
   end
 
   def test_enum_alias
@@ -168,9 +170,9 @@ class ParserTest < ProtoBoeuf::Test
 
   def test_enum_reserved
     parse_string('enum Foo { C0 = 0; C1 = 1; reserved 5; }')
-    assert_raises { parse_string('enum Foo { C0 = 0; C1 = 1; reserved 1; }') }
-    assert_raises { parse_string('enum Foo { C0 = 0; C1 = 5; reserved 1 to 10; }') }
-    assert_raises { parse_string('enum Foo { C0 = 0; C1 = 5; reserved 2 to max; }') }
+    assert_raises(ParserError) { parse_string('enum Foo { C0 = 0; C1 = 1; reserved 1; }') }
+    assert_raises(ParserError) { parse_string('enum Foo { C0 = 0; C1 = 5; reserved 1 to 10; }') }
+    assert_raises(ParserError) { parse_string('enum Foo { C0 = 0; C1 = 5; reserved 2 to max; }') }
   end
 
   def test_package_name
@@ -183,7 +185,7 @@ class ParserTest < ProtoBoeuf::Test
     unit = parse_string('package foo.bar.bif;')
     assert_equal 'foo.bar.bif', unit.package
 
-    assert_raises { parse_string('package foo.bar.bif.;') }
+    assert_raises(ParserError) { parse_string('package foo.bar.bif.;') }
 
     unit = parse_string('package .foo.bar; message Test1 { int32 a = 1; }')
     assert_equal '.foo.bar', unit.package
