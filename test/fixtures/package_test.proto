@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package package_test.proto3;
+
+message Test1 {
+  message SubMsg {
+    int32 a = 1;
+  }
+}

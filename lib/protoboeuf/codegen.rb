@@ -593,12 +593,19 @@ module ProtoBoeuf
 
         "  # enum readers\n" +
           fields.map { |field|
-            "def #{field.name}; #{class_name(field)}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
+            "def #{field.name}; #{class_name(field.type_name)}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
           }.join("\n") + "\n"
       end
 
-      def class_name(field)
-        translate_well_known(field.type_name).delete_prefix(".").gsub(".", "::")
+      # Translate ".package.name::NestedMessage" into "Package::Name::NestedMessage".
+      def class_name(type)
+        translate_well_known(type).delete_prefix(".").split(/\.|::/).map do |part|
+          part.split("_").map do |s|
+            # We need to "constantize" the fields that don't look like constants
+            # but if they already do we don't want to break the casing.
+            s.match?(/^[A-Z]/) ? s : s.capitalize
+          end.join("")
+        end.join("::")
       end
 
       def required_readers
@@ -652,7 +659,7 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map { |field|
-            "def #{field.name}=(v); #{iv_name(field)} = #{class_name(field)}.resolve(v) || v; end"
+            "def #{field.name}=(v); #{iv_name(field)} = #{class_name(field.type_name)}.resolve(v) || v; end"
           }.join("\n") + "\n\n"
       end
 
@@ -809,7 +816,7 @@ module ProtoBoeuf
       end
 
       def initialize_enum_field(field)
-        "#{iv_name(field)} = #{class_name(field)}.resolve(#{field.name}) || #{lvar_read(field)}"
+        "#{iv_name(field)} = #{class_name(field.type_name)}.resolve(#{field.name}) || #{lvar_read(field)}"
       end
 
       def extra_api
@@ -1402,7 +1409,7 @@ module ProtoBoeuf
         <<~RUBY
           ## PULL_MESSAGE
           #{pull_uint64("msg_len", "=")}
-          #{dest} #{operator} #{type}.allocate.decode_from(buff, index, index += msg_len)
+          #{dest} #{operator} #{class_name(type)}.allocate.decode_from(buff, index, index += msg_len)
           ## END PULL_MESSAGE
         RUBY
       end
