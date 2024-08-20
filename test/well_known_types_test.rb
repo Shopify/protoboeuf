@@ -83,6 +83,20 @@ message Foo {
     assert_equal 1234, v.value
   end
 
+  def test_null
+    unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+message Foo {
+  NullValue null = 1;
+}
+    EOPROTO
+
+    gen = ProtoBoeuf::CodeGen.new unit
+    klass = Class.new { self.class_eval gen.to_ruby }
+
+    assert_nil(klass::Foo.new.null)
+  end
+
   def test_struct
     unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
