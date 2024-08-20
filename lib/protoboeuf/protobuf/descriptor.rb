@@ -174,6 +174,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -664,6 +665,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -1015,6 +1017,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -1094,6 +1097,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -1173,6 +1177,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -1252,6 +1257,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x3a
             end
             ## END DECODE REPEATED
@@ -3043,6 +3049,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -3122,6 +3129,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -3201,6 +3209,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -3280,6 +3289,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -3359,6 +3369,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -3438,6 +3449,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x42
             end
             ## END DECODE REPEATED
@@ -3590,6 +3602,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x4a
             end
             ## END DECODE REPEATED
@@ -3666,6 +3679,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x52
             end
             ## END DECODE REPEATED
@@ -4751,6 +4765,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -4830,6 +4845,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -7206,6 +7222,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -7358,6 +7375,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -7434,6 +7452,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -8235,6 +8254,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -10343,6 +10363,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -11046,6 +11067,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -12639,6 +12661,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x98
             end
             ## END DECODE REPEATED
@@ -12718,6 +12741,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa2
             end
             ## END DECODE REPEATED
@@ -12943,6 +12967,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -13493,6 +13518,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -13893,6 +13919,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -14392,6 +14419,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -14808,6 +14836,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -15286,6 +15315,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -15806,6 +15836,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -17665,6 +17696,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -18514,6 +18546,7 @@ module ProtoBoeuf
                 tag = buff.getbyte(index)
                 index += 1
 
+                return self if index >= len
                 break unless tag == 0x32
               end
               ## END DECODE REPEATED
@@ -18804,6 +18837,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -19705,6 +19739,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED

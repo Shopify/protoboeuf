@@ -1204,6 +1204,7 @@ module ProtoBoeuf
           while true
             #{decode_subtype(field, field.type, "list", "<<")}
             #{pull_tag}
+            return self if index >= len
             break unless tag == #{tag_for_field(field, field.number)}
           end
           ## END DECODE REPEATED
