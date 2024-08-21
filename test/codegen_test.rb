@@ -207,6 +207,28 @@ message Test1 {
       assert_equal :BAR, msg.enum_1
     end
 
+    def test_neg_enum
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+enum TestEnum {
+  FOO = 0;
+  BAR = 1;
+  BAZ = -1;
+}
+
+message Test1 {
+  TestEnum enum_1 = 1;
+}
+      EOPROTO
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::Test1.new(enum_1: :BAZ)
+      msg = klass::Test1.decode(klass::Test1.encode(msg))
+      assert_equal :BAZ, msg.enum_1
+    end
+
     def test_required_field
       unit = parse_string(<<-EOPROTO)
 message Test1 {
