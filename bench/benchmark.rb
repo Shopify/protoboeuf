@@ -10,15 +10,19 @@ Random.srand(42)
 
 # Recursively populate the type map
 def pop_type_map(type_map, obj)
-  if defined? obj.messages
-    obj.messages.each do |msg|
+  if obj.message_type
+    obj.message_type.each do |msg|
       type_map[msg.name] = msg
-      pop_type_map(type_map, msg)
+      if msg.nested_type
+        msg.nested_type.each do |sub_msg|
+          pop_type_map(type_map, sub_msg)
+        end
+      end
     end
   end
 
-  if defined? obj.enums
-    obj.enums.each do |enum|
+  if obj.enum_type
+    obj.enum_type.each do |enum|
       type_map[enum.name] = enum
       pop_type_map(type_map, enum)
     end
@@ -28,19 +32,22 @@ end
 # Generate a fake value for a field
 def gen_fake_field_val(type_map, field)
   case field.type
-  when "bool"
+  when :TYPE_BOOL
     rand() < 0.5
-  when "string"
+  when :TYPE_STRING
     # TODO: better random strings with variable lengths
     "foobar" + '_foo' * rand(0..8)
-  when "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32"
+  when :TYPE_UINT64, :TYPE_INT32, :TYPE_SINT32, :TYPE_UINT32, :TYPE_INT64,
+            :TYPE_SINT64, :TYPE_FIXED64, :TYPE_FIXED32, :TYPE_SFIXED32,
+            :TYPE_SFIXED64, :TYPE_ENUM
     # TODO: we may want a normal or poisson distribution?
     # We don't care about negative integers for this benchmark (rarely used)
     rand(0..300)
-  when "float", "double"
+  when :TYPE_DOUBLE, :TYPE_FLOAT
     rand() * 100.0
   else
-    gen_fake_data(type_map, field.type)
+    name = field.type_name.sub(/^\./, '').gsub(".", "::")
+    gen_fake_data(type_map, name)
   end
 end
 
@@ -51,12 +58,12 @@ def gen_fake_msg(type_map, msg_def)
   msg = msg_class.new
 
   # For each field of this message
-  msg_def.fields.each do |field|
-    if field.repeated?
+  msg_def.field.each do |field|
+    if field.label == :LABEL_REPEATED
       arr = (0..20).map { gen_fake_field_val(type_map, field) }
       repeated_field = msg.send("#{field.name}")
       repeated_field.replace(arr)
-    elsif field.optional?
+    elsif field.proto3_optional
       # If optional, randomly set the field or not
       if rand() < 0.5
         field_val = gen_fake_field_val(type_map, field)
@@ -99,15 +106,20 @@ def gen_walk_fn(type_def)
 
   if type_def.instance_of? ProtoBoeuf::Message
     # For each field of this message
-    type_def.fields.each do |field|
-      if field.repeated?
-        out += "  node.#{field.name}.each { |v| walk_#{field.type}(v) }\n"
-      else
-        case field.type
-        when "bool", "string", "int32", "int64", "uint64", "bool", "sint32", "sint64", "uint32", "float", "double"
-          out += "  node.#{field.name}\n"
+    type_def.field.each do |field|
+      if field.label == :LABEL_REPEATED
+        if field.type == :TYPE_MESSAGE
+          name = field.type_name.sub(/^\./, '').gsub(".", "::")
+          out += "  node.#{field.name}.each { |v| walk_#{name}(v) }\n"
         else
-          out += "  walk_#{field.type}(node.#{field.name})\n"
+          out += "  node.#{field.name}.each { |v| walk_#{field.type}(v) }\n"
+        end
+      else
+        if field.type == :TYPE_MESSAGE
+          name = field.type_name.sub(/^\./, '').gsub(".", "::")
+          out += "  walk_#{name}(node.#{field.name})\n"
+        else
+          out += "  node.#{field.name}\n"
         end
       end
     end
@@ -130,7 +142,7 @@ unit = ProtoBoeuf.parse_file "bench/fixtures/benchmark.proto"
 # NOTE: for the benchmark, we can guarantee that we don't have overlapping
 # type names, so we can keep a hash of name => definition
 type_map = {}
-pop_type_map(type_map, unit)
+pop_type_map(type_map, unit.file.first)
 
 # Generate a sum functions for the root type
 type_map.each { |type_name, type_def| gen_walk_fn(type_def) }
