@@ -27,10 +27,102 @@ $ bundle
 You can compile your own `.proto` files to generate importable `.rb` files:
 
 ```
-bin/protoboeuf test.proto >> test.rb
+$ protoc -I examples test.proto -o test.bproto
+$ protoboeuf -b test.bproto > test.rb
 ```
 
 The above will produce a `.rb` file with Ruby classes representing each message type.
+
+You can also generate Ruby that contains Sorbet types by using the `-t` flag like this:
+
+```
+$ protoboeuf -t -b test.bproto > test.rb
+```
+
+## Generating Code with ProtoBoeuf AST
+
+The `protoc` command line tool can parse a `.proto` file and output a binary representation of the `.proto` file's abstract syntax tree.
+ProtoBoeuf ships with classes built for loading these binary files.
+This means you can combine `protoc` and ProtoBoeuf to write any kind of code generator you'd like based on what's inside the `.proto` file.
+
+Given an input `.proto` file like this:
+
+```
+syntax = "proto3";
+
+package test_app;
+
+message HelloReq {
+  string name = 1;
+}
+
+message HelloResp {
+  string name = 1;
+}
+
+service HelloWorld {
+  rpc Hello(HelloReq) returns (HelloResp);
+}
+```
+
+We can write code to process the AST and produce a very basic client:
+
+```ruby
+require "protoboeuf/protobuf/descriptor"
+
+fds = ProtoBoeuf::Protobuf::FileDescriptorSet.decode(File.binread(ARGV[0]))
+fds.file.each do |file|
+  file.service.each do |service|
+    puts "class #{service.name}"
+    service.method.each do |method|
+      input_klass = method.input_type.split(".").last
+      output_klass = method.output_type.split(".").last
+
+      puts <<-EORB
+  # expects #{input_klass}
+  def #{method.name.downcase}(input)
+    http = Net::HTTP.new(\"example.com\")
+    request = Net::HTTP::Post.new(\"/#{service.name}\")
+    req.content_type = 'application/protobuf'
+    data = #{input_klass}.encode(input)
+    request.body = data
+    response = http.request(request)
+    #{output_klass}.decode response.body
+  end
+      EORB
+
+    end
+    puts "end"
+    puts
+  end
+end
+```
+
+First we convert the `.proto` file to a binary version like this (assuming the file name is `server.proto`):
+
+```
+$ protoc -I . server.proto -o server.bproto
+```
+
+Then we can use our program to load the binary version of the proto file and produce a simple client:
+
+```
+$ ruby -I lib test.rb server.bproto
+class HelloWorld
+  # expects HelloReq
+  def hello(input)
+    http = Net::HTTP.new("example.com")
+    request = Net::HTTP::Post.new("/HelloWorld")
+    req.content_type = 'application/protobuf'
+    data = HelloReq.encode(input)
+    request.body = data
+    response = http.request(request)
+    HelloResp.decode response.body
+  end
+end
+```
+
+The code you can generate is only limited by your imagination!
 
 ## Running tests
 
