@@ -1599,14 +1599,14 @@ module ProtoBoeuf
         list = @public_dependency
         if list.size > 0
           buff << 0x52
-          len = list.size
-          while len != 0
-            byte = len & 0x7F
-            len >>= 7
-            byte |= 0x80 if len > 0
-            buff << byte
-          end
 
+          # Save the buffer size before appending the repeated bytes
+          current_len = buff.bytesize
+
+          # Write a single dummy byte to later store encoded length
+          buff << 42 # "*"
+
+          # write each item
           list.each do |item|
             val = item
             if val != 0
@@ -1624,19 +1624,53 @@ module ProtoBoeuf
               end
             end
           end
+
+          # Calculate the submessage's size
+          submessage_size = buff.bytesize - current_len - 1
+
+          # Hope the size fits in one byte
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+
+          # If the sub message was bigger
+          if submessage_size > 0
+            current_len += 1
+
+            # compute how much we need to shift
+            encoded_int_len = 0
+            remaining_size = submessage_size
+            while remaining_size != 0
+              remaining_size >>= 7
+              encoded_int_len += 1
+            end
+
+            # Make space in the string with dummy bytes
+            buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+            # Overwrite the dummy bytes with the encoded length
+            while submessage_size != 0
+              byte = submessage_size & 0x7F
+              submessage_size >>= 7
+              byte |= 0x80 if submessage_size > 0
+              buff.setbyte(current_len, byte)
+              current_len += 1
+            end
+          end
         end
 
         list = @weak_dependency
         if list.size > 0
           buff << 0x5a
-          len = list.size
-          while len != 0
-            byte = len & 0x7F
-            len >>= 7
-            byte |= 0x80 if len > 0
-            buff << byte
-          end
 
+          # Save the buffer size before appending the repeated bytes
+          current_len = buff.bytesize
+
+          # Write a single dummy byte to later store encoded length
+          buff << 42 # "*"
+
+          # write each item
           list.each do |item|
             val = item
             if val != 0
@@ -1652,6 +1686,40 @@ module ProtoBoeuf
                 byte |= 0x80 if val != 0
                 buff << byte
               end
+            end
+          end
+
+          # Calculate the submessage's size
+          submessage_size = buff.bytesize - current_len - 1
+
+          # Hope the size fits in one byte
+          byte = submessage_size & 0x7F
+          submessage_size >>= 7
+          byte |= 0x80 if submessage_size > 0
+          buff.setbyte(current_len, byte)
+
+          # If the sub message was bigger
+          if submessage_size > 0
+            current_len += 1
+
+            # compute how much we need to shift
+            encoded_int_len = 0
+            remaining_size = submessage_size
+            while remaining_size != 0
+              remaining_size >>= 7
+              encoded_int_len += 1
+            end
+
+            # Make space in the string with dummy bytes
+            buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+            # Overwrite the dummy bytes with the encoded length
+            while submessage_size != 0
+              byte = submessage_size & 0x7F
+              submessage_size >>= 7
+              byte |= 0x80 if submessage_size > 0
+              buff.setbyte(current_len, byte)
+              current_len += 1
             end
           end
         end
@@ -18460,14 +18528,14 @@ module ProtoBoeuf
           list = @path
           if list.size > 0
             buff << 0x0a
-            len = list.size
-            while len != 0
-              byte = len & 0x7F
-              len >>= 7
-              byte |= 0x80 if len > 0
-              buff << byte
-            end
 
+            # Save the buffer size before appending the repeated bytes
+            current_len = buff.bytesize
+
+            # Write a single dummy byte to later store encoded length
+            buff << 42 # "*"
+
+            # write each item
             list.each do |item|
               val = item
               if val != 0
@@ -18485,19 +18553,53 @@ module ProtoBoeuf
                 end
               end
             end
+
+            # Calculate the submessage's size
+            submessage_size = buff.bytesize - current_len - 1
+
+            # Hope the size fits in one byte
+            byte = submessage_size & 0x7F
+            submessage_size >>= 7
+            byte |= 0x80 if submessage_size > 0
+            buff.setbyte(current_len, byte)
+
+            # If the sub message was bigger
+            if submessage_size > 0
+              current_len += 1
+
+              # compute how much we need to shift
+              encoded_int_len = 0
+              remaining_size = submessage_size
+              while remaining_size != 0
+                remaining_size >>= 7
+                encoded_int_len += 1
+              end
+
+              # Make space in the string with dummy bytes
+              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+              # Overwrite the dummy bytes with the encoded length
+              while submessage_size != 0
+                byte = submessage_size & 0x7F
+                submessage_size >>= 7
+                byte |= 0x80 if submessage_size > 0
+                buff.setbyte(current_len, byte)
+                current_len += 1
+              end
+            end
           end
 
           list = @span
           if list.size > 0
             buff << 0x12
-            len = list.size
-            while len != 0
-              byte = len & 0x7F
-              len >>= 7
-              byte |= 0x80 if len > 0
-              buff << byte
-            end
 
+            # Save the buffer size before appending the repeated bytes
+            current_len = buff.bytesize
+
+            # Write a single dummy byte to later store encoded length
+            buff << 42 # "*"
+
+            # write each item
             list.each do |item|
               val = item
               if val != 0
@@ -18513,6 +18615,40 @@ module ProtoBoeuf
                   byte |= 0x80 if val != 0
                   buff << byte
                 end
+              end
+            end
+
+            # Calculate the submessage's size
+            submessage_size = buff.bytesize - current_len - 1
+
+            # Hope the size fits in one byte
+            byte = submessage_size & 0x7F
+            submessage_size >>= 7
+            byte |= 0x80 if submessage_size > 0
+            buff.setbyte(current_len, byte)
+
+            # If the sub message was bigger
+            if submessage_size > 0
+              current_len += 1
+
+              # compute how much we need to shift
+              encoded_int_len = 0
+              remaining_size = submessage_size
+              while remaining_size != 0
+                remaining_size >>= 7
+                encoded_int_len += 1
+              end
+
+              # Make space in the string with dummy bytes
+              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+              # Overwrite the dummy bytes with the encoded length
+              while submessage_size != 0
+                byte = submessage_size & 0x7F
+                submessage_size >>= 7
+                byte |= 0x80 if submessage_size > 0
+                buff.setbyte(current_len, byte)
+                current_len += 1
               end
             end
           end
@@ -19342,14 +19478,14 @@ module ProtoBoeuf
           list = @path
           if list.size > 0
             buff << 0x0a
-            len = list.size
-            while len != 0
-              byte = len & 0x7F
-              len >>= 7
-              byte |= 0x80 if len > 0
-              buff << byte
-            end
 
+            # Save the buffer size before appending the repeated bytes
+            current_len = buff.bytesize
+
+            # Write a single dummy byte to later store encoded length
+            buff << 42 # "*"
+
+            # write each item
             list.each do |item|
               val = item
               if val != 0
@@ -19365,6 +19501,40 @@ module ProtoBoeuf
                   byte |= 0x80 if val != 0
                   buff << byte
                 end
+              end
+            end
+
+            # Calculate the submessage's size
+            submessage_size = buff.bytesize - current_len - 1
+
+            # Hope the size fits in one byte
+            byte = submessage_size & 0x7F
+            submessage_size >>= 7
+            byte |= 0x80 if submessage_size > 0
+            buff.setbyte(current_len, byte)
+
+            # If the sub message was bigger
+            if submessage_size > 0
+              current_len += 1
+
+              # compute how much we need to shift
+              encoded_int_len = 0
+              remaining_size = submessage_size
+              while remaining_size != 0
+                remaining_size >>= 7
+                encoded_int_len += 1
+              end
+
+              # Make space in the string with dummy bytes
+              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+              # Overwrite the dummy bytes with the encoded length
+              while submessage_size != 0
+                byte = submessage_size & 0x7F
+                submessage_size >>= 7
+                byte |= 0x80 if submessage_size > 0
+                buff.setbyte(current_len, byte)
+                current_len += 1
               end
             end
           end

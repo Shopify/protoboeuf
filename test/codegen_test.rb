@@ -5,6 +5,30 @@ require_relative "./fixtures/package_test_pb.rb"
 
 module ProtoBoeuf
   class CodeGenTest < Test
+    def test_enum_with_underscore
+      unit = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Vehicle
+{
+  enum VEHICLE_TYPE {
+    CAR = 0;
+    SPORTS_CAR = 1;
+  }
+
+  VEHICLE_TYPE type = 6;
+}
+      EOPROTO
+
+      gen = CodeGen.new unit
+      klass = Class.new { self.class_eval gen.to_ruby }
+
+      msg = klass::Vehicle.new
+      assert_equal :CAR, msg.type
+      msg.type = :SPORTS_CAR
+      assert_equal :SPORTS_CAR, msg.type
+    end
+
     def test_uppercase_field_name
       unit = parse_string(<<-EOPROTO)
 syntax = "proto3";
