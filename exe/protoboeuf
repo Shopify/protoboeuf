@@ -15,12 +15,20 @@ op = OptionParser.new do |opts|
 end
 op.parse!
 
+def parse_binary(file)
+  require "protoboeuf/protobuf/descriptor"
+  ProtoBoeuf::Protobuf::FileDescriptorSet.decode(File.binread(file))
+end
+
+def parse_file(file)
+  ProtoBoeuf.parse_file(file)
+end
+
 if ARGV[0] && File.exist?(ARGV[0])
   unit = if binary
-    require "google/protobuf/descriptor_pb"
-    Google::Protobuf::FileDescriptorSet.decode File.binread ARGV[0]
+    parse_binary(ARGV[0])
   else
-    ProtoBoeuf.parse_file(ARGV[0])
+    parse_file(ARGV[0])
   end
 
   gen = ProtoBoeuf::CodeGen.new(unit, generate_types:)
