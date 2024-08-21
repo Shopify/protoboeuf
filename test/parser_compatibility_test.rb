@@ -481,11 +481,6 @@ message OneItem {
   end
 
   class ASTCompatibility < ParserCompatibilityTest
-    def test_fixture_file
-      skip
-      super
-    end
-
     private
 
     def decode_file_descriptor_set(data)

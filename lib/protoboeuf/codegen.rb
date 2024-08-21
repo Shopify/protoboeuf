@@ -112,6 +112,10 @@ module ProtoBoeuf
         }
       end
 
+      def max_field_number
+        message.field.max_by(&:number).number
+      end
+
       def optional_field?(field)
         proto3 = "proto3" == syntax
         field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
@@ -190,8 +194,17 @@ module ProtoBoeuf
       end
 
       def encode_tag(field)
+        result = +""
         tag = (field.number << 3) | CodeGen.wire_type(field)
-        "buff << #{sprintf("%#04x", tag)}\n"
+        while tag != 0
+          byte = tag & 0x7F
+          tag >>= 7
+          tag &= (1 << 57) - 1
+          byte |= 0x80 if tag != 0
+
+          result << "buff << #{sprintf("%#04x", byte)}\n"
+        end
+        result
       end
 
       def encode_length(field, len_expr)
@@ -1050,10 +1063,14 @@ module ProtoBoeuf
       ERB
 
       def pull_tag
-        str = <<~RUBY
+        str = if max_field_number > 15
+          pull_uint64("tag", "=")
+        else
+          <<~RUBY
           tag = buff.getbyte(index)
           index += 1
-        RUBY
+          RUBY
+        end
 
         if $DEBUG
           str += <<~'RUBY'
@@ -1196,6 +1213,7 @@ module ProtoBoeuf
           while true
             #{decode_subtype(field, field.type, "list", "<<")}
             #{pull_tag}
+            return self if index >= len
             break unless tag == #{tag_for_field(field, field.number)}
           end
           ## END DECODE REPEATED

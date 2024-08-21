@@ -174,6 +174,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -664,6 +665,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -1015,6 +1017,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -1094,6 +1097,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -1173,6 +1177,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -1252,6 +1257,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x3a
             end
             ## END DECODE REPEATED
@@ -3049,6 +3055,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -3128,6 +3135,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -3207,6 +3215,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -3286,6 +3295,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -3365,6 +3375,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -3444,6 +3455,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x42
             end
             ## END DECODE REPEATED
@@ -3596,6 +3608,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x4a
             end
             ## END DECODE REPEATED
@@ -3672,6 +3685,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x52
             end
             ## END DECODE REPEATED
@@ -4680,8 +4694,57 @@ module ProtoBoeuf
         @features = nil
         @verification = 0
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x1f3a
@@ -4754,9 +4817,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -4833,9 +4952,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -4912,8 +5087,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL_INT64
@@ -4987,8 +5217,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
 
           return self if index >= len
@@ -5000,7 +5285,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -5103,7 +5389,8 @@ module ProtoBoeuf
 
         val = @features
         if val
-          buff << 0x192
+          buff << 0x92
+          buff << 0x03
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -5509,8 +5796,57 @@ module ProtoBoeuf
         @options = nil
         @proto3_optional = false
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0xa
@@ -5577,8 +5913,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL_INT32
@@ -5652,8 +6043,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x20
             ## PULL_INT64
@@ -5727,8 +6173,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x28
             ## PULL_INT64
@@ -5802,8 +6303,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x32
             ## PULL_STRING
@@ -5870,8 +6426,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000010
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x12
             ## PULL_STRING
@@ -5938,8 +6549,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000020
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x3a
             ## PULL_STRING
@@ -6006,8 +6672,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000040
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x48
             ## PULL_INT32
@@ -6081,8 +6802,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000080
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x52
             ## PULL_STRING
@@ -6149,8 +6925,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000100
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x42
             ## PULL_MESSAGE
@@ -6222,8 +7053,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000200
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x88
             ## PULL BOOLEAN
@@ -6233,8 +7119,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000400
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
 
           return self if index >= len
@@ -6429,6 +7370,7 @@ module ProtoBoeuf
         val = @proto3_optional
         if val == true
           buff << 0x88
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -7230,6 +8172,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -7382,6 +8325,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -7458,6 +8402,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -8259,6 +9204,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -9374,8 +10320,57 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0xa
@@ -9443,8 +10438,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x42
             ## PULL_STRING
@@ -9511,8 +10561,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x50
             ## PULL BOOLEAN
@@ -9522,8 +10627,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0xa0
             ## PULL BOOLEAN
@@ -9533,8 +10693,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0xd8
             ## PULL BOOLEAN
@@ -9544,8 +10759,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000010
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x48
             ## PULL_INT64
@@ -9619,8 +10889,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000020
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x5a
             ## PULL_STRING
@@ -9687,8 +11012,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000040
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x80
             ## PULL BOOLEAN
@@ -9698,8 +11078,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000080
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x88
             ## PULL BOOLEAN
@@ -9709,8 +11144,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000100
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x90
             ## PULL BOOLEAN
@@ -9720,8 +11210,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000200
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0xb8
             ## PULL BOOLEAN
@@ -9731,8 +11276,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000400
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0xf8
             ## PULL BOOLEAN
@@ -9742,8 +11342,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000800
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x122
             ## PULL_STRING
@@ -9810,8 +11465,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000001000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x12a
             ## PULL_STRING
@@ -9878,8 +11588,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000002000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x13a
             ## PULL_STRING
@@ -9946,8 +11711,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000004000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x142
             ## PULL_STRING
@@ -10014,8 +11834,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000008000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x14a
             ## PULL_STRING
@@ -10082,8 +11957,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000010000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x162
             ## PULL_STRING
@@ -10150,8 +12080,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000020000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x16a
             ## PULL_STRING
@@ -10218,8 +12203,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000040000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x192
             ## PULL_MESSAGE
@@ -10291,8 +12331,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000080000
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -10364,9 +12459,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -10418,6 +12569,7 @@ module ProtoBoeuf
         val = @java_generate_equals_and_hash
         if val == true
           buff << 0xa0
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10429,6 +12581,7 @@ module ProtoBoeuf
         val = @java_string_check_utf8
         if val == true
           buff << 0xd8
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10471,6 +12624,7 @@ module ProtoBoeuf
         val = @cc_generic_services
         if val == true
           buff << 0x80
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10482,6 +12636,7 @@ module ProtoBoeuf
         val = @java_generic_services
         if val == true
           buff << 0x88
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10493,6 +12648,7 @@ module ProtoBoeuf
         val = @py_generic_services
         if val == true
           buff << 0x90
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10504,6 +12660,7 @@ module ProtoBoeuf
         val = @deprecated
         if val == true
           buff << 0xb8
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10515,6 +12672,7 @@ module ProtoBoeuf
         val = @cc_enable_arenas
         if val == true
           buff << 0xf8
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -10525,7 +12683,8 @@ module ProtoBoeuf
 
         val = @objc_class_prefix
         if ((len = val.bytesize) > 0)
-          buff << 0x122
+          buff << 0xa2
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10538,7 +12697,8 @@ module ProtoBoeuf
 
         val = @csharp_namespace
         if ((len = val.bytesize) > 0)
-          buff << 0x12a
+          buff << 0xaa
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10551,7 +12711,8 @@ module ProtoBoeuf
 
         val = @swift_prefix
         if ((len = val.bytesize) > 0)
-          buff << 0x13a
+          buff << 0xba
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10564,7 +12725,8 @@ module ProtoBoeuf
 
         val = @php_class_prefix
         if ((len = val.bytesize) > 0)
-          buff << 0x142
+          buff << 0xc2
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10577,7 +12739,8 @@ module ProtoBoeuf
 
         val = @php_namespace
         if ((len = val.bytesize) > 0)
-          buff << 0x14a
+          buff << 0xca
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10590,7 +12753,8 @@ module ProtoBoeuf
 
         val = @php_metadata_namespace
         if ((len = val.bytesize) > 0)
-          buff << 0x162
+          buff << 0xe2
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10603,7 +12767,8 @@ module ProtoBoeuf
 
         val = @ruby_package
         if ((len = val.bytesize) > 0)
-          buff << 0x16a
+          buff << 0xea
+          buff << 0x02
           while len != 0
             byte = len & 0x7F
             len >>= 7
@@ -10616,7 +12781,8 @@ module ProtoBoeuf
 
         val = @features
         if val
-          buff << 0x192
+          buff << 0x92
+          buff << 0x03
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -10667,7 +12833,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -10871,8 +13038,57 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x8
@@ -10883,8 +13099,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x10
             ## PULL BOOLEAN
@@ -10894,8 +13165,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL BOOLEAN
@@ -10905,8 +13231,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x38
             ## PULL BOOLEAN
@@ -10916,8 +13297,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x58
             ## PULL BOOLEAN
@@ -10927,8 +13363,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000010
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x62
             ## PULL_MESSAGE
@@ -11000,8 +13491,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000020
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -11073,9 +13619,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -11195,7 +13797,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -12323,8 +14926,57 @@ module ProtoBoeuf
         @feature_support = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x8
@@ -12399,8 +15051,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x10
             ## PULL BOOLEAN
@@ -12410,8 +15117,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x30
             ## PULL_INT64
@@ -12485,8 +15247,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x28
             ## PULL BOOLEAN
@@ -12496,8 +15313,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x78
             ## PULL BOOLEAN
@@ -12507,8 +15379,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000010
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL BOOLEAN
@@ -12518,8 +15445,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000020
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x50
             ## PULL BOOLEAN
@@ -12529,8 +15511,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000040
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x80
             ## PULL BOOLEAN
@@ -12540,8 +15577,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000080
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x88
             ## PULL_INT64
@@ -12615,8 +15707,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000100
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x98
             ## DECODE REPEATED
@@ -12690,9 +15837,65 @@ module ProtoBoeuf
 
               ## END PULL_INT64
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x98
             end
             ## END DECODE REPEATED
@@ -12769,9 +15972,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0xa2
             end
             ## END DECODE REPEATED
@@ -12848,8 +16107,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000200
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0xb2
             ## PULL_MESSAGE
@@ -12921,8 +16235,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000400
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -12994,9 +16363,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -13102,6 +16527,7 @@ module ProtoBoeuf
         val = @debug_redact
         if val == true
           buff << 0x80
+          buff << 0x01
 
           buff << 1
         elsif val == false
@@ -13113,6 +16539,7 @@ module ProtoBoeuf
         val = @retention
         if val != 0
           buff << 0x88
+          buff << 0x01
 
           while val != 0
             byte = val & 0x7F
@@ -13134,6 +16561,7 @@ module ProtoBoeuf
             val = item
             if val != 0
               buff << 0x98
+              buff << 0x01
 
               while val != 0
                 byte = val & 0x7F
@@ -13157,6 +16585,7 @@ module ProtoBoeuf
             val = item
             if val
               buff << 0xa2
+              buff << 0x01
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -13207,6 +16636,7 @@ module ProtoBoeuf
         val = @features
         if val
           buff << 0xaa
+          buff << 0x01
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -13255,6 +16685,7 @@ module ProtoBoeuf
         val = @feature_support
         if val
           buff << 0xb2
+          buff << 0x01
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -13305,7 +16736,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -13421,8 +16853,57 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0xa
@@ -13495,8 +16976,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -13568,9 +17104,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -13635,7 +17227,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -13788,8 +17381,57 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x10
@@ -13800,8 +17442,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL BOOLEAN
@@ -13811,8 +17508,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x30
             ## PULL BOOLEAN
@@ -13822,8 +17574,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x3a
             ## PULL_MESSAGE
@@ -13895,8 +17702,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -13968,9 +17830,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -14068,7 +17986,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -14225,8 +18144,57 @@ module ProtoBoeuf
         @feature_support = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x8
@@ -14237,8 +18205,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x12
             ## PULL_MESSAGE
@@ -14310,8 +18333,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x18
             ## PULL BOOLEAN
@@ -14321,8 +18399,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x22
             ## PULL_MESSAGE
@@ -14394,8 +18527,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000008
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -14467,9 +18655,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -14604,7 +18848,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -14725,8 +18970,57 @@ module ProtoBoeuf
         @deprecated = false
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x112
@@ -14799,8 +19093,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x108
             ## PULL BOOLEAN
@@ -14810,8 +19159,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -14883,9 +19287,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -14899,7 +19359,8 @@ module ProtoBoeuf
       def _encode(buff)
         val = @features
         if val
-          buff << 0x112
+          buff << 0x92
+          buff << 0x02
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -14947,7 +19408,8 @@ module ProtoBoeuf
 
         val = @deprecated
         if val == true
-          buff << 0x108
+          buff << 0x88
+          buff << 0x02
 
           buff << 1
         elsif val == false
@@ -14961,7 +19423,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -15128,8 +19591,57 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
-        tag = buff.getbyte(index)
-        index += 1
+        ## PULL_UINT64
+        tag =
+          if (byte0 = buff.getbyte(index)) < 0x80
+            index += 1
+            byte0
+          elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+            index += 2
+            (byte1 << 7) | (byte0 & 0x7F)
+          elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+            index += 3
+            (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+            index += 4
+            (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+              (byte0 & 0x7F)
+          elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+            index += 5
+            (byte4 << 28) | ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+            index += 6
+            (byte5 << 35) | ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+            index += 7
+            (byte6 << 42) | ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+            index += 8
+            (byte7 << 49) | ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+            index += 9
+            (byte8 << 56) | ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+            index += 10
+
+            (byte9 << 63) | ((byte8 & 0x7F) << 56) | ((byte7 & 0x7F) << 49) |
+              ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+              ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+              ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+          else
+            raise "integer decoding error"
+          end
+
+        ## END PULL_UINT64
 
         while true
           if tag == 0x108
@@ -15140,8 +19652,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000001
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x110
             ## PULL_INT64
@@ -15215,8 +19782,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000002
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x11a
             ## PULL_MESSAGE
@@ -15288,8 +19910,63 @@ module ProtoBoeuf
 
             @_bitmask |= 0x0000000000000004
             return self if index >= len
-            tag = buff.getbyte(index)
-            index += 1
+            ## PULL_UINT64
+            tag =
+              if (byte0 = buff.getbyte(index)) < 0x80
+                index += 1
+                byte0
+              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                index += 2
+                (byte1 << 7) | (byte0 & 0x7F)
+              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                index += 3
+                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                index += 4
+                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                index += 5
+                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                index += 6
+                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                index += 7
+                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                index += 8
+                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                index += 9
+                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                  (byte0 & 0x7F)
+              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                index += 10
+
+                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+              else
+                raise "integer decoding error"
+              end
+
+            ## END PULL_UINT64
           end
           if tag == 0x1f3a
             ## DECODE REPEATED
@@ -15361,9 +20038,65 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
-              tag = buff.getbyte(index)
-              index += 1
+              ## PULL_UINT64
+              tag =
+                if (byte0 = buff.getbyte(index)) < 0x80
+                  index += 1
+                  byte0
+                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                  index += 2
+                  (byte1 << 7) | (byte0 & 0x7F)
+                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                  index += 3
+                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                  index += 4
+                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                  index += 5
+                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                  index += 6
+                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                  index += 7
+                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                  index += 8
+                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                  index += 9
+                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                    (byte0 & 0x7F)
+                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                  index += 10
 
+                  (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                    ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                else
+                  raise "integer decoding error"
+                end
+
+              ## END PULL_UINT64
+
+              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -15377,7 +20110,8 @@ module ProtoBoeuf
       def _encode(buff)
         val = @deprecated
         if val == true
-          buff << 0x108
+          buff << 0x88
+          buff << 0x02
 
           buff << 1
         elsif val == false
@@ -15388,7 +20122,8 @@ module ProtoBoeuf
 
         val = @idempotency_level
         if val != 0
-          buff << 0x110
+          buff << 0x90
+          buff << 0x02
 
           while val != 0
             byte = val & 0x7F
@@ -15406,7 +20141,8 @@ module ProtoBoeuf
 
         val = @features
         if val
-          buff << 0x11a
+          buff << 0x9a
+          buff << 0x02
 
           # Save the buffer size before appending the submessage
           current_len = buff.bytesize
@@ -15457,7 +20193,8 @@ module ProtoBoeuf
           list.each do |item|
             val = item
             if val
-              buff << 0x1f3a
+              buff << 0xba
+              buff << 0x3e
 
               # Save the buffer size before appending the submessage
               current_len = buff.bytesize
@@ -15890,6 +20627,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -17791,6 +22529,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -18652,6 +23391,7 @@ module ProtoBoeuf
                 tag = buff.getbyte(index)
                 index += 1
 
+                return self if index >= len
                 break unless tag == 0x32
               end
               ## END DECODE REPEATED
@@ -18942,6 +23682,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -19849,6 +24590,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED

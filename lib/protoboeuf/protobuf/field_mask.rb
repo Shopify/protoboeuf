@@ -100,6 +100,7 @@ module ProtoBoeuf
               tag = buff.getbyte(index)
               index += 1
 
+              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
