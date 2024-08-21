@@ -2051,8 +2051,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -5149,8 +5155,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -6266,8 +6278,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -6278,8 +6296,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -10419,8 +10443,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -11447,8 +11477,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end
@@ -11865,8 +11901,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end
@@ -11877,8 +11919,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end
@@ -11902,8 +11950,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end
@@ -12960,8 +13014,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -12983,8 +13043,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -13050,8 +13116,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -13065,8 +13137,14 @@ module ProtoBoeuf
 
               while val != 0
                 byte = val & 0x7F
+
                 val >>= 7
-                byte |= 0x80 if val > 0
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
                 buff << byte
               end
             end
@@ -15314,8 +15392,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17042,8 +17126,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17054,8 +17144,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17066,8 +17162,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17078,8 +17180,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17090,8 +17198,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17102,8 +17216,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17433,8 +17553,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end
@@ -17885,8 +18011,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -17897,8 +18029,14 @@ module ProtoBoeuf
 
           while val != 0
             byte = val & 0x7F
+
             val >>= 7
-            byte |= 0x80 if val > 0
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
             buff << byte
           end
         end
@@ -19594,8 +19732,14 @@ module ProtoBoeuf
 
             while val != 0
               byte = val & 0x7F
+
               val >>= 7
-              byte |= 0x80 if val > 0
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
               buff << byte
             end
           end

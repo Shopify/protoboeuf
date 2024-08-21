@@ -246,17 +246,6 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_enum(field, value_expr, tagged)
-        # Zero is default value for enums, so encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if val != 0
-            #{encode_tag_and_length(field, tagged)}
-            #{uint64_code("val")}
-          end
-        RUBY
-      end
-
       def encode_map(field, value_expr, tagged)
         map_type = self.map_type(field)
 
@@ -465,6 +454,9 @@ module ProtoBoeuf
 
       # The same encoding logic is used for int32 and int64
       alias encode_int32 encode_int64
+
+      # Bools and enums are both encoded as if they were int32s
+      alias encode_enum encode_int32
 
       def encode_sint64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
