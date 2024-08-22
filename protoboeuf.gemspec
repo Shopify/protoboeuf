@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("syntax_tree", "~> 6.2")
 
   spec.platform = Gem::Platform::RUBY
-  spec.required_ruby_version = ">= 3.0"
+  spec.required_ruby_version = ">= 3.3"
 
   spec.license = "MIT"
 end
