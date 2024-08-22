@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ProtoBoeuf
   class CodeGen
     module TypeHelper
@@ -33,14 +35,14 @@ module ProtoBoeuf
         return "" unless generate_types
 
         sig = []
-        sig << "params(#{params.map { |k, v| "#{k}: #{convert_type(v)}"}.join(", ")})" if params
+        sig << "params(#{params.map { |k, v| "#{k}: #{convert_type(v)}" }.join(", ")})" if params
         sig << "returns(#{returns})" if returns
         sig << "void" unless returns
 
         complete_sig = "sig { #{sig.join(".")} }"
-        return complete_sig unless newline
+        complete_sig += "\n" if newline
 
-        complete_sig += "\n"
+        complete_sig
       end
 
       def initialize_type_signature(fields)
@@ -56,7 +58,7 @@ module ProtoBoeuf
       def extend_t_sig
         return "" unless generate_types
 
-        return "extend T::Sig"
+        "extend T::Sig"
       end
 
       private
@@ -82,7 +84,11 @@ module ProtoBoeuf
           end
         end
 
-        convert_type(converted_type, optional: field.label == :TYPE_OPTIONAL, array: field.label == :LABEL_REPEATED && !map_field?(field))
+        convert_type(
+          converted_type,
+          optional: field.label == :TYPE_OPTIONAL,
+          array: field.label == :LABEL_REPEATED && !map_field?(field),
+        )
       end
 
       def field_to_params(field)

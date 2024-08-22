@@ -8,10 +8,13 @@ module ProtoBoeuf
   class CodeGen
     class EnumCompiler
       attr_reader :generate_types
+
       include TypeHelper
 
-      def self.result(enum, generate_types:)
-        new(enum, generate_types:).result
+      class << self
+        def result(enum, generate_types:)
+          new(enum, generate_types:).result
+        end
       end
 
       attr_reader :enum
@@ -34,19 +37,19 @@ module ProtoBoeuf
       end
 
       def lookup
-        type_signature(params: {val: "Integer"}, returns: "Symbol", newline: true) +
-        "def self.lookup(val)\n" +
-        "if " + enum.value.map { |const|
-          "val == #{const.number} then :#{const.name}"
-        }.join(" elsif ") + " end; end"
+        type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) +
+          "def self.lookup(val)\n" \
+            "if " + enum.value.map { |const|
+                      "val == #{const.number} then :#{const.name}"
+                    }.join(" elsif ") + " end; end"
       end
 
       def resolve
-        type_signature(params: {val: "Symbol"}, returns: "Integer", newline: true) +
-        "def self.resolve(val)\n" +
-        "if " + enum.value.map { |const|
-          "val == :#{const.name} then #{const.number}"
-        }.join(" elsif ") + " end; end"
+        type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) +
+          "def self.resolve(val)\n" \
+            "if " + enum.value.map { |const|
+                      "val == :#{const.name} then #{const.number}"
+                    }.join(" elsif ") + " end; end"
       end
     end
 
@@ -55,8 +58,10 @@ module ProtoBoeuf
 
       include TypeHelper
 
-      def self.result(message, toplevel_enums, generate_types:, requires:, syntax:)
-        new(message, toplevel_enums, generate_types:, requires:, syntax:).result
+      class << self
+        def result(message, toplevel_enums, generate_types:, requires:, syntax:)
+          new(message, toplevel_enums, generate_types:, requires:, syntax:).result
+        end
       end
 
       attr_reader :message, :fields, :oneof_fields, :syntax
@@ -80,36 +85,32 @@ module ProtoBoeuf
 
         optional_field_count = 0
 
-        message.field.each { |field|
+        message.field.each do |field|
           if field.has_oneof_index? && !field.proto3_optional
             (@oneof_fields[field.oneof_index] ||= []) << field
-          else
-            if optional_field?(field)
-              if field.type == :TYPE_ENUM
-                @enum_fields << field
-              else
-                @optional_fields << field
-              end
-              @optional_field_bit_lut[field.number] = optional_field_count
-              optional_field_count += 1
+          elsif optional_field?(field)
+            if field.type == :TYPE_ENUM
+              @enum_fields << field
             else
-              if field.type == :TYPE_ENUM
-                @enum_fields << field
-              else
-                @required_fields << field
-              end
+              @optional_fields << field
             end
+            @optional_field_bit_lut[field.number] = optional_field_count
+            optional_field_count += 1
+          elsif field.type == :TYPE_ENUM
+            @enum_fields << field
+          else
+            @required_fields << field
           end
-        }
+        end
 
         # The AST treats "optional" fields in Proto3 as "oneof" fields.
         # But since there is only one of each of these "oneof" fields, there
         # is no reason to add an extra instance variable.  The "oneof_fields"
         # list only contains non-proto3_optional fields, so we're using that
         # to only iterate over actual "oneof" fields.
-        @oneof_selection_fields = @oneof_fields.each_with_index.map { |item, i|
+        @oneof_selection_fields = @oneof_fields.each_with_index.map do |item, i|
           item && message.oneof_decl[i]
-        }
+        end
       end
 
       def max_field_number
@@ -141,13 +142,13 @@ module ProtoBoeuf
       end
 
       def conversion
-        fields = self.fields.reject { |field|
+        fields = self.fields.reject do |field|
           field.has_oneof_index? && !field.proto3_optional
-        }
+        end
 
-        oneofs = @oneof_selection_fields.map { |field|
+        oneofs = @oneof_selection_fields.map do |field|
           "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
-        }
+        end
 
         <<~RUBY
           #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
@@ -171,8 +172,8 @@ module ProtoBoeuf
 
       def encode
         # FIXME: we should probably sort fields by field number
-        type_signature(params: {buff: "String"}, returns: "String", newline: true) +
-        "def _encode(buff)\n" +
+        type_signature(params: { buff: "String" }, returns: "String", newline: true) +
+          "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
           "\nbuff\n end\n\n"
       end
@@ -190,7 +191,7 @@ module ProtoBoeuf
       end
 
       def encode_leaf_type(field, value_expr, tagged)
-        send "encode_#{field.type.to_s.downcase.delete_prefix("type_")}", field, value_expr, tagged
+        send("encode_#{field.type.to_s.downcase.delete_prefix("type_")}", field, value_expr, tagged)
       end
 
       def encode_tag(field)
@@ -202,7 +203,7 @@ module ProtoBoeuf
           tag &= (1 << 57) - 1
           byte |= 0x80 if tag != 0
 
-          result << "buff << #{sprintf("%#04x", byte)}\n"
+          result << "buff << #{format("%#04x", byte)}\n"
         end
         result
       end
@@ -212,6 +213,7 @@ module ProtoBoeuf
 
         if CodeGen.wire_type(field) == LEN
           raise "length encoded fields must have a length expression" unless len_expr
+
           if len_expr != "len"
             result << "len = #{len_expr}\n"
           end
@@ -291,64 +293,64 @@ module ProtoBoeuf
       def encode_repeated(field, value_expr, tagged)
         if CodeGen.packed?(field)
           <<~RUBY
-          list = #{value_expr}
-          if list.size > 0
-            #{encode_tag(field)}
+            list = #{value_expr}
+            if list.size > 0
+              #{encode_tag(field)}
 
-            # Save the buffer size before appending the repeated bytes
-            current_len = buff.bytesize
+              # Save the buffer size before appending the repeated bytes
+              current_len = buff.bytesize
 
-            # Write a single dummy byte to later store encoded length
-            buff << 42 # "*"
+              # Write a single dummy byte to later store encoded length
+              buff << 42 # "*"
 
-            # write each item
-            list.each do |item|
-              #{encode_leaf_type(field, "item", false)}
-            end
-
-            # Calculate the submessage's size
-            submessage_size = buff.bytesize - current_len - 1
-
-            # Hope the size fits in one byte
-            byte = submessage_size & 0x7F
-            submessage_size >>= 7
-            byte |= 0x80 if submessage_size > 0
-            buff.setbyte(current_len, byte)
-
-            # If the sub message was bigger
-            if submessage_size > 0
-              current_len += 1
-
-              # compute how much we need to shift
-              encoded_int_len = 0
-              remaining_size = submessage_size
-              while remaining_size != 0
-                remaining_size >>= 7
-                encoded_int_len += 1
+              # write each item
+              list.each do |item|
+                #{encode_leaf_type(field, "item", false)}
               end
 
-              # Make space in the string with dummy bytes
-              buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+              # Calculate the submessage's size
+              submessage_size = buff.bytesize - current_len - 1
 
-              # Overwrite the dummy bytes with the encoded length
-              while submessage_size != 0
-                byte = submessage_size & 0x7F
-                submessage_size >>= 7
-                byte |= 0x80 if submessage_size > 0
-                buff.setbyte(current_len, byte)
+              # Hope the size fits in one byte
+              byte = submessage_size & 0x7F
+              submessage_size >>= 7
+              byte |= 0x80 if submessage_size > 0
+              buff.setbyte(current_len, byte)
+
+              # If the sub message was bigger
+              if submessage_size > 0
                 current_len += 1
+
+                # compute how much we need to shift
+                encoded_int_len = 0
+                remaining_size = submessage_size
+                while remaining_size != 0
+                  remaining_size >>= 7
+                  encoded_int_len += 1
+                end
+
+                # Make space in the string with dummy bytes
+                buff.bytesplice(current_len, 0, "*********", 0, encoded_int_len)
+
+                # Overwrite the dummy bytes with the encoded length
+                while submessage_size != 0
+                  byte = submessage_size & 0x7F
+                  submessage_size >>= 7
+                  byte |= 0x80 if submessage_size > 0
+                  buff.setbyte(current_len, byte)
+                  current_len += 1
+                end
               end
             end
-          end
           RUBY
         else
           <<~RUBY
-          list = #{value_expr}
-          if list.size > 0
-            list.each do |item|
-              #{encode_leaf_type(field, "item", true)}
+            list = #{value_expr}
+            if list.size > 0
+              list.each do |item|
+                #{encode_leaf_type(field, "item", true)}
+              end
             end
-          end
           RUBY
         end
       end
@@ -419,12 +421,12 @@ module ProtoBoeuf
 
       def uint64_code(local)
         <<~RUBY
-            while #{local} != 0
-              byte = #{local} & 0x7F
-              #{local} >>= 7
-              byte |= 0x80 if #{local} > 0
-              buff << byte
-            end
+          while #{local} != 0
+            byte = #{local} & 0x7F
+            #{local} >>= 7
+            byte |= 0x80 if #{local} > 0
+            buff << byte
+          end
         RUBY
       end
 
@@ -441,7 +443,7 @@ module ProtoBoeuf
 
       # Ideally this should happen when setting the field value
       # rather than when doing the encoding
-      alias encode_uint32 encode_uint64
+      alias_method :encode_uint32, :encode_uint64
 
       def encode_int64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
@@ -466,10 +468,10 @@ module ProtoBoeuf
       end
 
       # The same encoding logic is used for int32 and int64
-      alias encode_int32 encode_int64
+      alias_method :encode_int32, :encode_int64
 
       # Bools and enums are both encoded as if they were int32s
-      alias encode_enum encode_int32
+      alias_method :encode_enum, :encode_int32
 
       def encode_sint64(field, value_expr, tagged)
         # Zero is the default value, so it encodes zero bytes
@@ -493,7 +495,7 @@ module ProtoBoeuf
       end
 
       # The same encoding logic is used for sint32 and sint64
-      alias encode_sint32 encode_sint64
+      alias_method :encode_sint32, :encode_sint64
 
       def encode_double(field, value_expr, tagged)
         # False/zero is the default value, so the zero case encodes nothing
@@ -564,12 +566,12 @@ module ProtoBoeuf
       def prelude
         <<~RUBY
           #{extend_t_sig}
-          #{type_signature(params: {buff: "String"}, returns: message.name)}
+          #{type_signature(params: { buff: "String" }, returns: message.name)}
           def self.decode(buff)
             allocate.decode_from(buff.b, 0, buff.bytesize)
           end
 
-          #{type_signature(params: {obj: message.name}, returns: "String")}
+          #{type_signature(params: { obj: message.name }, returns: "String")}
           def self.encode(obj)
             obj._encode("".b)
           end
@@ -577,15 +579,15 @@ module ProtoBoeuf
       end
 
       def enums
-        message.enum_type.map { |enum|
+        message.enum_type.map do |enum|
           EnumCompiler.result(enum, generate_types:)
-        }.join("\n")
+        end.join("\n")
       end
 
       def constants
-        message.nested_type.reject { |x| x.options&.map_entry }.map { |x|
+        message.nested_type.reject { |x| x.options&.map_entry }.map do |x|
           self.class.new(x, enum_field_types, generate_types:, requires:, syntax:).result
-        }.join("\n")
+        end.join("\n")
       end
 
       def readers
@@ -604,6 +606,7 @@ module ProtoBoeuf
 
       def enum_name(field)
         raise ArgumentError unless field.type == :TYPE_ENUM
+
         class_name(field.type_name)
       end
 
@@ -628,39 +631,39 @@ module ProtoBoeuf
         end
 
         "# required field readers\n" +
-        fields.map do |field|
-          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
-        end.join("\n") +
-        "\n\n"
+          fields.map do |field|
+            "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
+          end.join("\n") +
+          "\n\n"
       end
 
       def optional_readers
-        return "" unless optional_fields.length > 0
+        return "" if optional_fields.empty?
 
         "# optional field readers\n" +
-        optional_fields.map do |field|
-          "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
-        end.join("\n") +
-        "\n\n"
+          optional_fields.map do |field|
+            "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
+          end.join("\n") +
+          "\n\n"
       end
 
       def oneof_readers
-        return "" unless oneof_fields.length > 0
+        return "" if oneof_fields.empty?
 
         "# oneof field readers\n" +
-        oneof_fields.map.with_index do |sub_fields, i|
-          next unless sub_fields
+          oneof_fields.map.with_index do |sub_fields, i|
+            next unless sub_fields
 
-          field = message.oneof_decl[i]
+            field = message.oneof_decl[i]
 
-          [
-            type_signature(returns: "Symbol"),
-            "attr_reader :#{field.name}",
-            sub_fields.map do |sub_field|
-              "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
-            end
-          ].join("\n")
-        end.join("\n") + "\n\n"
+            [
+              type_signature(returns: "Symbol"),
+              "attr_reader :#{field.name}",
+              sub_fields.map do |sub_field|
+                "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
+              end,
+            ].join("\n")
+          end.join("\n") + "\n\n"
       end
 
       def writers
@@ -684,7 +687,7 @@ module ProtoBoeuf
 
         fields.map { |field|
           <<~RUBY
-            #{type_signature(params: {v: convert_field_type(field)})}
+            #{type_signature(params: { v: convert_field_type(field) })}
             def #{field.name}=(v)
               #{bounds_check(field, "v")}
               #{iv_name(field)} = v
@@ -697,38 +700,38 @@ module ProtoBoeuf
         return "" if optional_fields.empty?
 
         "# BEGIN writers for optional fields\n" +
-        optional_fields.map { |field|
-          <<~RUBY
-            #{type_signature(params: {v: convert_field_type(field)})}
-            def #{field.name}=(v)
-              #{bounds_check(field, "v")}
-              #{set_bitmask(field)}
-              #{iv_name(field)} = v
-            end
-          RUBY
-        }.join("\n") +
-        "  # END writers for optional fields\n\n"
+          optional_fields.map { |field|
+            <<~RUBY
+              #{type_signature(params: { v: convert_field_type(field) })}
+              def #{field.name}=(v)
+                #{bounds_check(field, "v")}
+                #{set_bitmask(field)}
+                #{iv_name(field)} = v
+              end
+            RUBY
+          }.join("\n") +
+          "  # END writers for optional fields\n\n"
       end
 
       def oneof_writers
         return "" if oneof_fields.empty?
 
         "# BEGIN writers for oneof fields\n" +
-        oneof_fields.map.with_index { |sub_fields, i|
-          next unless sub_fields
+          oneof_fields.map.with_index { |sub_fields, i|
+            next unless sub_fields
 
-          oneof = message.oneof_decl[i]
-          sub_fields.map { |field|
-            <<~RUBY
-              def #{field.name}=(v)
-                #{bounds_check(field, "v")}
-                @#{oneof.name} = :#{field.name}
-                #{iv_name(field)} = v
-              end
-            RUBY
-          }.join("\n")
-        }.join("\n") +
-        "# END writers for oneof fields\n\n"
+            oneof = message.oneof_decl[i]
+            sub_fields.map { |field|
+              <<~RUBY
+                def #{field.name}=(v)
+                  #{bounds_check(field, "v")}
+                  @#{oneof.name} = :#{field.name}
+                  #{iv_name(field)} = v
+                end
+              RUBY
+            }.join("\n")
+          }.join("\n") +
+          "# END writers for oneof fields\n\n"
       end
 
       def initialize_code
@@ -755,13 +758,13 @@ module ProtoBoeuf
         oneof = msg.oneof_decl[field.oneof_index]
 
         <<~RUBY
-              if #{lvar_read(field)} == nil
-                #{iv_name(field)} = #{default_for(field)}
-              else
-                #{bounds_check(field, lvar_read(field))}
-                #{iv_name(oneof)} = :#{field.name}
-                #{iv_name(field)} = #{lvar_read(field)}
-              end
+          if #{lvar_read(field)} == nil
+            #{iv_name(field)} = #{default_for(field)}
+          else
+            #{bounds_check(field, lvar_read(field))}
+            #{iv_name(oneof)} = :#{field.name}
+            #{iv_name(field)} = #{lvar_read(field)}
+          end
         RUBY
       end
 
@@ -787,33 +790,68 @@ module ProtoBoeuf
         RUBY
       end
 
-      RUBY_KEYWORDS = %w{ __ENCODING__ __LINE__ __FILE__ BEGIN END alias and
-      begin break case class def defined?  do else elsif end ensure false for if
-      in module next nil not or redo rescue retry return self super then true
-      undef unless until when while yield }.to_set
+      RUBY_KEYWORDS = [
+        "__ENCODING__",
+        "__LINE__",
+        "__FILE__",
+        "BEGIN",
+        "END",
+        "alias",
+        "and",
+        "begin",
+        "break",
+        "case",
+        "class",
+        "def",
+        "defined?",
+        "do",
+        "else",
+        "elsif",
+        "end",
+        "ensure",
+        "false",
+        "for",
+        "if",
+        "in",
+        "module",
+        "next",
+        "nil",
+        "not",
+        "or",
+        "redo",
+        "rescue",
+        "retry",
+        "return",
+        "self",
+        "super",
+        "then",
+        "true",
+        "undef",
+        "unless",
+        "until",
+        "when",
+        "while",
+        "yield",
+      ].to_set
 
       # Return code for reading the local variable returned by `lvar_name`
       def lvar_read(field)
         if RUBY_KEYWORDS.include?(field.name)
           "binding.local_variable_get(:#{field.name})"
+        elsif field.name =~ /^[A-Z_]/
+          "_#{field.name}"
         else
-          if field.name =~ /^[A-Z_]/
-            "_#{field.name}"
-          else
-            field.name
-          end
+          field.name
         end
       end
 
       def lvar_name(field)
         if RUBY_KEYWORDS.include?(field.name)
           field.name
+        elsif field.name =~ /^[A-Z_]/
+          "_#{field.name}"
         else
-          if field.name =~ /^[A-Z_]/
-            "_#{field.name}"
-          else
-            field.name
-          end
+          field.name
         end
       end
 
@@ -838,7 +876,7 @@ module ProtoBoeuf
       end
 
       def optional_predicates
-        return "" unless optional_fields.length > 0
+        return "" if optional_fields.empty?
 
         optional_fields.map { |field|
           <<~RUBY
@@ -851,26 +889,27 @@ module ProtoBoeuf
       end
 
       def decode
-        type_signature(params: {buff: String, index: Integer, len: Integer}, returns: message.name, newline: true) +
+        type_signature(params: { buff: String, index: Integer, len: Integer }, returns: message.name, newline: true) +
           DECODE_METHOD.result(binding)
       end
 
       def oneof_field_readers
         fields = oneof_fields + oneof_fields.flat_map(&:fields)
         return "" if fields.empty?
+
         "attr_reader " + fields.map { |f| ":" + f.name }.join(", ")
       end
 
       TYPE_BOUNDS = {
-        :TYPE_UINT32 => [0, 4_294_967_295],
-        :TYPE_INT32 => [-2_147_483_648,  2_147_483_647],
-        :TYPE_SINT32 => [-2_147_483_648,  2_147_483_647],
-        :TYPE_UINT64 => [0, 18_446_744_073_709_551_615],
-        :TYPE_INT64 => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
-        :TYPE_SINT64 => [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+        TYPE_UINT32: [0, 4_294_967_295],
+        TYPE_INT32: [-2_147_483_648, 2_147_483_647],
+        TYPE_SINT32: [-2_147_483_648, 2_147_483_647],
+        TYPE_UINT64: [0, 18_446_744_073_709_551_615],
+        TYPE_INT64: [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
+        TYPE_SINT64: [-9_223_372_036_854_775_808, 9_223_372_036_854_775_807],
       }.freeze
 
-      PULL_VARINT = ERB.new(<<~ERB, trim_mode: '-')
+      PULL_VARINT = ERB.new(<<~ERB, trim_mode: "-")
         if (byte0 = buff.getbyte(index)) < 0x80
           index += 1
           byte0
@@ -985,21 +1024,21 @@ module ProtoBoeuf
         end
       ERB
 
-      PULL_STRING = ERB.new(<<~ERB, trim_mode: '-')
+      PULL_STRING = ERB.new(<<~ERB, trim_mode: "-")
         value = <%= pull_varint %>
 
         <%= dest %> <%= operator %> buff.byteslice(index, value).force_encoding(Encoding::UTF_8)
         index += value
       ERB
 
-      PULL_BYTES = ERB.new(<<~ERB, trim_mode: '-')
+      PULL_BYTES = ERB.new(<<~ERB, trim_mode: "-")
         value = <%= pull_varint %>
 
         <%= dest %> <%= operator %> buff.byteslice(index, value)
         index += value
       ERB
 
-      PULL_SINT32 = ERB.new(<<~ERB, trim_mode: '-')
+      PULL_SINT32 = ERB.new(<<~ERB, trim_mode: "-")
         ## PULL SINT32
         value = <%= pull_varint %>
 
@@ -1012,7 +1051,7 @@ module ProtoBoeuf
         ## END PULL SINT32
       ERB
 
-      DECODE_METHOD = ERB.new(<<~ERB, trim_mode: '-')
+      DECODE_METHOD = ERB.new(<<~ERB, trim_mode: "-")
         def decode_from(buff, index, len)
           <%= init_bitmask(message) %>
           <%- for field in @oneof_selection_fields -%>
@@ -1067,8 +1106,8 @@ module ProtoBoeuf
           pull_uint64("tag", "=")
         else
           <<~RUBY
-          tag = buff.getbyte(index)
-          index += 1
+            tag = buff.getbyte(index)
+            index += 1
           RUBY
         end
 
@@ -1084,9 +1123,9 @@ module ProtoBoeuf
       def default_for(field)
         if field.label == :LABEL_REPEATED
           if map_field?(field)
-            '{}'
+            "{}"
           else
-            '[]'
+            "[]"
           end
         else
           case field.type
@@ -1101,7 +1140,7 @@ module ProtoBoeuf
           when :TYPE_BOOL
             false
           when :TYPE_MESSAGE
-            'nil'
+            "nil"
           else
             raise NotImplementedError, field.type.to_s
           end
@@ -1110,34 +1149,34 @@ module ProtoBoeuf
 
       def map_field?(field)
         return false unless field.label == :LABEL_REPEATED
+
         map_name = field.type_name.split(".").last
         message.nested_type.any? { |type| type.name == map_name && type.options&.map_entry }
       end
 
       def map_type(field)
         return false unless field.label == :LABEL_REPEATED
+
         map_name = field.type_name.split(".").last
-        message.nested_type.find { |type|
+        message.nested_type.find do |type|
           type.name == map_name && type.options&.map_entry
-        } || raise(ArgumentError, "Not a map field")
+        end || raise(ArgumentError, "Not a map field")
       end
 
       def initialize_signature
-        self.fields.flat_map { |f|
+        fields.flat_map do |f|
           if f.has_oneof_index? && !f.proto3_optional
             "#{lvar_name(f)}: nil"
+          elsif f.proto3_optional
+            "#{lvar_name(f)}: nil"
           else
-            if f.proto3_optional
-              "#{lvar_name(f)}: nil"
-            else
-              "#{lvar_name(f)}: #{default_for(f)}"
-            end
+            "#{lvar_name(f)}: #{default_for(f)}"
           end
-        }.join(", ")
+        end.join(", ")
       end
 
       def tag_for_field(field, idx)
-        sprintf("%#02x", (idx << 3 | CodeGen.wire_type(field)))
+        format("%#02x", (idx << 3 | CodeGen.wire_type(field)))
       end
 
       def decode_subtype(field, type, dest, operator)
@@ -1164,7 +1203,7 @@ module ProtoBoeuf
             if field.type_name.start_with?(".google")
               pull_message(field.type_name, dest, operator)
             else
-              pull_message(field.type_name.sub(/^\./, '').gsub(".", "::"), dest, operator)
+              pull_message(field.type_name.sub(/^\./, "").gsub(".", "::"), dest, operator)
             end
           else
             raise "Unknown field type #{type}"
@@ -1181,11 +1220,15 @@ module ProtoBoeuf
       end
 
       def pull_fixed_int64(dest, operator)
-        "#{dest} #{operator} (" + 8.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 8"
+        "#{dest} #{operator} (" + 8.times.map { |i|
+                                    "(buff.getbyte(index + #{i}) << #{i * 8})"
+                                  }.join(" | ") + "); index += 8"
       end
 
       def pull_fixed_int32(dest, operator)
-        "#{dest} #{operator} (" + 4.times.map { |i| "(buff.getbyte(index + #{i}) << #{i * 8})" }.join(" | ") + "); index += 4"
+        "#{dest} #{operator} (" + 4.times.map { |i|
+                                    "(buff.getbyte(index + #{i}) << #{i * 8})"
+                                  }.join(" | ") + "); index += 4"
       end
 
       def decode_map(field)
@@ -1457,7 +1500,7 @@ module ProtoBoeuf
         PULL_VARINT.result(binding)
       end
 
-      alias :pull_sint64 :pull_sint32
+      alias_method :pull_sint64, :pull_sint32
 
       def pull_string(dest, operator)
         <<~RUBY
@@ -1483,7 +1526,7 @@ module ProtoBoeuf
         RUBY
       end
 
-      alias :pull_uint32 :pull_uint64
+      alias_method :pull_uint32, :pull_uint64
 
       def pull_boolean(dest, operator)
         <<~RUBY
@@ -1498,12 +1541,10 @@ module ProtoBoeuf
         if field.label == :LABEL_REPEATED
           if map_field?(field)
             decode_map(field)
+          elsif CodeGen.packed?(field)
+            PACKED_REPEATED.result(binding)
           else
-            if CodeGen.packed?(field)
-              PACKED_REPEATED.result(binding)
-            else
-              decode_repeated(field)
-            end
+            decode_repeated(field)
           end
         else
           decode_subtype(field, field.type, iv_name(field), "=")
@@ -1516,17 +1557,18 @@ module ProtoBoeuf
 
       def init_bitmask(msg)
         optionals = optional_fields
-        raise NotImplementedError unless optionals.length < 63
-        if optionals.length > 0
-          "    @_bitmask = 0\n\n"
-        else
+        raise NotImplementedError if optionals.length >= 63
+
+        if optionals.empty?
           ""
+        else
+          "    @_bitmask = 0\n\n"
         end
       end
 
-      def set_bitmask(field)
+      def set_bitmask(field) # rubocop:disable Naming/AccessorMethodName
         i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
-        "@_bitmask |= #{sprintf("%#018x", 1 << i)}"
+        "@_bitmask |= #{format("%#018x", 1 << i)}"
       end
 
       def bounds_check(field, value_name)
@@ -1553,7 +1595,7 @@ module ProtoBoeuf
 
       def test_bitmask(field)
         i = @optional_field_bit_lut.fetch(field.number) || raise("optional field should have a bit")
-        "(@_bitmask & #{sprintf("%#018x", 1 << i)}) == #{sprintf("%#018x", 1 << i)}"
+        "(@_bitmask & #{format("%#018x", 1 << i)}) == #{format("%#018x", 1 << i)}"
       end
 
       def reads_next_tag?(field)
@@ -1584,7 +1626,9 @@ module ProtoBoeuf
 
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
-        body += file.message_type.map { |message| MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax) }.join
+        body += file.message_type.map do |message|
+          MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax)
+        end.join
 
         head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
@@ -1617,41 +1661,55 @@ module ProtoBoeuf
     LEN = 2
     I32 = 5
 
-    PACKED_TYPES = %i{ TYPE_DOUBLE TYPE_FLOAT TYPE_INT32 TYPE_INT64 TYPE_UINT32
-    TYPE_UINT64 TYPE_SINT32 TYPE_SINT64 TYPE_FIXED32 TYPE_FIXED64 TYPE_SFIXED32
-    TYPE_SFIXED64 TYPE_BOOL }.to_set.freeze
+    PACKED_TYPES = [
+      :TYPE_DOUBLE,
+      :TYPE_FLOAT,
+      :TYPE_INT32,
+      :TYPE_INT64,
+      :TYPE_UINT32,
+      :TYPE_UINT64,
+      :TYPE_SINT32,
+      :TYPE_SINT64,
+      :TYPE_FIXED32,
+      :TYPE_FIXED64,
+      :TYPE_SFIXED32,
+      :TYPE_SFIXED64,
+      :TYPE_BOOL,
+    ].to_set.freeze
 
-    # Returns whether or not a repeated field is packed.
-    # In Proto3 documents, repeated fields default to packed
-    def self.packed?(field)
-      raise ArgumentError unless field.label == :LABEL_REPEATED
+    class << self
+      # Returns whether or not a repeated field is packed.
+      # In Proto3 documents, repeated fields default to packed
+      def packed?(field)
+        raise ArgumentError unless field.label == :LABEL_REPEATED
 
-      return PACKED_TYPES.include?(field.type) unless field.options
+        return PACKED_TYPES.include?(field.type) unless field.options
 
-      field.options.packed
-    end
+        field.options.packed
+      end
 
-    def self.wire_type(field)
-      if field.label == :LABEL_REPEATED && packed?(field)
-        LEN
-      elsif field.type == :TYPE_ENUM
-        VARINT
-      else
-        case field.type
-        when :TYPE_STRING, :TYPE_BYTES
+      def wire_type(field)
+        if field.label == :LABEL_REPEATED && packed?(field)
           LEN
-        when :TYPE_INT64, :TYPE_INT32, :TYPE_UINT64, :TYPE_BOOL, :TYPE_SINT32, :TYPE_SINT64, :TYPE_UINT32
+        elsif field.type == :TYPE_ENUM
           VARINT
-        when :TYPE_DOUBLE, :TYPE_FIXED64, :TYPE_SFIXED64
-          I64
-        when :TYPE_FLOAT, :TYPE_FIXED32, :TYPE_SFIXED32
-          I32
-        when :TYPE_MESSAGE
-          LEN
-        #when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
-        #  LEN
         else
-          raise "Unknown wire type for field #{field.type}"
+          case field.type
+          when :TYPE_STRING, :TYPE_BYTES
+            LEN
+          when :TYPE_INT64, :TYPE_INT32, :TYPE_UINT64, :TYPE_BOOL, :TYPE_SINT32, :TYPE_SINT64, :TYPE_UINT32
+            VARINT
+          when :TYPE_DOUBLE, :TYPE_FIXED64, :TYPE_SFIXED64
+            I64
+          when :TYPE_FLOAT, :TYPE_FIXED32, :TYPE_SFIXED32
+            I32
+          when :TYPE_MESSAGE
+            LEN
+          # when /[A-Z]+\w+/ # FIXME: this doesn't seem right...
+          #  LEN
+          else
+            raise "Unknown wire type for field #{field.type}"
+          end
         end
       end
     end
