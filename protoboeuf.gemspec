@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = ["protoboeuf"]
   spec.require_paths = ["lib"]
-  spec.files = Dir.glob(%w[lib/**/*.rb]) + %w[README.md Gemfile Rakefile]
+  spec.files = Dir.glob(["lib/**/*.rb"]) + ["README.md", "Gemfile", "Rakefile"]
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 

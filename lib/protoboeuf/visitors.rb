@@ -8,16 +8,16 @@ module ProtoBoeuf
       end
 
       def accept(node)
-        node.accept self
+        node.accept(self)
       end
 
       def visit_file_descriptor_set(node)
-        node.file.map { |n| n.accept self }.join
+        node.file.map { |n| n.accept(self) }.join
       end
 
       def visit_unit(unit)
         doc = "syntax = \"proto3\";"
-        if unit.imports.length > 0
+        unless unit.imports.empty?
           doc += "\n\n"
           doc += unit.imports.map { |i| "import \"#{i}\";" }.join("\n")
         end
@@ -27,14 +27,14 @@ module ProtoBoeuf
           doc += "package #{unit.package};"
         end
 
-        if unit.enum_type.length > 0
+        unless unit.enum_type.empty?
           doc += "\n\n"
-          doc += unit.enum_type.map { |msg| msg.accept self }.join("\n")
+          doc += unit.enum_type.map { |msg| msg.accept(self) }.join("\n")
         end
 
-        if unit.message_type.length > 0
+        unless unit.message_type.empty?
           doc += "\n\n"
-          doc += unit.message_type.map { |msg| msg.accept self }.join("\n")
+          doc += unit.message_type.map { |msg| msg.accept(self) }.join("\n")
         end
         doc
       end
@@ -51,27 +51,28 @@ module ProtoBoeuf
         end
 
         body = "".dup
-        body += msg.enum_type.map { |f| f.accept self }.join("\n")
-        body += "\n" if msg.enum_type.length > 0
-        body += msg.messages.map { |f| f.accept self }.join("\n")
-        body += "\n" if msg.messages.length > 0
+        body += msg.enum_type.map { |f| f.accept(self) }.join("\n")
+        body += "\n" unless msg.enum_type.empty?
+        body += msg.messages.map { |f| f.accept(self) }.join("\n")
+        body += "\n" unless msg.messages.empty?
 
-        oneof_decls = msg.oneof_decl.each_with_index.select { |oneof, idx|
+        oneof_decls = msg.oneof_decl.each_with_index.select do |_oneof, idx|
           oneof_fields[idx]
-        }
-        body += oneof_decls.map { |oneof, idx|
+        end
+        body += oneof_decls.map do |oneof, idx|
           next unless oneof_fields[idx]
-          visit_oneof oneof, oneof_fields[idx]
-        }.join("\n")
-        body += "\n" if oneof_decls.length > 0
 
-        body += msg.field.reject { |f|
+          visit_oneof(oneof, oneof_fields[idx])
+        end.join("\n")
+        body += "\n" unless oneof_decls.empty?
+
+        body += msg.field.reject do |f|
           f.oneof_index && oneof_fields[f.oneof_index]
-        }.map { |f| f.accept self }.join("\n")
-        body += "\n" if msg.field.length > 0
+        end.map { |f| f.accept(self) }.join("\n")
+        body += "\n" unless msg.field.empty?
 
-        body += msg.nested_type.map { |f| visit_message f }.join("\n")
-        body += "\n" if msg.nested_type.length > 0
+        body += msg.nested_type.map { |f| visit_message(f) }.join("\n")
+        body += "\n" unless msg.nested_type.empty?
 
         @indent -= 1
 
@@ -82,15 +83,15 @@ module ProtoBoeuf
         options = if !field.options
           ""
         else
-          " [" + field.options.to_h.reject { |_, v| v.nil? }.map { |k,v| "#{k} = #{v}" }.join(", ") + "]"
+          " [" + field.options.to_h.reject { |_, v| v.nil? }.map { |k, v| "#{k} = #{v}" }.join(", ") + "]"
         end
         indent([qualifier(field), type(field), field.name].compact.join(" ") + " = " + "#{field.number}#{options};")
       end
 
       def visit_enum(enum)
         @indent += 1
-        body = enum.value.map { |f| f.accept self }.join("\n")
-        body += "\n" if enum.value.length > 0
+        body = enum.value.map { |f| f.accept(self) }.join("\n")
+        body += "\n" unless enum.value.empty?
         @indent -= 1
         indent("enum #{enum.name} {\n") + body + indent("}")
       end
@@ -101,8 +102,8 @@ module ProtoBoeuf
 
       def visit_oneof(oneof, children)
         @indent += 1
-        body = children.map { |f| f.accept self }.join("\n")
-        body += "\n" if children.length > 0
+        body = children.map { |f| f.accept(self) }.join("\n")
+        body += "\n" unless children.empty?
         @indent -= 1
 
         indent("oneof #{oneof.name} {\n") + body + indent("}")
@@ -117,7 +118,7 @@ module ProtoBoeuf
           case field.label
           when :LABEL_REQUIRED then "required"
           when :LABEL_REPEATED then "repeated"
-          else
+          else # rubocop:disable Style/EmptyElse
             nil
           end
         end
@@ -133,7 +134,7 @@ module ProtoBoeuf
         elsif field.type == :TYPE_ENUM
           field.type_name.split(".").last
         else
-          field.type.to_s.sub(/^TYPE_/, '').downcase
+          field.type.to_s.sub(/^TYPE_/, "").downcase
         end
       end
     end

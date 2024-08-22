@@ -31,5 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: bundle install
+
+      - name: Run RuboCop
+        run: bundle exec rubocop
+
       - name: Run tests ${{ matrix.rubyopt }}
         run: bundle exec rake RUBYOPT="${{ matrix.rubyopt }}"

@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 ENV["MT_NO_PLUGINS"] = "1"
 
 require "minitest/autorun"
-#require "minitest/color"
+# require "minitest/color"
 require_relative "fixtures/test_pb"
 require "protoboeuf/parser"
 require "protoboeuf/codegen"
