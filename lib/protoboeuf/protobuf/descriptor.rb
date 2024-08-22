@@ -171,10 +171,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -662,10 +662,10 @@ module ProtoBoeuf
 
               ## END PULL_STRING
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -1014,10 +1014,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -1094,10 +1094,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -1174,10 +1174,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -1254,10 +1254,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x3a
             end
             ## END DECODE REPEATED
@@ -3052,10 +3052,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -3132,10 +3132,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x32
             end
             ## END DECODE REPEATED
@@ -3212,10 +3212,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x1a
             end
             ## END DECODE REPEATED
@@ -3292,10 +3292,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -3372,10 +3372,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -3452,10 +3452,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x42
             end
             ## END DECODE REPEATED
@@ -3605,10 +3605,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x4a
             end
             ## END DECODE REPEATED
@@ -3682,10 +3682,10 @@ module ProtoBoeuf
 
               ## END PULL_STRING
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x52
             end
             ## END DECODE REPEATED
@@ -4817,6 +4817,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -4875,7 +4876,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -4952,6 +4952,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -5010,7 +5011,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -8169,10 +8169,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -8322,10 +8322,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x22
             end
             ## END DECODE REPEATED
@@ -8399,10 +8399,10 @@ module ProtoBoeuf
 
               ## END PULL_STRING
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x2a
             end
             ## END DECODE REPEATED
@@ -9201,10 +9201,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -12459,6 +12459,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -12517,7 +12518,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -13619,6 +13619,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -13677,7 +13678,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -15837,6 +15837,7 @@ module ProtoBoeuf
 
               ## END PULL_INT64
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -15895,7 +15896,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x98
             end
             ## END DECODE REPEATED
@@ -15972,6 +15972,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -16030,7 +16031,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0xa2
             end
             ## END DECODE REPEATED
@@ -16363,6 +16363,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -16421,7 +16422,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -17104,6 +17104,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -17162,7 +17163,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -17830,6 +17830,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -17888,7 +17889,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -18655,6 +18655,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -18713,7 +18714,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -19287,6 +19287,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -19345,7 +19346,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -20038,6 +20038,7 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               ## PULL_UINT64
               tag =
                 if (byte0 = buff.getbyte(index)) < 0x80
@@ -20096,7 +20097,6 @@ module ProtoBoeuf
 
               ## END PULL_UINT64
 
-              return self if index >= len
               break unless tag == 0x1f3a
             end
             ## END DECODE REPEATED
@@ -20624,10 +20624,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0x12
             end
             ## END DECODE REPEATED
@@ -22526,10 +22526,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -23388,10 +23388,10 @@ module ProtoBoeuf
 
                 ## END PULL_STRING
 
+                return self if index >= len
                 tag = buff.getbyte(index)
                 index += 1
 
-                return self if index >= len
                 break unless tag == 0x32
               end
               ## END DECODE REPEATED
@@ -23679,10 +23679,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
@@ -24587,10 +24587,10 @@ module ProtoBoeuf
               )
               ## END PULL_MESSAGE
 
+              return self if index >= len
               tag = buff.getbyte(index)
               index += 1
 
-              return self if index >= len
               break unless tag == 0xa
             end
             ## END DECODE REPEATED
