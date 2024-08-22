@@ -10,3 +10,4 @@ AllCops:
   Exclude:
   - '**/*_pb.rb'
   - 'bench/lib/**/*'
+  - 'lib/protoboeuf/protobuf/descriptor.rb'
