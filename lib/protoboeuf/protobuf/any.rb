@@ -1,4 +1,5 @@
 # encoding: ascii-8bit
+# rubocop:disable all
 # frozen_string_literal: true
 
 module ProtoBoeuf

@@ -1577,8 +1577,10 @@ module ProtoBoeuf
       @ast.file.each do |file|
         modules = resolve_modules(file)
         head = "# encoding: ascii-8bit\n"
+        head += "# rubocop:disable all\n"
         head += "# typed: false\n" if generate_types
-        head += "# frozen_string_literal: true\n\n"
+        head += "# frozen_string_literal: true\n"
+        head += "\n"
 
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
