@@ -209,6 +209,11 @@ class Test1
     @bytes_field = bytes_field
   end
 
+  sig { params(_options: T::Hash).returns(String) }
+  def to_proto(_options = {})
+    self.class.encode(self)
+  end
+
   sig { returns(T::Boolean) }
   def has_string_field?
     (@_bitmask & 0x0000000000000001) == 0x0000000000000001
