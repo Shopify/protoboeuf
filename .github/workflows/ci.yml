@@ -11,10 +11,10 @@ jobs:
       matrix:
         os: [ubuntu]
         ruby: [ head, '3.3' ]
-        ruby-opt: [""]
+        rubyopt: [""]
         include:
           - ruby: "3.3"
-            ruby-opt: "--enable-frozen-string-literal --debug-frozen-string-literal"
+            rubyopt: "--enable-frozen-string-literal --debug-frozen-string-literal"
             os: "ubuntu"
 
     steps:
