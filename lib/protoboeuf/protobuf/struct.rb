@@ -36,6 +36,10 @@ module ProtoBoeuf
         @fields = fields
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @fields = {}
 
@@ -443,6 +447,10 @@ module ProtoBoeuf
           @kind = :list_value
           @list_value = list_value
         end
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def decode_from(buff, index, len)
@@ -943,6 +951,10 @@ module ProtoBoeuf
 
       def initialize(values: [])
         @values = values
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def decode_from(buff, index, len)
