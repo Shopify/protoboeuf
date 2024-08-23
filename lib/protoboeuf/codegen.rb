@@ -872,7 +872,14 @@ module ProtoBoeuf
       end
 
       def extra_api
-        optional_predicates
+        <<~RUBY
+          #{type_signature(params: { _options: "T::Hash" }, returns: "String")}
+          def to_proto(_options = {})
+            self.class.encode(self)
+          end
+
+          #{optional_predicates}
+        RUBY
       end
 
       def optional_predicates

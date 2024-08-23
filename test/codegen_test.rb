@@ -511,6 +511,23 @@ module ProtoBoeuf
       refute(gen.to_ruby(path).to_s.match?(require_line), "require should not be present")
     end
 
+    def test_to_proto
+      unit = parse_string(<<~PROTO)
+        syntax = "proto3";
+
+        message Foo {
+          int32 a = 1;
+        }
+      PROTO
+
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval gen.to_ruby }
+      obj = klass::Foo.new(a: 255)
+
+      assert_equal(255, obj.a)
+      assert_equal("\x08\xff\x01".b, obj.to_proto)
+    end
+
     def test_bounds_checks
       proto = <<~PROTO
         message Test1 {
