@@ -33,6 +33,10 @@ module ProtoBoeuf
         @value = value
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @value = 0
 

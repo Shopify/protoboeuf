@@ -95,6 +95,10 @@ module ProtoBoeuf
         @file = file
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @file = []
 
@@ -418,6 +422,10 @@ module ProtoBoeuf
         @syntax = syntax
 
         @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -2164,6 +2172,10 @@ module ProtoBoeuf
           @options = options
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_start?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
@@ -2567,6 +2579,10 @@ module ProtoBoeuf
           @end = binding.local_variable_get(:end)
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_start?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
@@ -2888,6 +2904,10 @@ module ProtoBoeuf
         @reserved_range = reserved_range
 
         @reserved_name = reserved_name
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -4253,6 +4273,10 @@ module ProtoBoeuf
           @repeated = repeated
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_number?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
@@ -4681,6 +4705,10 @@ module ProtoBoeuf
           ProtoBoeuf::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
             verification
           ) || verification
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_features?
@@ -5744,6 +5772,10 @@ module ProtoBoeuf
         @options = options
 
         @proto3_optional = proto3_optional
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -7436,6 +7468,10 @@ module ProtoBoeuf
         @options = options
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def has_name?
         (@_bitmask & 0x0000000000000001) == 0x0000000000000001
       end
@@ -7734,6 +7770,10 @@ module ProtoBoeuf
           @end = binding.local_variable_get(:end)
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_start?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
@@ -8010,6 +8050,10 @@ module ProtoBoeuf
         @reserved_range = reserved_range
 
         @reserved_name = reserved_name
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -8668,6 +8712,10 @@ module ProtoBoeuf
         @options = options
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def has_name?
         (@_bitmask & 0x0000000000000001) == 0x0000000000000001
       end
@@ -9044,6 +9092,10 @@ module ProtoBoeuf
         @method = method
 
         @options = options
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -9493,6 +9545,10 @@ module ProtoBoeuf
         @client_streaming = client_streaming
 
         @server_streaming = server_streaming
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_name?
@@ -10218,6 +10274,10 @@ module ProtoBoeuf
         @features = features
 
         @uninterpreted_option = uninterpreted_option
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_java_package?
@@ -13004,6 +13064,10 @@ module ProtoBoeuf
         @uninterpreted_option = uninterpreted_option
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def has_message_set_wire_format?
         (@_bitmask & 0x0000000000000001) == 0x0000000000000001
       end
@@ -13913,6 +13977,10 @@ module ProtoBoeuf
           @value = value
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_value?
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
         end
@@ -14183,6 +14251,10 @@ module ProtoBoeuf
           @edition_removed =
             ProtoBoeuf::Protobuf::Edition.resolve(edition_removed) ||
               edition_removed
+        end
+
+        def to_proto(_options = {})
+          self.class.encode(self)
         end
 
         def has_deprecation_warning?
@@ -14875,6 +14947,10 @@ module ProtoBoeuf
         @feature_support = feature_support
 
         @uninterpreted_option = uninterpreted_option
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_packed?
@@ -16844,6 +16920,10 @@ module ProtoBoeuf
         @uninterpreted_option = uninterpreted_option
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def has_features?
         (@_bitmask & 0x0000000000000001) == 0x0000000000000001
       end
@@ -17355,6 +17435,10 @@ module ProtoBoeuf
         @features = features
 
         @uninterpreted_option = uninterpreted_option
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_allow_alias?
@@ -18118,6 +18202,10 @@ module ProtoBoeuf
         @feature_support = feature_support
 
         @uninterpreted_option = uninterpreted_option
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_deprecated?
@@ -18956,6 +19044,10 @@ module ProtoBoeuf
         @uninterpreted_option = uninterpreted_option
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def has_features?
         (@_bitmask & 0x0000000000000001) == 0x0000000000000001
       end
@@ -19574,6 +19666,10 @@ module ProtoBoeuf
         @features = features
 
         @uninterpreted_option = uninterpreted_option
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_deprecated?
@@ -20291,6 +20387,10 @@ module ProtoBoeuf
           @is_extension = is_extension
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def decode_from(buff, index, len)
           @name_part = ""
           @is_extension = false
@@ -20514,6 +20614,10 @@ module ProtoBoeuf
         @string_value = string_value
 
         @aggregate_value = aggregate_value
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def has_identifier_value?
@@ -21392,6 +21496,10 @@ module ProtoBoeuf
             json_format
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @field_presence = 0
         @enum_type = 0
@@ -22041,6 +22149,10 @@ module ProtoBoeuf
           @fixed_features = fixed_features
         end
 
+        def to_proto(_options = {})
+          self.class.encode(self)
+        end
+
         def has_overridable_features?
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
         end
@@ -22446,6 +22558,10 @@ module ProtoBoeuf
         @maximum_edition =
           ProtoBoeuf::Protobuf::Edition.resolve(maximum_edition) ||
             maximum_edition
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def decode_from(buff, index, len)
@@ -22891,6 +23007,10 @@ module ProtoBoeuf
           @trailing_comments = trailing_comments
 
           @leading_detached_comments = leading_detached_comments
+        end
+
+        def to_proto(_options = {})
+          self.class.encode(self)
         end
 
         def has_leading_comments?
@@ -23603,6 +23723,10 @@ module ProtoBoeuf
         @location = location
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @location = []
 
@@ -23894,6 +24018,10 @@ module ProtoBoeuf
             ProtoBoeuf::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
               semantic
             ) || semantic
+        end
+
+        def to_proto(_options = {})
+          self.class.encode(self)
         end
 
         def has_source_file?
@@ -24509,6 +24637,10 @@ module ProtoBoeuf
 
       def initialize(annotation: [])
         @annotation = annotation
+      end
+
+      def to_proto(_options = {})
+        self.class.encode(self)
       end
 
       def decode_from(buff, index, len)

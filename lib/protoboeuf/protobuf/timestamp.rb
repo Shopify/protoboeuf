@@ -51,6 +51,10 @@ module ProtoBoeuf
         @nanos = nanos
       end
 
+      def to_proto(_options = {})
+        self.class.encode(self)
+      end
+
       def decode_from(buff, index, len)
         @seconds = 0
         @nanos = 0
