@@ -378,6 +378,17 @@ module ProtoBoeuf
       assert_equal(:oneof_u32, msg.oneof_field)
     end
 
+    def test_decode_empty_many_fields
+      # Use field number high enough to require looking for second varint byte.
+      unit = parse_string('syntax = "proto3"; message DecodeEmpty { string a = 16; }')
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval gen.to_ruby }
+      encoded = klass::DecodeEmpty.new.to_proto
+      assert_equal("", encoded)
+      obj = klass::DecodeEmpty.decode(encoded)
+      assert_equal("", obj.a)
+    end
+
     def test_make_ruby
       unit = parse_string(
         'syntax = "proto3"; message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }',

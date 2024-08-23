@@ -102,6 +102,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @file = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -744,6 +745,7 @@ module ProtoBoeuf
         @syntax = ""
         @edition = 0
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -3410,6 +3412,7 @@ module ProtoBoeuf
           @end = 0
           @options = nil
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -4183,6 +4186,7 @@ module ProtoBoeuf
           @start = 0
           @end = 0
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -4833,6 +4837,7 @@ module ProtoBoeuf
         @reserved_range = []
         @reserved_name = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -6985,6 +6990,7 @@ module ProtoBoeuf
           @reserved = false
           @repeated = false
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -7885,6 +7891,7 @@ module ProtoBoeuf
         @features = nil
         @verification = 0
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -9196,6 +9203,7 @@ module ProtoBoeuf
         @options = nil
         @proto3_optional = false
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -11018,6 +11026,7 @@ module ProtoBoeuf
         @name = ""
         @options = nil
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -11635,6 +11644,7 @@ module ProtoBoeuf
           @start = 0
           @end = 0
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -12235,6 +12245,7 @@ module ProtoBoeuf
         @reserved_range = []
         @reserved_name = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -13385,6 +13396,7 @@ module ProtoBoeuf
         @number = 0
         @options = nil
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -14134,6 +14146,7 @@ module ProtoBoeuf
         @method = []
         @options = nil
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -14997,6 +15010,7 @@ module ProtoBoeuf
         @client_streaming = false
         @server_streaming = false
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -16422,6 +16436,7 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -19339,6 +19354,7 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -20388,6 +20404,7 @@ module ProtoBoeuf
           @edition = 0
           @value = ""
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -20992,6 +21009,7 @@ module ProtoBoeuf
           @deprecation_warning = ""
           @edition_removed = 0
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -22199,6 +22217,7 @@ module ProtoBoeuf
         @feature_support = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -24293,6 +24312,7 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -24991,6 +25011,7 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -25927,6 +25948,7 @@ module ProtoBoeuf
         @feature_support = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -26916,6 +26938,7 @@ module ProtoBoeuf
         @deprecated = false
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -27703,6 +27726,7 @@ module ProtoBoeuf
         @features = nil
         @uninterpreted_option = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -28558,6 +28582,7 @@ module ProtoBoeuf
           @name_part = ""
           @is_extension = false
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -29153,6 +29178,7 @@ module ProtoBoeuf
         @string_value = ""
         @aggregate_value = ""
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -30626,6 +30652,7 @@ module ProtoBoeuf
         @message_encoding = 0
         @json_format = 0
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -31830,6 +31857,7 @@ module ProtoBoeuf
           @overridable_features = nil
           @fixed_features = nil
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -32603,6 +32631,7 @@ module ProtoBoeuf
         @minimum_edition = 0
         @maximum_edition = 0
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -33435,6 +33464,7 @@ module ProtoBoeuf
           @trailing_comments = ""
           @leading_detached_comments = []
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -34608,6 +34638,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @location = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -35198,6 +35229,7 @@ module ProtoBoeuf
           @end = 0
           @semantic = 0
 
+          return self if index >= len
           ## PULL_UINT64
           tag =
             if (byte0 = buff.getbyte(index)) < 0x80
@@ -36272,6 +36304,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @annotation = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80

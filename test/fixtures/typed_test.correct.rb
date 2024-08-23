@@ -232,6 +232,7 @@ class Test1
     @map_field = {}
     @bytes_field = ""
 
+    return self if index >= len
     ## PULL_UINT64
     tag =
       if (byte0 = buff.getbyte(index)) < 0x80
