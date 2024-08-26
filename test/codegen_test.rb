@@ -398,6 +398,28 @@ module ProtoBoeuf
       assert_equal(0, obj.a)
     end
 
+    def test_oneof_edition_2023
+      skip("Editions not supported by parser") if protoboeuf_parser?
+
+      unit = parse_string(<<~EOPROTO)
+        edition = "2023";
+
+        message TestMessageWithOneOf {
+          oneof oneof_field {
+            string oneof_str = 1;
+          }
+          string after_oneof = 2;
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval(gen.to_ruby) }
+
+      msg = klass::TestMessageWithOneOf.new(oneof_str: "hello")
+      assert_predicate(msg, :has_oneof_str?)
+      obj = klass::TestMessageWithOneOf.decode(klass::TestMessageWithOneOf.encode(msg))
+      assert_predicate(obj, :has_oneof_str?)
+    end
+
     # One of our well known types (descriptor.proto) has proto2 syntax so we want to test our codegen of it.
     def test_optional_predicate_proto2
       skip("Syntax proto2 not supported by parser") if protoboeuf_parser?

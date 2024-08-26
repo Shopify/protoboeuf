@@ -86,9 +86,7 @@ module ProtoBoeuf
         optional_field_count = 0
 
         message.field.each do |field|
-          if field.has_oneof_index? && !field.proto3_optional
-            (@oneof_fields[field.oneof_index] ||= []) << field
-          elsif optional_field?(field)
+          if optional_field?(field)
             if field.type == :TYPE_ENUM
               @enum_fields << field
             else
@@ -96,6 +94,8 @@ module ProtoBoeuf
             end
             @optional_field_bit_lut[field.number] = optional_field_count
             optional_field_count += 1
+          elsif field.has_oneof_index?
+            (@oneof_fields[field.oneof_index] ||= []) << field
           elsif field.type == :TYPE_ENUM
             @enum_fields << field
           else
@@ -740,7 +740,7 @@ module ProtoBoeuf
           init_bitmask(message) +
           initialize_oneofs +
           fields.map { |field|
-            if field.has_oneof_index? && !field.proto3_optional
+            if field.has_oneof_index? && !optional_field?(field)
               initialize_oneof(field, message)
             else
               initialize_field(field)
