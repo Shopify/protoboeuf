@@ -79,7 +79,8 @@ class WellKnownTypesTest < ProtoBoeuf::Test
       edition: :EDITION_2023,
     )
 
-    assert_predicate(fd, :has_name?, "optional field predicate")
+    assert_predicate(fd, :has_name?, "optional field predicate should be true when initialized")
+    refute_predicate(fd, :has_package?, "optional field predicate should be false when not initialized")
 
     assert_equal(fd.edition, :EDITION_2023, "enum resolve")
     # Test that the resolve/lookup is working and that we aren't just passing through.

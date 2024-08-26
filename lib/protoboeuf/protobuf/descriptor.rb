@@ -369,8 +369,8 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        name: "",
-        package: "",
+        name: nil,
+        package: nil,
         dependency: [],
         public_dependency: [],
         weak_dependency: [],
@@ -380,8 +380,8 @@ module ProtoBoeuf
         extension: [],
         options: nil,
         source_code_info: nil,
-        syntax: "",
-        edition: 0
+        syntax: nil,
+        edition: nil
       )
         @_bitmask = 0
 
@@ -2183,7 +2183,7 @@ module ProtoBoeuf
         end
         # END writers for optional fields
 
-        def initialize(start: 0, end: 0, options: nil)
+        def initialize(start: nil, end: nil, options: nil)
           @_bitmask = 0
 
           if start == nil
@@ -2607,7 +2607,7 @@ module ProtoBoeuf
         end
         # END writers for optional fields
 
-        def initialize(start: 0, end: 0)
+        def initialize(start: nil, end: nil)
           @_bitmask = 0
 
           if start == nil
@@ -2927,7 +2927,7 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        name: "",
+        name: nil,
         field: [],
         extension: [],
         nested_type: [],
@@ -4315,11 +4315,11 @@ module ProtoBoeuf
         # END writers for optional fields
 
         def initialize(
-          number: 0,
-          full_name: "",
-          type: "",
-          reserved: false,
-          repeated: false
+          number: nil,
+          full_name: nil,
+          type: nil,
+          reserved: nil,
+          repeated: nil
         )
           @_bitmask = 0
 
@@ -4781,7 +4781,7 @@ module ProtoBoeuf
         uninterpreted_option: [],
         declaration: [],
         features: nil,
-        verification: 0
+        verification: nil
       )
         @_bitmask = 0
 
@@ -5827,17 +5827,17 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        name: "",
-        number: 0,
-        label: 0,
-        type: 0,
-        type_name: "",
-        extendee: "",
-        default_value: "",
-        oneof_index: 0,
-        json_name: "",
+        name: nil,
+        number: nil,
+        label: nil,
+        type: nil,
+        type_name: nil,
+        extendee: nil,
+        default_value: nil,
+        oneof_index: nil,
+        json_name: nil,
         options: nil,
-        proto3_optional: false
+        proto3_optional: nil
       )
         @_bitmask = 0
 
@@ -7617,7 +7617,7 @@ module ProtoBoeuf
       end
       # END writers for optional fields
 
-      def initialize(name: "", options: nil)
+      def initialize(name: nil, options: nil)
         @_bitmask = 0
 
         if name == nil
@@ -7920,7 +7920,7 @@ module ProtoBoeuf
         end
         # END writers for optional fields
 
-        def initialize(start: 0, end: 0)
+        def initialize(start: nil, end: nil)
           @_bitmask = 0
 
           if start == nil
@@ -8210,7 +8210,7 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        name: "",
+        name: nil,
         value: [],
         options: nil,
         reserved_range: [],
@@ -8885,7 +8885,7 @@ module ProtoBoeuf
       end
       # END writers for optional fields
 
-      def initialize(name: "", number: 0, options: nil)
+      def initialize(name: nil, number: nil, options: nil)
         @_bitmask = 0
 
         if name == nil
@@ -9286,7 +9286,7 @@ module ProtoBoeuf
       end
       # END writers for optional fields
 
-      def initialize(name: "", method: [], options: nil)
+      def initialize(name: nil, method: [], options: nil)
         @_bitmask = 0
 
         if name == nil
@@ -9737,12 +9737,12 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        name: "",
-        input_type: "",
-        output_type: "",
+        name: nil,
+        input_type: nil,
+        output_type: nil,
         options: nil,
-        client_streaming: false,
-        server_streaming: false
+        client_streaming: nil,
+        server_streaming: nil
       )
         @_bitmask = 0
 
@@ -10448,25 +10448,25 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        java_package: "",
-        java_outer_classname: "",
-        java_multiple_files: false,
-        java_generate_equals_and_hash: false,
-        java_string_check_utf8: false,
-        optimize_for: 0,
-        go_package: "",
-        cc_generic_services: false,
-        java_generic_services: false,
-        py_generic_services: false,
-        deprecated: false,
-        cc_enable_arenas: false,
-        objc_class_prefix: "",
-        csharp_namespace: "",
-        swift_prefix: "",
-        php_class_prefix: "",
-        php_namespace: "",
-        php_metadata_namespace: "",
-        ruby_package: "",
+        java_package: nil,
+        java_outer_classname: nil,
+        java_multiple_files: nil,
+        java_generate_equals_and_hash: nil,
+        java_string_check_utf8: nil,
+        optimize_for: nil,
+        go_package: nil,
+        cc_generic_services: nil,
+        java_generic_services: nil,
+        py_generic_services: nil,
+        deprecated: nil,
+        cc_enable_arenas: nil,
+        objc_class_prefix: nil,
+        csharp_namespace: nil,
+        swift_prefix: nil,
+        php_class_prefix: nil,
+        php_namespace: nil,
+        php_metadata_namespace: nil,
+        ruby_package: nil,
         features: nil,
         uninterpreted_option: []
       )
@@ -13380,11 +13380,11 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        message_set_wire_format: false,
-        no_standard_descriptor_accessor: false,
-        deprecated: false,
-        map_entry: false,
-        deprecated_legacy_json_field_conflicts: false,
+        message_set_wire_format: nil,
+        no_standard_descriptor_accessor: nil,
+        deprecated: nil,
+        map_entry: nil,
+        deprecated_legacy_json_field_conflicts: nil,
         features: nil,
         uninterpreted_option: []
       )
@@ -14341,7 +14341,7 @@ module ProtoBoeuf
         end
         # END writers for optional fields
 
-        def initialize(edition: 0, value: "")
+        def initialize(edition: nil, value: nil)
           @_bitmask = 0
 
           if edition == nil
@@ -14614,10 +14614,10 @@ module ProtoBoeuf
         # END writers for optional fields
 
         def initialize(
-          edition_introduced: 0,
-          edition_deprecated: 0,
-          deprecation_warning: "",
-          edition_removed: 0
+          edition_introduced: nil,
+          edition_deprecated: nil,
+          deprecation_warning: nil,
+          edition_removed: nil
         )
           @_bitmask = 0
 
@@ -15299,15 +15299,15 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        ctype: 0,
-        packed: false,
-        jstype: 0,
-        lazy: false,
-        unverified_lazy: false,
-        deprecated: false,
-        weak: false,
-        debug_redact: false,
-        retention: 0,
+        ctype: nil,
+        packed: nil,
+        jstype: nil,
+        lazy: nil,
+        unverified_lazy: nil,
+        deprecated: nil,
+        weak: nil,
+        debug_redact: nil,
+        retention: nil,
         targets: [],
         edition_defaults: [],
         features: nil,
@@ -17881,9 +17881,9 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        allow_alias: false,
-        deprecated: false,
-        deprecated_legacy_json_field_conflicts: false,
+        allow_alias: nil,
+        deprecated: nil,
+        deprecated_legacy_json_field_conflicts: nil,
         features: nil,
         uninterpreted_option: []
       )
@@ -18669,9 +18669,9 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        deprecated: false,
+        deprecated: nil,
         features: nil,
-        debug_redact: false,
+        debug_redact: nil,
         feature_support: nil,
         uninterpreted_option: []
       )
@@ -19538,7 +19538,7 @@ module ProtoBoeuf
       end
       # END writers for optional fields
 
-      def initialize(features: nil, deprecated: false, uninterpreted_option: [])
+      def initialize(features: nil, deprecated: nil, uninterpreted_option: [])
         @_bitmask = 0
 
         if features == nil
@@ -20163,8 +20163,8 @@ module ProtoBoeuf
       # END writers for optional fields
 
       def initialize(
-        deprecated: false,
-        idempotency_level: 0,
+        deprecated: nil,
+        idempotency_level: nil,
         features: nil,
         uninterpreted_option: []
       )
@@ -21111,12 +21111,12 @@ module ProtoBoeuf
 
       def initialize(
         name: [],
-        identifier_value: "",
-        positive_int_value: 0,
-        negative_int_value: 0,
-        double_value: 0.0,
-        string_value: "",
-        aggregate_value: ""
+        identifier_value: nil,
+        positive_int_value: nil,
+        negative_int_value: nil,
+        double_value: nil,
+        string_value: nil,
+        aggregate_value: nil
       )
         @_bitmask = 0
 
@@ -22024,12 +22024,12 @@ module ProtoBoeuf
       end
 
       def initialize(
-        field_presence: 0,
-        enum_type: 0,
-        repeated_field_encoding: 0,
-        utf8_validation: 0,
-        message_encoding: 0,
-        json_format: 0
+        field_presence: nil,
+        enum_type: nil,
+        repeated_field_encoding: nil,
+        utf8_validation: nil,
+        message_encoding: nil,
+        json_format: nil
       )
         if field_presence == nil
           @field_presence = 0
@@ -22730,7 +22730,7 @@ module ProtoBoeuf
         # END writers for optional fields
 
         def initialize(
-          edition: 0,
+          edition: nil,
           overridable_features: nil,
           fixed_features: nil
         )
@@ -23158,7 +23158,7 @@ module ProtoBoeuf
         @maximum_edition = ProtoBoeuf::Protobuf::Edition.resolve(v) || v
       end
 
-      def initialize(defaults: [], minimum_edition: 0, maximum_edition: 0)
+      def initialize(defaults: [], minimum_edition: nil, maximum_edition: nil)
         @defaults = defaults
 
         if minimum_edition == nil
@@ -23600,8 +23600,8 @@ module ProtoBoeuf
         def initialize(
           path: [],
           span: [],
-          leading_comments: "",
-          trailing_comments: "",
+          leading_comments: nil,
+          trailing_comments: nil,
           leading_detached_comments: []
         )
           @_bitmask = 0
@@ -24617,7 +24617,13 @@ module ProtoBoeuf
         end
         # END writers for optional fields
 
-        def initialize(path: [], source_file: "", begin: 0, end: 0, semantic: 0)
+        def initialize(
+          path: [],
+          source_file: nil,
+          begin: nil,
+          end: nil,
+          semantic: nil
+        )
           @_bitmask = 0
 
           path.each do |v|

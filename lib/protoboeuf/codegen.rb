@@ -1178,9 +1178,7 @@ module ProtoBoeuf
 
       def initialize_signature
         fields.flat_map do |f|
-          if f.has_oneof_index? && !f.proto3_optional
-            "#{lvar_name(f)}: nil"
-          elsif f.proto3_optional
+          if f.has_oneof_index? || optional_field?(f)
             "#{lvar_name(f)}: nil"
           else
             "#{lvar_name(f)}: #{default_for(f)}"
