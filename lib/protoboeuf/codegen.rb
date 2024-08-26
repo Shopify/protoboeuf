@@ -143,7 +143,7 @@ module ProtoBoeuf
 
       def conversion
         fields = self.fields.reject do |field|
-          field.has_oneof_index? && !field.proto3_optional
+          field.has_oneof_index? && !optional_field?(field)
         end
 
         oneofs = @oneof_selection_fields.map do |field|

@@ -418,6 +418,12 @@ module ProtoBoeuf
       assert_predicate(msg, :has_oneof_str?)
       obj = klass::TestMessageWithOneOf.decode(klass::TestMessageWithOneOf.encode(msg))
       assert_predicate(obj, :has_oneof_str?)
+
+      assert_equal(
+        { oneof_str: "hello", after_oneof: "" },
+        obj.to_h,
+        "to_h should contain all fields",
+      )
     end
 
     # One of our well known types (descriptor.proto) has proto2 syntax so we want to test our codegen of it.
