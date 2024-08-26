@@ -494,7 +494,7 @@ module ProtoBoeuf
     end
 
     def test_requires
-      skip("no implicit well known type for protoc tests") if self.class == ProtoBoeuf::ProtoCCodeGenTest
+      skip("no implicit well known type for protoc tests") unless protoboeuf_parser?
 
       unit = parse_string(<<~PROTO)
         package example.proto;
@@ -664,12 +664,20 @@ module ProtoBoeuf
       ProtoBoeuf.parse_file(string)
     end
 
+    def protoboeuf_parser?
+      true
+    end
+
     def ruby_script_header(string)
       string.split(/^(module|class)/).first
     end
   end
 
   class ProtoCCodeGenTest < CodeGenTest
+    def protoboeuf_parser?
+      false
+    end
+
     def import_path
       File.expand_path("fixtures", __dir__)
     end
