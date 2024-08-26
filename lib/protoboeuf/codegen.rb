@@ -769,7 +769,7 @@ module ProtoBoeuf
       end
 
       def initialize_field(field)
-        if field.label == :LABEL_OPTIONAL && field.proto3_optional
+        if optional_field?(field)
           initialize_optional_field(field)
         elsif field.type == :TYPE_ENUM
           initialize_enum_field(field)
@@ -779,13 +779,19 @@ module ProtoBoeuf
       end
 
       def initialize_optional_field(field)
+        set_field_to_var = if field.type == :TYPE_ENUM
+          initialize_enum_field(field)
+        else
+          "#{iv_name(field)} = #{lvar_read(field)}"
+        end
+
         <<~RUBY
           if #{lvar_read(field)} == nil
             #{iv_name(field)} = #{default_for(field)}
           else
             #{bounds_check(field, lvar_read(field)).chomp}
             #{set_bitmask(field)}
-            #{iv_name(field)} = #{lvar_read(field)}
+            #{set_field_to_var}
           end
         RUBY
       end

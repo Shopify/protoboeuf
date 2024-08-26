@@ -385,9 +385,19 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
-        @package = package
+        if package == nil
+          @package = ""
+        else
+          @_bitmask |= 0x0000000000000002
+          @package = package
+        end
 
         @dependency = dependency
 
@@ -415,13 +425,33 @@ module ProtoBoeuf
 
         @extension = extension
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000004
+          @options = options
+        end
 
-        @source_code_info = source_code_info
+        if source_code_info == nil
+          @source_code_info = nil
+        else
+          @_bitmask |= 0x0000000000000008
+          @source_code_info = source_code_info
+        end
 
-        @syntax = syntax
+        if syntax == nil
+          @syntax = ""
+        else
+          @_bitmask |= 0x0000000000000010
+          @syntax = syntax
+        end
 
-        @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+        if edition == nil
+          @edition = 0
+        else
+          @_bitmask |= 0x0000000000000020
+          @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+        end
       end
 
       def to_proto(_options = {})
@@ -2156,20 +2186,35 @@ module ProtoBoeuf
         def initialize(start: 0, end: 0, options: nil)
           @_bitmask = 0
 
-          unless -2_147_483_648 <= start && start <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+          if start == nil
+            @start = 0
+          else
+            unless -2_147_483_648 <= start && start <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000001
+            @start = start
           end
-          @start = start
 
-          unless -2_147_483_648 <= binding.local_variable_get(:end) &&
-                   binding.local_variable_get(:end) <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+          if binding.local_variable_get(:end) == nil
+            @end = 0
+          else
+            unless -2_147_483_648 <= binding.local_variable_get(:end) &&
+                     binding.local_variable_get(:end) <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000002
+            @end = binding.local_variable_get(:end)
           end
-          @end = binding.local_variable_get(:end)
 
-          @options = options
+          if options == nil
+            @options = nil
+          else
+            @_bitmask |= 0x0000000000000004
+            @options = options
+          end
         end
 
         def to_proto(_options = {})
@@ -2565,18 +2610,28 @@ module ProtoBoeuf
         def initialize(start: 0, end: 0)
           @_bitmask = 0
 
-          unless -2_147_483_648 <= start && start <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+          if start == nil
+            @start = 0
+          else
+            unless -2_147_483_648 <= start && start <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000001
+            @start = start
           end
-          @start = start
 
-          unless -2_147_483_648 <= binding.local_variable_get(:end) &&
-                   binding.local_variable_get(:end) <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+          if binding.local_variable_get(:end) == nil
+            @end = 0
+          else
+            unless -2_147_483_648 <= binding.local_variable_get(:end) &&
+                     binding.local_variable_get(:end) <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000002
+            @end = binding.local_variable_get(:end)
           end
-          @end = binding.local_variable_get(:end)
         end
 
         def to_proto(_options = {})
@@ -2885,7 +2940,12 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
         @field = field
 
@@ -2899,7 +2959,12 @@ module ProtoBoeuf
 
         @oneof_decl = oneof_decl
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000002
+          @options = options
+        end
 
         @reserved_range = reserved_range
 
@@ -4258,19 +4323,44 @@ module ProtoBoeuf
         )
           @_bitmask = 0
 
-          unless -2_147_483_648 <= number && number <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+          if number == nil
+            @number = 0
+          else
+            unless -2_147_483_648 <= number && number <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000001
+            @number = number
           end
-          @number = number
 
-          @full_name = full_name
+          if full_name == nil
+            @full_name = ""
+          else
+            @_bitmask |= 0x0000000000000002
+            @full_name = full_name
+          end
 
-          @type = type
+          if type == nil
+            @type = ""
+          else
+            @_bitmask |= 0x0000000000000004
+            @type = type
+          end
 
-          @reserved = reserved
+          if reserved == nil
+            @reserved = false
+          else
+            @_bitmask |= 0x0000000000000008
+            @reserved = reserved
+          end
 
-          @repeated = repeated
+          if repeated == nil
+            @repeated = false
+          else
+            @_bitmask |= 0x0000000000000010
+            @repeated = repeated
+          end
         end
 
         def to_proto(_options = {})
@@ -4699,12 +4789,22 @@ module ProtoBoeuf
 
         @declaration = declaration
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000001
+          @features = features
+        end
 
-        @verification =
-          ProtoBoeuf::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
-            verification
-          ) || verification
+        if verification == nil
+          @verification = 0
+        else
+          @_bitmask |= 0x0000000000000002
+          @verification =
+            ProtoBoeuf::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
+              verification
+            ) || verification
+        end
       end
 
       def to_proto(_options = {})
@@ -5741,37 +5841,94 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @name = name
-
-        unless -2_147_483_648 <= number && number <= 2_147_483_647
-          raise RangeError,
-                "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
         end
-        @number = number
 
-        @label =
-          ProtoBoeuf::Protobuf::FieldDescriptorProto::Label.resolve(label) ||
-            label
-        @type =
-          ProtoBoeuf::Protobuf::FieldDescriptorProto::Type.resolve(type) || type
-
-        @type_name = type_name
-
-        @extendee = extendee
-
-        @default_value = default_value
-
-        unless -2_147_483_648 <= oneof_index && oneof_index <= 2_147_483_647
-          raise RangeError,
-                "Value (#{oneof_index}) for field oneof_index is out of bounds (-2147483648..2147483647)"
+        if number == nil
+          @number = 0
+        else
+          unless -2_147_483_648 <= number && number <= 2_147_483_647
+            raise RangeError,
+                  "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+          end
+          @_bitmask |= 0x0000000000000002
+          @number = number
         end
-        @oneof_index = oneof_index
 
-        @json_name = json_name
+        if label == nil
+          @label = 0
+        else
+          @_bitmask |= 0x0000000000000004
+          @label =
+            ProtoBoeuf::Protobuf::FieldDescriptorProto::Label.resolve(label) ||
+              label
+        end
 
-        @options = options
+        if type == nil
+          @type = 0
+        else
+          @_bitmask |= 0x0000000000000008
+          @type =
+            ProtoBoeuf::Protobuf::FieldDescriptorProto::Type.resolve(type) ||
+              type
+        end
 
-        @proto3_optional = proto3_optional
+        if type_name == nil
+          @type_name = ""
+        else
+          @_bitmask |= 0x0000000000000010
+          @type_name = type_name
+        end
+
+        if extendee == nil
+          @extendee = ""
+        else
+          @_bitmask |= 0x0000000000000020
+          @extendee = extendee
+        end
+
+        if default_value == nil
+          @default_value = ""
+        else
+          @_bitmask |= 0x0000000000000040
+          @default_value = default_value
+        end
+
+        if oneof_index == nil
+          @oneof_index = 0
+        else
+          unless -2_147_483_648 <= oneof_index && oneof_index <= 2_147_483_647
+            raise RangeError,
+                  "Value (#{oneof_index}) for field oneof_index is out of bounds (-2147483648..2147483647)"
+          end
+          @_bitmask |= 0x0000000000000080
+          @oneof_index = oneof_index
+        end
+
+        if json_name == nil
+          @json_name = ""
+        else
+          @_bitmask |= 0x0000000000000100
+          @json_name = json_name
+        end
+
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000200
+          @options = options
+        end
+
+        if proto3_optional == nil
+          @proto3_optional = false
+        else
+          @_bitmask |= 0x0000000000000400
+          @proto3_optional = proto3_optional
+        end
       end
 
       def to_proto(_options = {})
@@ -7463,9 +7620,19 @@ module ProtoBoeuf
       def initialize(name: "", options: nil)
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000002
+          @options = options
+        end
       end
 
       def to_proto(_options = {})
@@ -7756,18 +7923,28 @@ module ProtoBoeuf
         def initialize(start: 0, end: 0)
           @_bitmask = 0
 
-          unless -2_147_483_648 <= start && start <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+          if start == nil
+            @start = 0
+          else
+            unless -2_147_483_648 <= start && start <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{start}) for field start is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000001
+            @start = start
           end
-          @start = start
 
-          unless -2_147_483_648 <= binding.local_variable_get(:end) &&
-                   binding.local_variable_get(:end) <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+          if binding.local_variable_get(:end) == nil
+            @end = 0
+          else
+            unless -2_147_483_648 <= binding.local_variable_get(:end) &&
+                     binding.local_variable_get(:end) <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000002
+            @end = binding.local_variable_get(:end)
           end
-          @end = binding.local_variable_get(:end)
         end
 
         def to_proto(_options = {})
@@ -8041,11 +8218,21 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
         @value = value
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000002
+          @options = options
+        end
 
         @reserved_range = reserved_range
 
@@ -8701,15 +8888,30 @@ module ProtoBoeuf
       def initialize(name: "", number: 0, options: nil)
         @_bitmask = 0
 
-        @name = name
-
-        unless -2_147_483_648 <= number && number <= 2_147_483_647
-          raise RangeError,
-                "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
         end
-        @number = number
 
-        @options = options
+        if number == nil
+          @number = 0
+        else
+          unless -2_147_483_648 <= number && number <= 2_147_483_647
+            raise RangeError,
+                  "Value (#{number}) for field number is out of bounds (-2147483648..2147483647)"
+          end
+          @_bitmask |= 0x0000000000000002
+          @number = number
+        end
+
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000004
+          @options = options
+        end
       end
 
       def to_proto(_options = {})
@@ -9087,11 +9289,21 @@ module ProtoBoeuf
       def initialize(name: "", method: [], options: nil)
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
         @method = method
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000002
+          @options = options
+        end
       end
 
       def to_proto(_options = {})
@@ -9534,17 +9746,47 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @name = name
+        if name == nil
+          @name = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @name = name
+        end
 
-        @input_type = input_type
+        if input_type == nil
+          @input_type = ""
+        else
+          @_bitmask |= 0x0000000000000002
+          @input_type = input_type
+        end
 
-        @output_type = output_type
+        if output_type == nil
+          @output_type = ""
+        else
+          @_bitmask |= 0x0000000000000004
+          @output_type = output_type
+        end
 
-        @options = options
+        if options == nil
+          @options = nil
+        else
+          @_bitmask |= 0x0000000000000008
+          @options = options
+        end
 
-        @client_streaming = client_streaming
+        if client_streaming == nil
+          @client_streaming = false
+        else
+          @_bitmask |= 0x0000000000000010
+          @client_streaming = client_streaming
+        end
 
-        @server_streaming = server_streaming
+        if server_streaming == nil
+          @server_streaming = false
+        else
+          @_bitmask |= 0x0000000000000020
+          @server_streaming = server_streaming
+        end
       end
 
       def to_proto(_options = {})
@@ -10230,48 +10472,148 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @java_package = java_package
+        if java_package == nil
+          @java_package = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @java_package = java_package
+        end
 
-        @java_outer_classname = java_outer_classname
+        if java_outer_classname == nil
+          @java_outer_classname = ""
+        else
+          @_bitmask |= 0x0000000000000002
+          @java_outer_classname = java_outer_classname
+        end
 
-        @java_multiple_files = java_multiple_files
+        if java_multiple_files == nil
+          @java_multiple_files = false
+        else
+          @_bitmask |= 0x0000000000000004
+          @java_multiple_files = java_multiple_files
+        end
 
-        @java_generate_equals_and_hash = java_generate_equals_and_hash
+        if java_generate_equals_and_hash == nil
+          @java_generate_equals_and_hash = false
+        else
+          @_bitmask |= 0x0000000000000008
+          @java_generate_equals_and_hash = java_generate_equals_and_hash
+        end
 
-        @java_string_check_utf8 = java_string_check_utf8
+        if java_string_check_utf8 == nil
+          @java_string_check_utf8 = false
+        else
+          @_bitmask |= 0x0000000000000010
+          @java_string_check_utf8 = java_string_check_utf8
+        end
 
-        @optimize_for =
-          ProtoBoeuf::Protobuf::FileOptions::OptimizeMode.resolve(
-            optimize_for
-          ) || optimize_for
+        if optimize_for == nil
+          @optimize_for = 0
+        else
+          @_bitmask |= 0x0000000000000020
+          @optimize_for =
+            ProtoBoeuf::Protobuf::FileOptions::OptimizeMode.resolve(
+              optimize_for
+            ) || optimize_for
+        end
 
-        @go_package = go_package
+        if go_package == nil
+          @go_package = ""
+        else
+          @_bitmask |= 0x0000000000000040
+          @go_package = go_package
+        end
 
-        @cc_generic_services = cc_generic_services
+        if cc_generic_services == nil
+          @cc_generic_services = false
+        else
+          @_bitmask |= 0x0000000000000080
+          @cc_generic_services = cc_generic_services
+        end
 
-        @java_generic_services = java_generic_services
+        if java_generic_services == nil
+          @java_generic_services = false
+        else
+          @_bitmask |= 0x0000000000000100
+          @java_generic_services = java_generic_services
+        end
 
-        @py_generic_services = py_generic_services
+        if py_generic_services == nil
+          @py_generic_services = false
+        else
+          @_bitmask |= 0x0000000000000200
+          @py_generic_services = py_generic_services
+        end
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000400
+          @deprecated = deprecated
+        end
 
-        @cc_enable_arenas = cc_enable_arenas
+        if cc_enable_arenas == nil
+          @cc_enable_arenas = false
+        else
+          @_bitmask |= 0x0000000000000800
+          @cc_enable_arenas = cc_enable_arenas
+        end
 
-        @objc_class_prefix = objc_class_prefix
+        if objc_class_prefix == nil
+          @objc_class_prefix = ""
+        else
+          @_bitmask |= 0x0000000000001000
+          @objc_class_prefix = objc_class_prefix
+        end
 
-        @csharp_namespace = csharp_namespace
+        if csharp_namespace == nil
+          @csharp_namespace = ""
+        else
+          @_bitmask |= 0x0000000000002000
+          @csharp_namespace = csharp_namespace
+        end
 
-        @swift_prefix = swift_prefix
+        if swift_prefix == nil
+          @swift_prefix = ""
+        else
+          @_bitmask |= 0x0000000000004000
+          @swift_prefix = swift_prefix
+        end
 
-        @php_class_prefix = php_class_prefix
+        if php_class_prefix == nil
+          @php_class_prefix = ""
+        else
+          @_bitmask |= 0x0000000000008000
+          @php_class_prefix = php_class_prefix
+        end
 
-        @php_namespace = php_namespace
+        if php_namespace == nil
+          @php_namespace = ""
+        else
+          @_bitmask |= 0x0000000000010000
+          @php_namespace = php_namespace
+        end
 
-        @php_metadata_namespace = php_metadata_namespace
+        if php_metadata_namespace == nil
+          @php_metadata_namespace = ""
+        else
+          @_bitmask |= 0x0000000000020000
+          @php_metadata_namespace = php_metadata_namespace
+        end
 
-        @ruby_package = ruby_package
+        if ruby_package == nil
+          @ruby_package = ""
+        else
+          @_bitmask |= 0x0000000000040000
+          @ruby_package = ruby_package
+        end
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000080000
+          @features = features
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -13048,18 +13390,48 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @message_set_wire_format = message_set_wire_format
+        if message_set_wire_format == nil
+          @message_set_wire_format = false
+        else
+          @_bitmask |= 0x0000000000000001
+          @message_set_wire_format = message_set_wire_format
+        end
 
-        @no_standard_descriptor_accessor = no_standard_descriptor_accessor
+        if no_standard_descriptor_accessor == nil
+          @no_standard_descriptor_accessor = false
+        else
+          @_bitmask |= 0x0000000000000002
+          @no_standard_descriptor_accessor = no_standard_descriptor_accessor
+        end
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000004
+          @deprecated = deprecated
+        end
 
-        @map_entry = map_entry
+        if map_entry == nil
+          @map_entry = false
+        else
+          @_bitmask |= 0x0000000000000008
+          @map_entry = map_entry
+        end
 
-        @deprecated_legacy_json_field_conflicts =
-          deprecated_legacy_json_field_conflicts
+        if deprecated_legacy_json_field_conflicts == nil
+          @deprecated_legacy_json_field_conflicts = false
+        else
+          @_bitmask |= 0x0000000000000010
+          @deprecated_legacy_json_field_conflicts =
+            deprecated_legacy_json_field_conflicts
+        end
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000020
+          @features = features
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -13972,9 +14344,19 @@ module ProtoBoeuf
         def initialize(edition: 0, value: "")
           @_bitmask = 0
 
-          @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+          if edition == nil
+            @edition = 0
+          else
+            @_bitmask |= 0x0000000000000001
+            @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+          end
 
-          @value = value
+          if value == nil
+            @value = ""
+          else
+            @_bitmask |= 0x0000000000000002
+            @value = value
+          end
         end
 
         def to_proto(_options = {})
@@ -14239,18 +14621,39 @@ module ProtoBoeuf
         )
           @_bitmask = 0
 
-          @edition_introduced =
-            ProtoBoeuf::Protobuf::Edition.resolve(edition_introduced) ||
-              edition_introduced
-          @edition_deprecated =
-            ProtoBoeuf::Protobuf::Edition.resolve(edition_deprecated) ||
-              edition_deprecated
+          if edition_introduced == nil
+            @edition_introduced = 0
+          else
+            @_bitmask |= 0x0000000000000001
+            @edition_introduced =
+              ProtoBoeuf::Protobuf::Edition.resolve(edition_introduced) ||
+                edition_introduced
+          end
 
-          @deprecation_warning = deprecation_warning
+          if edition_deprecated == nil
+            @edition_deprecated = 0
+          else
+            @_bitmask |= 0x0000000000000002
+            @edition_deprecated =
+              ProtoBoeuf::Protobuf::Edition.resolve(edition_deprecated) ||
+                edition_deprecated
+          end
 
-          @edition_removed =
-            ProtoBoeuf::Protobuf::Edition.resolve(edition_removed) ||
-              edition_removed
+          if deprecation_warning == nil
+            @deprecation_warning = ""
+          else
+            @_bitmask |= 0x0000000000000004
+            @deprecation_warning = deprecation_warning
+          end
+
+          if edition_removed == nil
+            @edition_removed = 0
+          else
+            @_bitmask |= 0x0000000000000008
+            @edition_removed =
+              ProtoBoeuf::Protobuf::Edition.resolve(edition_removed) ||
+                edition_removed
+          end
         end
 
         def to_proto(_options = {})
@@ -14913,28 +15316,74 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @ctype =
-          ProtoBoeuf::Protobuf::FieldOptions::CType.resolve(ctype) || ctype
+        if ctype == nil
+          @ctype = 0
+        else
+          @_bitmask |= 0x0000000000000001
+          @ctype =
+            ProtoBoeuf::Protobuf::FieldOptions::CType.resolve(ctype) || ctype
+        end
 
-        @packed = packed
+        if packed == nil
+          @packed = false
+        else
+          @_bitmask |= 0x0000000000000002
+          @packed = packed
+        end
 
-        @jstype =
-          ProtoBoeuf::Protobuf::FieldOptions::JSType.resolve(jstype) || jstype
+        if jstype == nil
+          @jstype = 0
+        else
+          @_bitmask |= 0x0000000000000004
+          @jstype =
+            ProtoBoeuf::Protobuf::FieldOptions::JSType.resolve(jstype) || jstype
+        end
 
-        @lazy = lazy
+        if lazy == nil
+          @lazy = false
+        else
+          @_bitmask |= 0x0000000000000008
+          @lazy = lazy
+        end
 
-        @unverified_lazy = unverified_lazy
+        if unverified_lazy == nil
+          @unverified_lazy = false
+        else
+          @_bitmask |= 0x0000000000000010
+          @unverified_lazy = unverified_lazy
+        end
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000020
+          @deprecated = deprecated
+        end
 
-        @weak = weak
+        if weak == nil
+          @weak = false
+        else
+          @_bitmask |= 0x0000000000000040
+          @weak = weak
+        end
 
-        @debug_redact = debug_redact
+        if debug_redact == nil
+          @debug_redact = false
+        else
+          @_bitmask |= 0x0000000000000080
+          @debug_redact = debug_redact
+        end
 
-        @retention =
-          ProtoBoeuf::Protobuf::FieldOptions::OptionRetention.resolve(
-            retention
-          ) || retention
+        if retention == nil
+          @retention = 0
+        else
+          @_bitmask |= 0x0000000000000100
+          @retention =
+            ProtoBoeuf::Protobuf::FieldOptions::OptionRetention.resolve(
+              retention
+            ) || retention
+        end
+
         @targets =
           ProtoBoeuf::Protobuf::FieldOptions::OptionTargetType.resolve(
             targets
@@ -14942,9 +15391,19 @@ module ProtoBoeuf
 
         @edition_defaults = edition_defaults
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000200
+          @features = features
+        end
 
-        @feature_support = feature_support
+        if feature_support == nil
+          @feature_support = nil
+        else
+          @_bitmask |= 0x0000000000000400
+          @feature_support = feature_support
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -16915,7 +17374,12 @@ module ProtoBoeuf
       def initialize(features: nil, uninterpreted_option: [])
         @_bitmask = 0
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000001
+          @features = features
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -17425,14 +17889,34 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @allow_alias = allow_alias
+        if allow_alias == nil
+          @allow_alias = false
+        else
+          @_bitmask |= 0x0000000000000001
+          @allow_alias = allow_alias
+        end
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000002
+          @deprecated = deprecated
+        end
 
-        @deprecated_legacy_json_field_conflicts =
-          deprecated_legacy_json_field_conflicts
+        if deprecated_legacy_json_field_conflicts == nil
+          @deprecated_legacy_json_field_conflicts = false
+        else
+          @_bitmask |= 0x0000000000000004
+          @deprecated_legacy_json_field_conflicts =
+            deprecated_legacy_json_field_conflicts
+        end
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000008
+          @features = features
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -18193,13 +18677,33 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000001
+          @deprecated = deprecated
+        end
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000002
+          @features = features
+        end
 
-        @debug_redact = debug_redact
+        if debug_redact == nil
+          @debug_redact = false
+        else
+          @_bitmask |= 0x0000000000000004
+          @debug_redact = debug_redact
+        end
 
-        @feature_support = feature_support
+        if feature_support == nil
+          @feature_support = nil
+        else
+          @_bitmask |= 0x0000000000000008
+          @feature_support = feature_support
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -19037,9 +19541,19 @@ module ProtoBoeuf
       def initialize(features: nil, deprecated: false, uninterpreted_option: [])
         @_bitmask = 0
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000001
+          @features = features
+        end
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000002
+          @deprecated = deprecated
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -19656,14 +20170,29 @@ module ProtoBoeuf
       )
         @_bitmask = 0
 
-        @deprecated = deprecated
+        if deprecated == nil
+          @deprecated = false
+        else
+          @_bitmask |= 0x0000000000000001
+          @deprecated = deprecated
+        end
 
-        @idempotency_level =
-          ProtoBoeuf::Protobuf::MethodOptions::IdempotencyLevel.resolve(
-            idempotency_level
-          ) || idempotency_level
+        if idempotency_level == nil
+          @idempotency_level = 0
+        else
+          @_bitmask |= 0x0000000000000002
+          @idempotency_level =
+            ProtoBoeuf::Protobuf::MethodOptions::IdempotencyLevel.resolve(
+              idempotency_level
+            ) || idempotency_level
+        end
 
-        @features = features
+        if features == nil
+          @features = nil
+        else
+          @_bitmask |= 0x0000000000000004
+          @features = features
+        end
 
         @uninterpreted_option = uninterpreted_option
       end
@@ -20593,27 +21122,57 @@ module ProtoBoeuf
 
         @name = name
 
-        @identifier_value = identifier_value
-
-        unless 0 <= positive_int_value &&
-                 positive_int_value <= 18_446_744_073_709_551_615
-          raise RangeError,
-                "Value (#{positive_int_value}) for field positive_int_value is out of bounds (0..18446744073709551615)"
+        if identifier_value == nil
+          @identifier_value = ""
+        else
+          @_bitmask |= 0x0000000000000001
+          @identifier_value = identifier_value
         end
-        @positive_int_value = positive_int_value
 
-        unless -9_223_372_036_854_775_808 <= negative_int_value &&
-                 negative_int_value <= 9_223_372_036_854_775_807
-          raise RangeError,
-                "Value (#{negative_int_value}) for field negative_int_value is out of bounds (-9223372036854775808..9223372036854775807)"
+        if positive_int_value == nil
+          @positive_int_value = 0
+        else
+          unless 0 <= positive_int_value &&
+                   positive_int_value <= 18_446_744_073_709_551_615
+            raise RangeError,
+                  "Value (#{positive_int_value}) for field positive_int_value is out of bounds (0..18446744073709551615)"
+          end
+          @_bitmask |= 0x0000000000000002
+          @positive_int_value = positive_int_value
         end
-        @negative_int_value = negative_int_value
 
-        @double_value = double_value
+        if negative_int_value == nil
+          @negative_int_value = 0
+        else
+          unless -9_223_372_036_854_775_808 <= negative_int_value &&
+                   negative_int_value <= 9_223_372_036_854_775_807
+            raise RangeError,
+                  "Value (#{negative_int_value}) for field negative_int_value is out of bounds (-9223372036854775808..9223372036854775807)"
+          end
+          @_bitmask |= 0x0000000000000004
+          @negative_int_value = negative_int_value
+        end
 
-        @string_value = string_value
+        if double_value == nil
+          @double_value = 0.0
+        else
+          @_bitmask |= 0x0000000000000008
+          @double_value = double_value
+        end
 
-        @aggregate_value = aggregate_value
+        if string_value == nil
+          @string_value = ""
+        else
+          @_bitmask |= 0x0000000000000010
+          @string_value = string_value
+        end
+
+        if aggregate_value == nil
+          @aggregate_value = ""
+        else
+          @_bitmask |= 0x0000000000000020
+          @aggregate_value = aggregate_value
+        end
       end
 
       def to_proto(_options = {})
@@ -21472,28 +22031,63 @@ module ProtoBoeuf
         message_encoding: 0,
         json_format: 0
       )
-        @field_presence =
-          ProtoBoeuf::Protobuf::FeatureSet::FieldPresence.resolve(
-            field_presence
-          ) || field_presence
-        @enum_type =
-          ProtoBoeuf::Protobuf::FeatureSet::EnumType.resolve(enum_type) ||
-            enum_type
-        @repeated_field_encoding =
-          ProtoBoeuf::Protobuf::FeatureSet::RepeatedFieldEncoding.resolve(
-            repeated_field_encoding
-          ) || repeated_field_encoding
-        @utf8_validation =
-          ProtoBoeuf::Protobuf::FeatureSet::Utf8Validation.resolve(
-            utf8_validation
-          ) || utf8_validation
-        @message_encoding =
-          ProtoBoeuf::Protobuf::FeatureSet::MessageEncoding.resolve(
-            message_encoding
-          ) || message_encoding
-        @json_format =
-          ProtoBoeuf::Protobuf::FeatureSet::JsonFormat.resolve(json_format) ||
-            json_format
+        if field_presence == nil
+          @field_presence = 0
+        else
+          @_bitmask |= 0x0000000000000001
+          @field_presence =
+            ProtoBoeuf::Protobuf::FeatureSet::FieldPresence.resolve(
+              field_presence
+            ) || field_presence
+        end
+
+        if enum_type == nil
+          @enum_type = 0
+        else
+          @_bitmask |= 0x0000000000000002
+          @enum_type =
+            ProtoBoeuf::Protobuf::FeatureSet::EnumType.resolve(enum_type) ||
+              enum_type
+        end
+
+        if repeated_field_encoding == nil
+          @repeated_field_encoding = 0
+        else
+          @_bitmask |= 0x0000000000000004
+          @repeated_field_encoding =
+            ProtoBoeuf::Protobuf::FeatureSet::RepeatedFieldEncoding.resolve(
+              repeated_field_encoding
+            ) || repeated_field_encoding
+        end
+
+        if utf8_validation == nil
+          @utf8_validation = 0
+        else
+          @_bitmask |= 0x0000000000000008
+          @utf8_validation =
+            ProtoBoeuf::Protobuf::FeatureSet::Utf8Validation.resolve(
+              utf8_validation
+            ) || utf8_validation
+        end
+
+        if message_encoding == nil
+          @message_encoding = 0
+        else
+          @_bitmask |= 0x0000000000000010
+          @message_encoding =
+            ProtoBoeuf::Protobuf::FeatureSet::MessageEncoding.resolve(
+              message_encoding
+            ) || message_encoding
+        end
+
+        if json_format == nil
+          @json_format = 0
+        else
+          @_bitmask |= 0x0000000000000020
+          @json_format =
+            ProtoBoeuf::Protobuf::FeatureSet::JsonFormat.resolve(json_format) ||
+              json_format
+        end
       end
 
       def to_proto(_options = {})
@@ -22142,11 +22736,26 @@ module ProtoBoeuf
         )
           @_bitmask = 0
 
-          @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+          if edition == nil
+            @edition = 0
+          else
+            @_bitmask |= 0x0000000000000001
+            @edition = ProtoBoeuf::Protobuf::Edition.resolve(edition) || edition
+          end
 
-          @overridable_features = overridable_features
+          if overridable_features == nil
+            @overridable_features = nil
+          else
+            @_bitmask |= 0x0000000000000002
+            @overridable_features = overridable_features
+          end
 
-          @fixed_features = fixed_features
+          if fixed_features == nil
+            @fixed_features = nil
+          else
+            @_bitmask |= 0x0000000000000004
+            @fixed_features = fixed_features
+          end
         end
 
         def to_proto(_options = {})
@@ -22552,12 +23161,23 @@ module ProtoBoeuf
       def initialize(defaults: [], minimum_edition: 0, maximum_edition: 0)
         @defaults = defaults
 
-        @minimum_edition =
-          ProtoBoeuf::Protobuf::Edition.resolve(minimum_edition) ||
-            minimum_edition
-        @maximum_edition =
-          ProtoBoeuf::Protobuf::Edition.resolve(maximum_edition) ||
-            maximum_edition
+        if minimum_edition == nil
+          @minimum_edition = 0
+        else
+          @_bitmask |= 0x0000000000000001
+          @minimum_edition =
+            ProtoBoeuf::Protobuf::Edition.resolve(minimum_edition) ||
+              minimum_edition
+        end
+
+        if maximum_edition == nil
+          @maximum_edition = 0
+        else
+          @_bitmask |= 0x0000000000000002
+          @maximum_edition =
+            ProtoBoeuf::Protobuf::Edition.resolve(maximum_edition) ||
+              maximum_edition
+        end
       end
 
       def to_proto(_options = {})
@@ -23002,9 +23622,19 @@ module ProtoBoeuf
           end
           @span = span
 
-          @leading_comments = leading_comments
+          if leading_comments == nil
+            @leading_comments = ""
+          else
+            @_bitmask |= 0x0000000000000001
+            @leading_comments = leading_comments
+          end
 
-          @trailing_comments = trailing_comments
+          if trailing_comments == nil
+            @trailing_comments = ""
+          else
+            @_bitmask |= 0x0000000000000002
+            @trailing_comments = trailing_comments
+          end
 
           @leading_detached_comments = leading_detached_comments
         end
@@ -23998,26 +24628,46 @@ module ProtoBoeuf
           end
           @path = path
 
-          @source_file = source_file
-
-          unless -2_147_483_648 <= binding.local_variable_get(:begin) &&
-                   binding.local_variable_get(:begin) <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{binding.local_variable_get(:begin)}) for field begin is out of bounds (-2147483648..2147483647)"
+          if source_file == nil
+            @source_file = ""
+          else
+            @_bitmask |= 0x0000000000000001
+            @source_file = source_file
           end
-          @begin = binding.local_variable_get(:begin)
 
-          unless -2_147_483_648 <= binding.local_variable_get(:end) &&
-                   binding.local_variable_get(:end) <= 2_147_483_647
-            raise RangeError,
-                  "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+          if binding.local_variable_get(:begin) == nil
+            @begin = 0
+          else
+            unless -2_147_483_648 <= binding.local_variable_get(:begin) &&
+                     binding.local_variable_get(:begin) <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{binding.local_variable_get(:begin)}) for field begin is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000002
+            @begin = binding.local_variable_get(:begin)
           end
-          @end = binding.local_variable_get(:end)
 
-          @semantic =
-            ProtoBoeuf::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
-              semantic
-            ) || semantic
+          if binding.local_variable_get(:end) == nil
+            @end = 0
+          else
+            unless -2_147_483_648 <= binding.local_variable_get(:end) &&
+                     binding.local_variable_get(:end) <= 2_147_483_647
+              raise RangeError,
+                    "Value (#{binding.local_variable_get(:end)}) for field end is out of bounds (-2147483648..2147483647)"
+            end
+            @_bitmask |= 0x0000000000000004
+            @end = binding.local_variable_get(:end)
+          end
+
+          if semantic == nil
+            @semantic = 0
+          else
+            @_bitmask |= 0x0000000000000008
+            @semantic =
+              ProtoBoeuf::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
+                semantic
+              ) || semantic
+          end
         end
 
         def to_proto(_options = {})
