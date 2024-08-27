@@ -113,10 +113,6 @@ module ProtoBoeuf
         end
       end
 
-      def max_field_number
-        message.field.max_by(&:number)&.number || 0
-      end
-
       def optional_field?(field)
         proto3 = "proto3" == syntax
         field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
@@ -1142,14 +1138,7 @@ module ProtoBoeuf
       ERB
 
       def pull_tag
-        str = if max_field_number > 15
-          pull_uint64("tag", "=")
-        else
-          <<~RUBY
-            tag = buff.getbyte(index)
-            index += 1
-          RUBY
-        end
+        str = pull_uint64("tag", "=")
 
         if $DEBUG
           str += <<~'RUBY'

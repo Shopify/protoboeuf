@@ -575,6 +575,15 @@ module ProtoBoeuf
       msg += small_class::Small.new(a: 1).to_proto
 
       assert_equal(1, small_class::Small.decode(msg).a, "expected field #{small_field} to populate")
+
+      # Also test message with only low field numbers.
+      unit = parse_string(%(syntax = "proto3"; message One { int32 a = 1; }))
+      gen = CodeGen.new(unit)
+      one_class = Class.new { class_eval gen.to_ruby }
+
+      msg += one_class::One.new(a: 1).to_proto
+
+      assert_equal(1, one_class::One.decode(msg).a, "expected field 1 to populate")
     end
 
     def test_bounds_checks
