@@ -183,6 +183,6 @@ Benchmark protobuf files are in `bench/fixtures`, and the benchmarks themselves 
 To view the protobuf encoding for a given message:
 
 ```
-bundle exec ruby -I lib -rproto/test/fixtures/test_pb -e'p TestSigned.encode(TestSigned.new.tap { |x| x.a = -123 })'
+bundle exec ruby -I lib -r ./test/fixtures/test_pb -e 'p TestSigned.new(a: -123).to_proto'
 "\b\xF5\x01"
 ```
