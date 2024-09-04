@@ -528,6 +528,64 @@ module ProtoBoeuf
       assert_equal("\x08\xff\x01".b, obj.to_proto)
     end
 
+    def test_unknown_fields
+      unit = parse_string(<<~EOPROTO)
+        syntax = "proto3";
+        message M1 {
+          string a = 1;
+          bool   bool = 2;
+          uint64 uint64 = 3;
+          sint64 sint64 = 4;
+          double i64 = 5;
+          float i32 = 6;
+          string str = 7;
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      more = Class.new { class_eval gen.to_ruby }
+
+      attr = { a: "A", bool: true, uint64: (1 << 57), sint64: -2**63, i64: 2.5, i32: 1.25, str: "str" }
+      msg = more::M1.new(**attr).to_proto
+      assert_equal(attr, more::M1.decode(msg).to_h)
+
+      # Include a gap in field numbers so that we test finding a field after discarding some.
+      unit = parse_string('syntax = "proto3"; message M2 { string a = 1; sint64 sint64 = 4; }')
+      gen = CodeGen.new(unit)
+      less = Class.new { class_eval gen.to_ruby }
+
+      m2_decoded = less::M2.decode(msg)
+      assert_equal({ a: "A", sint64: -2**63 }, m2_decoded.to_h)
+    end
+
+    def test_high_field_number
+      max_field = 2**29 - 1
+      unit = parse_string(%(syntax = "proto3"; message Max { int32 a = #{max_field}; }))
+      gen = CodeGen.new(unit)
+      max_class = Class.new { class_eval gen.to_ruby }
+
+      msg = max_class::Max.new(a: 1).to_proto
+      assert_equal(1, max_class::Max.decode(msg).a, "expected field #{max_field} to populate")
+
+      # Use high enough field number to be a multi-byte varint.
+      small_field = 0x10 << 3
+      unit = parse_string(%(syntax = "proto3"; message Small { int32 a = #{small_field}; }))
+      gen = CodeGen.new(unit)
+      small_class = Class.new { class_eval gen.to_ruby }
+
+      msg += small_class::Small.new(a: 1).to_proto
+
+      assert_equal(1, small_class::Small.decode(msg).a, "expected field #{small_field} to populate")
+
+      # Also test message with only low field numbers.
+      unit = parse_string(%(syntax = "proto3"; message One { int32 a = 1; }))
+      gen = CodeGen.new(unit)
+      one_class = Class.new { class_eval gen.to_ruby }
+
+      msg += one_class::One.new(a: 1).to_proto
+
+      assert_equal(1, one_class::One.decode(msg).a, "expected field 1 to populate")
+    end
+
     def test_bounds_checks
       proto = <<~PROTO
         message Test1 {

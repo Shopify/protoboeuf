@@ -113,10 +113,6 @@ module ProtoBoeuf
         end
       end
 
-      def max_field_number
-        message.field.max_by(&:number).number
-      end
-
       def optional_field?(field)
         proto3 = "proto3" == syntax
         field.proto3_optional || (field.label == :LABEL_OPTIONAL && !proto3)
@@ -1072,10 +1068,42 @@ module ProtoBoeuf
           <%= pull_tag %>
           <%- end -%>
 
+          found = true
           while true
+            # If we have looped around since the last found tag this one is
+            # unexpected, so discard it and continue.
+            if !found
+              wire_type = tag & 0x7
+              case wire_type
+              when <%= VARINT %>
+                i = 0
+                while true
+                  newbyte = buff.getbyte(index)
+                  index += 1
+                  if newbyte.nil? || newbyte < 0x80
+                    break
+                  end
+                  i += 1
+                  break if i > 9
+                end
+              when <%= I64 %>
+                index += 8
+              when <%= LEN %>
+                <%= pull_bytes("", "") %>
+              when <%= I32 %>
+                index += 4
+              else
+                raise "unknown wire type \#{wire_type}"
+              end
+              return self if index >= len
+              <%= pull_tag %>
+            end
+            found = false
+
             <%- fields.each do |field| -%>
               <%- if !field.has_oneof_index? || optional_field?(field) -%>
             if tag == <%= tag_for_field(field, field.number) %>
+              found = true
               <%= decode_code(field) %>
               <%= set_bitmask(field) if optional_field?(field) %>
               return self if index >= len
@@ -1085,6 +1113,7 @@ module ProtoBoeuf
             end
               <%- else -%>
             if tag == <%= tag_for_field(field, field.number) %>
+              found = true
               <%= decode_code(field) %>
               @<%= message.oneof_decl[field.oneof_index].name %> = :<%= field.name %>
               return self if index >= len
@@ -1109,14 +1138,7 @@ module ProtoBoeuf
       ERB
 
       def pull_tag
-        str = if max_field_number > 15
-          pull_uint64("tag", "=")
-        else
-          <<~RUBY
-            tag = buff.getbyte(index)
-            index += 1
-          RUBY
-        end
+        str = pull_uint64("tag", "=")
 
         if $DEBUG
           str += <<~'RUBY'
