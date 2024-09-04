@@ -275,6 +275,31 @@ module ProtoBoeuf
       assert_equal(:BAZ, msg.enum_1)
     end
 
+    def test_optional_enum
+      unit = parse_string(<<~EOPROTO)
+        syntax = "proto3";
+
+        enum TestEnum {
+          FOO = 0;
+          BAR = 1;
+        }
+
+        message Test1 {
+          optional TestEnum enum_1 = 1;
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval(gen.to_ruby) }
+
+      msg = klass::Test1.new(enum_1: :BAR)
+      msg = klass::Test1.decode(msg.to_proto)
+      assert_equal(:BAR, msg.enum_1)
+
+      msg.enum_1 = :FOO
+      msg = klass::Test1.decode(msg.to_proto)
+      assert_equal(:FOO, msg.enum_1)
+    end
+
     def test_required_field
       unit = parse_string(<<~EOPROTO)
         message Test1 {
@@ -371,6 +396,54 @@ module ProtoBoeuf
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new
       assert_equal(0, obj.a)
+    end
+
+    def test_oneof_edition_2023
+      skip("Editions not supported by parser") if protoboeuf_parser?
+
+      unit = parse_string(<<~EOPROTO)
+        edition = "2023";
+
+        message TestMessageWithOneOf {
+          oneof oneof_field {
+            string oneof_str = 1;
+          }
+          string after_oneof = 2;
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval(gen.to_ruby) }
+
+      msg = klass::TestMessageWithOneOf.new(oneof_str: "hello")
+      assert_predicate(msg, :has_oneof_str?)
+      obj = klass::TestMessageWithOneOf.decode(klass::TestMessageWithOneOf.encode(msg))
+      assert_predicate(obj, :has_oneof_str?)
+
+      assert_equal(
+        { oneof_str: "hello", after_oneof: "" },
+        obj.to_h,
+        "to_h should contain all fields",
+      )
+    end
+
+    # One of our well known types (descriptor.proto) has proto2 syntax so we want to test our codegen of it.
+    def test_optional_predicate_proto2
+      skip("Syntax proto2 not supported by parser") if protoboeuf_parser?
+
+      unit = parse_string(<<~EOPROTO)
+        syntax = "proto2";
+
+        message TestMessageWithOptional {
+          optional string s = 2;
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval(gen.to_ruby) }
+
+      msg = klass::TestMessageWithOptional.new(s: "hello")
+      assert_predicate(msg, :has_s?)
+      obj = klass::TestMessageWithOptional.decode(msg.to_proto)
+      assert_predicate(obj, :has_s?)
     end
 
     def test_fixture_file
@@ -494,7 +567,7 @@ module ProtoBoeuf
     end
 
     def test_requires
-      skip("no implicit well known type for protoc tests") if self.class == ProtoBoeuf::ProtoCCodeGenTest
+      skip("no implicit well known type for protoc tests") unless protoboeuf_parser?
 
       unit = parse_string(<<~PROTO)
         package example.proto;
@@ -722,12 +795,20 @@ module ProtoBoeuf
       ProtoBoeuf.parse_file(string)
     end
 
+    def protoboeuf_parser?
+      true
+    end
+
     def ruby_script_header(string)
       string.split(/^(module|class)/).first
     end
   end
 
   class ProtoCCodeGenTest < CodeGenTest
+    def protoboeuf_parser?
+      false
+    end
+
     def import_path
       File.expand_path("fixtures", __dir__)
     end

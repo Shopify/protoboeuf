@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "helper"
+require "protoboeuf/protobuf/descriptor"
 require "protoboeuf/protobuf/uint64value"
 
 class WellKnownTypesTest < ProtoBoeuf::Test
@@ -70,6 +71,20 @@ class WellKnownTypesTest < ProtoBoeuf::Test
     foo = klass::Foo.decode(klass::Foo.encode(foo))
     assert_equal(123456, foo.time.seconds)
     assert_equal(10, foo.time.nanos)
+  end
+
+  def test_descriptor
+    fd = ProtoBoeuf::Protobuf::FileDescriptorProto.new(
+      name: "n",
+      edition: :EDITION_2023,
+    )
+
+    assert_predicate(fd, :has_name?, "optional field predicate should be true when initialized")
+    refute_predicate(fd, :has_package?, "optional field predicate should be false when not initialized")
+
+    assert_equal(fd.edition, :EDITION_2023, "enum resolve")
+    # Test that the resolve/lookup is working and that we aren't just passing through.
+    assert_equal(1000, fd.instance_variable_get(:@edition), "enum lookup")
   end
 
   def test_uint64

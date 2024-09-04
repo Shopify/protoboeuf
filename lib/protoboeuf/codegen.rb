@@ -86,9 +86,7 @@ module ProtoBoeuf
         optional_field_count = 0
 
         message.field.each do |field|
-          if field.has_oneof_index? && !field.proto3_optional
-            (@oneof_fields[field.oneof_index] ||= []) << field
-          elsif optional_field?(field)
+          if optional_field?(field)
             if field.type == :TYPE_ENUM
               @enum_fields << field
             else
@@ -96,6 +94,8 @@ module ProtoBoeuf
             end
             @optional_field_bit_lut[field.number] = optional_field_count
             optional_field_count += 1
+          elsif field.has_oneof_index?
+            (@oneof_fields[field.oneof_index] ||= []) << field
           elsif field.type == :TYPE_ENUM
             @enum_fields << field
           else
@@ -139,7 +139,7 @@ module ProtoBoeuf
 
       def conversion
         fields = self.fields.reject do |field|
-          field.has_oneof_index? && !field.proto3_optional
+          field.has_oneof_index? && !optional_field?(field)
         end
 
         oneofs = @oneof_selection_fields.map do |field|
@@ -736,7 +736,7 @@ module ProtoBoeuf
           init_bitmask(message) +
           initialize_oneofs +
           fields.map { |field|
-            if field.has_oneof_index? && !field.proto3_optional
+            if field.has_oneof_index? && !optional_field?(field)
               initialize_oneof(field, message)
             else
               initialize_field(field)
@@ -765,7 +765,7 @@ module ProtoBoeuf
       end
 
       def initialize_field(field)
-        if field.label == :LABEL_OPTIONAL && field.proto3_optional
+        if optional_field?(field)
           initialize_optional_field(field)
         elsif field.type == :TYPE_ENUM
           initialize_enum_field(field)
@@ -775,13 +775,19 @@ module ProtoBoeuf
       end
 
       def initialize_optional_field(field)
+        set_field_to_var = if field.type == :TYPE_ENUM
+          initialize_enum_field(field)
+        else
+          "#{iv_name(field)} = #{lvar_read(field)}"
+        end
+
         <<~RUBY
           if #{lvar_read(field)} == nil
             #{iv_name(field)} = #{default_for(field)}
           else
             #{bounds_check(field, lvar_read(field)).chomp}
             #{set_bitmask(field)}
-            #{iv_name(field)} = #{lvar_read(field)}
+            #{set_field_to_var}
           end
         RUBY
       end
@@ -1194,9 +1200,7 @@ module ProtoBoeuf
 
       def initialize_signature
         fields.flat_map do |f|
-          if f.has_oneof_index? && !f.proto3_optional
-            "#{lvar_name(f)}: nil"
-          elsif f.proto3_optional
+          if f.has_oneof_index? || optional_field?(f)
             "#{lvar_name(f)}: nil"
           else
             "#{lvar_name(f)}: #{default_for(f)}"
