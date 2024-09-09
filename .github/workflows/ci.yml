@@ -36,5 +36,11 @@ jobs:
       - name: Run RuboCop
         run: bundle exec rubocop
 
+      - name: Ensure generated files are up to date
+        # On a clean checkout the timestamps may not trigger the well_known_types to regenerate.
+        run: |
+          bundle exec rake RUBYOPT="${{ matrix.rubyopt }}" clobber well_known_types
+          git diff --exit-code
+
       - name: Run tests ${{ matrix.rubyopt }}
         run: bundle exec rake RUBYOPT="${{ matrix.rubyopt }}"
