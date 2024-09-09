@@ -40,6 +40,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @value = 0
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80

@@ -40,6 +40,7 @@ module ProtoBoeuf
         @type_url = ""
         @value = ""
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80

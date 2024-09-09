@@ -1070,6 +1070,7 @@ module ProtoBoeuf
             <%= iv_name(field) %> = <%= default_for(field) %>
           <%- end -%>
 
+          return self if index >= len
           <%- unless fields.empty? -%>
           <%= pull_tag %>
           <%- end -%>

@@ -43,6 +43,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @fields = {}
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -711,6 +712,7 @@ module ProtoBoeuf
         @struct_value = nil
         @list_value = nil
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
@@ -1738,6 +1740,7 @@ module ProtoBoeuf
       def decode_from(buff, index, len)
         @values = []
 
+        return self if index >= len
         ## PULL_UINT64
         tag =
           if (byte0 = buff.getbyte(index)) < 0x80
