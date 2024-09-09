@@ -12,16 +12,17 @@ module ProtoBoeuf
       include TypeHelper
 
       class << self
-        def result(enum, generate_types:)
-          new(enum, generate_types:).result
+        def result(enum, generate_types:, options: {})
+          new(enum, generate_types:, options:).result
         end
       end
 
       attr_reader :enum
 
-      def initialize(enum, generate_types:)
+      def initialize(enum, generate_types:, options: {})
         @enum = enum
         @generate_types = generate_types
+        @options = options
       end
 
       def result
@@ -59,15 +60,15 @@ module ProtoBoeuf
       include TypeHelper
 
       class << self
-        def result(message, toplevel_enums, generate_types:, requires:, syntax:)
-          new(message, toplevel_enums, generate_types:, requires:, syntax:).result
+        def result(message, toplevel_enums, generate_types:, requires:, syntax:, options: {})
+          new(message, toplevel_enums, generate_types:, requires:, syntax:, options:).result
         end
       end
 
       attr_reader :message, :fields, :oneof_fields, :syntax
       attr_reader :optional_fields, :enum_field_types
 
-      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:)
+      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, options:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field
@@ -76,6 +77,7 @@ module ProtoBoeuf
         @generate_types = generate_types
         @has_submessage = false
         @syntax = syntax
+        @options = options
 
         @required_fields = []
         @optional_fields = []
@@ -246,17 +248,6 @@ module ProtoBoeuf
         RUBY
       end
 
-      def encode_bytes(field, value_expr, tagged)
-        # Empty bytes is default value, so encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if((bs = val.bytesize) > 0)
-            #{encode_tag_and_length(field, tagged, "bs")}
-            buff.concat(val.b)
-          end
-        RUBY
-      end
-
       def encode_map(field, value_expr, tagged)
         map_type = self.map_type(field)
 
@@ -353,13 +344,44 @@ module ProtoBoeuf
 
       def encode_string(field, value_expr, tagged)
         # Empty string is default value, so encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if((len = val.bytesize) > 0)
-            #{encode_tag_and_length(field, tagged, "len")}
-            buff << (val.ascii_only? ? val : val.b)
-          end
-        RUBY
+        if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
+          <<~RUBY
+            val = #{value_expr}
+            if((len = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "len")}
+              buff.append_as_bytes(val)
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if((len = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "len")}
+              buff << (val.ascii_only? ? val : val.b)
+            end
+          RUBY
+        end
+      end
+
+      def encode_bytes(field, value_expr, tagged)
+        # Empty bytes is default value, so encodes nothing
+        if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
+          <<~RUBY
+            val = #{value_expr}
+            if((bs = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "bs")}
+              buff.append_as_bytes(val)
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if((bs = val.bytesize) > 0)
+              #{encode_tag_and_length(field, tagged, "bs")}
+              buff.concat(val.b)
+            end
+          RUBY
+        end
       end
 
       def encode_message(field, value_expr, tagged)
@@ -582,7 +604,7 @@ module ProtoBoeuf
 
       def constants
         message.nested_type.reject { |x| x.options&.map_entry }.map do |x|
-          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:).result
+          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:, options: @options).result
         end.join("\n")
       end
 
@@ -1648,7 +1670,7 @@ module ProtoBoeuf
       @generate_types = generate_types
     end
 
-    def to_ruby(this_file = nil)
+    def to_ruby(this_file = nil, options = {})
       requires = Set.new
       @ast.file.each do |file|
         modules = resolve_modules(file)
@@ -1659,9 +1681,9 @@ module ProtoBoeuf
         head += "\n"
 
         toplevel_enums = file.enum_type.group_by(&:name)
-        body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:) }.join + "\n"
+        body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:, options:) }.join + "\n"
         body += file.message_type.map do |message|
-          MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax)
+          MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax, options:)
         end.join
 
         head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
