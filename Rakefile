@@ -42,7 +42,10 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
 
   puts "writing #{t.name}"
   dest = Pathname.new(t.name).relative_path_from(File.join(BASE_DIR, "lib")).to_s.delete_suffix(".rb")
-  File.binwrite(t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby(dest))
+  options = {
+    append_as_bytes: !ENV["NO_APPEND_AS_BYTES"],
+  }
+  File.binwrite(t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby(dest, options))
 end
 
 task well_known_types: WELL_KNOWN_PB
