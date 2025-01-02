@@ -1613,7 +1613,6 @@ module ProtoBoeuf
 
       def init_bitmask(msg)
         optionals = optional_fields
-        raise NotImplementedError if optionals.length >= 63
 
         if optionals.empty?
           ""

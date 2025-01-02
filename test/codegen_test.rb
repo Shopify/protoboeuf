@@ -228,6 +228,24 @@ module ProtoBoeuf
       assert(Class.new { class_eval(gen.to_ruby) })
     end
 
+    def test_many_optional_fields
+      unit = parse_string(<<~EOPROTO)
+        syntax = "proto3";
+
+        message TestManyOptionalFields {
+          #{(1..99).map { |i| "optional int32 a#{i} = #{i};" }.join("\n")}
+        }
+      EOPROTO
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval(gen.to_ruby) }
+
+      msg = klass::TestManyOptionalFields.new(a59: 0, a60: 1, a99: 1)
+      msg = klass::TestManyOptionalFields.decode(klass::TestManyOptionalFields.encode(msg))
+      refute_predicate(msg, :has_a59?)
+      assert_predicate(msg, :has_a60?)
+      assert_predicate(msg, :has_a99?)
+    end
+
     def test_enum_field
       unit = parse_string(<<~EOPROTO)
         syntax = "proto3";
