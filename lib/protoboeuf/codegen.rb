@@ -155,6 +155,38 @@ module ProtoBoeuf
             #{(oneofs + fields.map { |field| convert_field(field) }).join("\n")}
             result
           end
+
+          #{type_signature(params: { _options: "T::Hash" }, returns: "String")}
+          def to_json(options = {})
+            require 'json'
+            obj = transform_for_json!(to_h)
+            JSON.generate(obj, options)
+          end
+
+          # sig: any
+          private def transform_for_json!(obj)
+            case obj
+            when Hash
+              obj.each_with_object({}) do |(k, v), result|
+                result[k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix('_').capitalize }] = transform_for_json!(v)
+              end
+            when Array
+              obj.map { |v| transform_for_json!(v) }
+            when String
+              # TODO: when field.type == :TYPE_BYTES
+              [obj].pack('m')
+            when Numeric
+              obj.to_s
+            else
+              obj
+            end
+          end
+
+          def as_json
+            result = {}
+            #{(oneofs + fields.map { |field| convert_field_for_json(field) }).join("\n")}
+            result
+          end
         RUBY
       end
 
@@ -166,6 +198,27 @@ module ProtoBoeuf
         else
           "result['#{field.name}'.to_sym] = #{iv_name(field)}"
         end
+      end
+
+      def convert_field_for_json(field)
+        name = field.name.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+
+        value_expr = if field.type == :TYPE_MESSAGE
+          if repeated?(field)
+            if false # map_field?(field)
+              "%s.map(&:as_json)"
+            else
+              "%s.map(&:as_json)"
+            end
+          else
+            "%s&.as_json"
+          end
+        elsif field.type == :TYPE_BYTES
+          repeated?(field) ? "%s.map { |x| [x].pack('m') if x }" : "[%s].pack('m')"
+        else
+          "%s"
+        end
+        "result['#{name}'] = " + format(value_expr, iv_name(field))
       end
 
       def encode

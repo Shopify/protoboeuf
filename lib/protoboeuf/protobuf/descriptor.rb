@@ -502,6 +502,39 @@ module ProtoBoeuf
         result["file".to_sym] = @file
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["file"] = @file.map(&:as_json)
+        result
+      end
     end
     class FileDescriptorProto
       def self.decode(buff)
@@ -3300,6 +3333,51 @@ module ProtoBoeuf
         result["edition".to_sym] = @edition
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["package"] = @package
+        result["dependency"] = @dependency
+        result["publicDependency"] = @public_dependency
+        result["weakDependency"] = @weak_dependency
+        result["messageType"] = @message_type.map(&:as_json)
+        result["enumType"] = @enum_type.map(&:as_json)
+        result["service"] = @service.map(&:as_json)
+        result["extension"] = @extension.map(&:as_json)
+        result["options"] = @options&.as_json
+        result["sourceCodeInfo"] = @source_code_info&.as_json
+        result["syntax"] = @syntax
+        result["edition"] = @edition
+        result
+      end
     end
     class DescriptorProto
       def self.decode(buff)
@@ -4100,6 +4178,41 @@ module ProtoBoeuf
           result["options".to_sym] = @options.to_h
           result
         end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["start"] = @start
+          result["end"] = @end
+          result["options"] = @options&.as_json
+          result
+        end
       end
 
       class ReservedRange
@@ -4694,6 +4807,40 @@ module ProtoBoeuf
           result = {}
           result["start".to_sym] = @start
           result["end".to_sym] = @end
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["start"] = @start
+          result["end"] = @end
           result
         end
       end
@@ -6844,6 +6991,48 @@ module ProtoBoeuf
         result["reserved_name".to_sym] = @reserved_name
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["field"] = @field.map(&:as_json)
+        result["extension"] = @extension.map(&:as_json)
+        result["nestedType"] = @nested_type.map(&:as_json)
+        result["enumType"] = @enum_type.map(&:as_json)
+        result["extensionRange"] = @extension_range.map(&:as_json)
+        result["oneofDecl"] = @oneof_decl.map(&:as_json)
+        result["options"] = @options&.as_json
+        result["reservedRange"] = @reserved_range.map(&:as_json)
+        result["reservedName"] = @reserved_name
+        result
+      end
     end
     class ExtensionRangeOptions
       def self.decode(buff)
@@ -7782,6 +7971,43 @@ module ProtoBoeuf
           result["type".to_sym] = @type
           result["reserved".to_sym] = @reserved
           result["repeated".to_sym] = @repeated
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["number"] = @number
+          result["fullName"] = @full_name
+          result["type"] = @type
+          result["reserved"] = @reserved
+          result["repeated"] = @repeated
           result
         end
       end
@@ -8809,6 +9035,42 @@ module ProtoBoeuf
         result["declaration".to_sym] = @declaration
         result["features".to_sym] = @features.to_h
         result["verification".to_sym] = @verification
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result["declaration"] = @declaration.map(&:as_json)
+        result["features"] = @features&.as_json
+        result["verification"] = @verification
         result
       end
     end
@@ -10960,6 +11222,49 @@ module ProtoBoeuf
         result["proto3_optional".to_sym] = @proto3_optional
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["number"] = @number
+        result["label"] = @label
+        result["type"] = @type
+        result["typeName"] = @type_name
+        result["extendee"] = @extendee
+        result["defaultValue"] = @default_value
+        result["oneofIndex"] = @oneof_index
+        result["jsonName"] = @json_name
+        result["options"] = @options&.as_json
+        result["proto3Optional"] = @proto3_optional
+        result
+      end
     end
     class OneofDescriptorProto
       def self.decode(buff)
@@ -11549,6 +11854,40 @@ module ProtoBoeuf
         result = {}
         result["name".to_sym] = @name
         result["options".to_sym] = @options.to_h
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["options"] = @options&.as_json
         result
       end
     end
@@ -12152,6 +12491,40 @@ module ProtoBoeuf
           result = {}
           result["start".to_sym] = @start
           result["end".to_sym] = @end
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["start"] = @start
+          result["end"] = @end
           result
         end
       end
@@ -13302,6 +13675,43 @@ module ProtoBoeuf
         result["reserved_name".to_sym] = @reserved_name
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["value"] = @value.map(&:as_json)
+        result["options"] = @options&.as_json
+        result["reservedRange"] = @reserved_range.map(&:as_json)
+        result["reservedName"] = @reserved_name
+        result
+      end
     end
     class EnumValueDescriptorProto
       def self.decode(buff)
@@ -14069,6 +14479,41 @@ module ProtoBoeuf
         result["name".to_sym] = @name
         result["number".to_sym] = @number
         result["options".to_sym] = @options.to_h
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["number"] = @number
+        result["options"] = @options&.as_json
         result
       end
     end
@@ -14859,6 +15304,41 @@ module ProtoBoeuf
         result["name".to_sym] = @name
         result["method".to_sym] = @method
         result["options".to_sym] = @options.to_h
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["method"] = @method.map(&:as_json)
+        result["options"] = @options&.as_json
         result
       end
     end
@@ -15967,6 +16447,44 @@ module ProtoBoeuf
         result["options".to_sym] = @options.to_h
         result["client_streaming".to_sym] = @client_streaming
         result["server_streaming".to_sym] = @server_streaming
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name
+        result["inputType"] = @input_type
+        result["outputType"] = @output_type
+        result["options"] = @options&.as_json
+        result["clientStreaming"] = @client_streaming
+        result["serverStreaming"] = @server_streaming
         result
       end
     end
@@ -19194,6 +19712,59 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["javaPackage"] = @java_package
+        result["javaOuterClassname"] = @java_outer_classname
+        result["javaMultipleFiles"] = @java_multiple_files
+        result["javaGenerateEqualsAndHash"] = @java_generate_equals_and_hash
+        result["javaStringCheckUtf8"] = @java_string_check_utf8
+        result["optimizeFor"] = @optimize_for
+        result["goPackage"] = @go_package
+        result["ccGenericServices"] = @cc_generic_services
+        result["javaGenericServices"] = @java_generic_services
+        result["pyGenericServices"] = @py_generic_services
+        result["deprecated"] = @deprecated
+        result["ccEnableArenas"] = @cc_enable_arenas
+        result["objcClassPrefix"] = @objc_class_prefix
+        result["csharpNamespace"] = @csharp_namespace
+        result["swiftPrefix"] = @swift_prefix
+        result["phpClassPrefix"] = @php_class_prefix
+        result["phpNamespace"] = @php_namespace
+        result["phpMetadataNamespace"] = @php_metadata_namespace
+        result["rubyPackage"] = @ruby_package
+        result["features"] = @features&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result
+      end
     end
     class MessageOptions
       def self.decode(buff)
@@ -20332,6 +20903,49 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["messageSetWireFormat"] = @message_set_wire_format
+        result[
+          "noStandardDescriptorAccessor"
+        ] = @no_standard_descriptor_accessor
+        result["deprecated"] = @deprecated
+        result["mapEntry"] = @map_entry
+        result[
+          "deprecatedLegacyJsonFieldConflicts"
+        ] = @deprecated_legacy_json_field_conflicts
+        result["features"] = @features&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result
+      end
     end
     class FieldOptions
       def self.decode(buff)
@@ -20900,6 +21514,40 @@ module ProtoBoeuf
           result = {}
           result["edition".to_sym] = @edition
           result["value".to_sym] = @value
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["edition"] = @edition
+          result["value"] = @value
           result
         end
       end
@@ -21805,6 +22453,42 @@ module ProtoBoeuf
           result["edition_deprecated".to_sym] = @edition_deprecated
           result["deprecation_warning".to_sym] = @deprecation_warning
           result["edition_removed".to_sym] = @edition_removed
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["editionIntroduced"] = @edition_introduced
+          result["editionDeprecated"] = @edition_deprecated
+          result["deprecationWarning"] = @deprecation_warning
+          result["editionRemoved"] = @edition_removed
           result
         end
       end
@@ -24256,6 +24940,52 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["ctype"] = @ctype
+        result["packed"] = @packed
+        result["jstype"] = @jstype
+        result["lazy"] = @lazy
+        result["unverifiedLazy"] = @unverified_lazy
+        result["deprecated"] = @deprecated
+        result["weak"] = @weak
+        result["debugRedact"] = @debug_redact
+        result["retention"] = @retention
+        result["targets"] = @targets
+        result["editionDefaults"] = @edition_defaults.map(&:as_json)
+        result["features"] = @features&.as_json
+        result["featureSupport"] = @feature_support&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result
+      end
     end
     class OneofOptions
       def self.decode(buff)
@@ -24889,6 +25619,40 @@ module ProtoBoeuf
         result = {}
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["features"] = @features&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
         result
       end
     end
@@ -25827,6 +26591,45 @@ module ProtoBoeuf
         ] = @deprecated_legacy_json_field_conflicts
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["allowAlias"] = @allow_alias
+        result["deprecated"] = @deprecated
+        result[
+          "deprecatedLegacyJsonFieldConflicts"
+        ] = @deprecated_legacy_json_field_conflicts
+        result["features"] = @features&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
         result
       end
     end
@@ -26863,6 +27666,43 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["deprecated"] = @deprecated
+        result["features"] = @features&.as_json
+        result["debugRedact"] = @debug_redact
+        result["featureSupport"] = @feature_support&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result
+      end
     end
     class ServiceOptions
       def self.decode(buff)
@@ -27596,6 +28436,41 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["deprecated".to_sym] = @deprecated
         result["uninterpreted_option".to_sym] = @uninterpreted_option
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["features"] = @features&.as_json
+        result["deprecated"] = @deprecated
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
         result
       end
     end
@@ -28537,6 +29412,42 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["deprecated"] = @deprecated
+        result["idempotencyLevel"] = @idempotency_level
+        result["features"] = @features&.as_json
+        result["uninterpretedOption"] = @uninterpreted_option.map(&:as_json)
+        result
+      end
     end
     class UninterpretedOption
       def self.decode(buff)
@@ -29005,6 +29916,40 @@ module ProtoBoeuf
           result = {}
           result["name_part".to_sym] = @name_part
           result["is_extension".to_sym] = @is_extension
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["namePart"] = @name_part
+          result["isExtension"] = @is_extension
           result
         end
       end
@@ -30345,6 +31290,45 @@ module ProtoBoeuf
         result["double_value".to_sym] = @double_value
         result["string_value".to_sym] = @string_value
         result["aggregate_value".to_sym] = @aggregate_value
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["name"] = @name.map(&:as_json)
+        result["identifierValue"] = @identifier_value
+        result["positiveIntValue"] = @positive_int_value
+        result["negativeIntValue"] = @negative_int_value
+        result["doubleValue"] = @double_value
+        result["stringValue"] = [@string_value].pack("m")
+        result["aggregateValue"] = @aggregate_value
         result
       end
     end
@@ -31762,6 +32746,44 @@ module ProtoBoeuf
         result["json_format".to_sym] = @json_format
         result
       end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["fieldPresence"] = @field_presence
+        result["enumType"] = @enum_type
+        result["repeatedFieldEncoding"] = @repeated_field_encoding
+        result["utf8Validation"] = @utf8_validation
+        result["messageEncoding"] = @message_encoding
+        result["jsonFormat"] = @json_format
+        result
+      end
     end
     class FeatureSetDefaults
       def self.decode(buff)
@@ -32573,6 +33595,41 @@ module ProtoBoeuf
           result["fixed_features".to_sym] = @fixed_features.to_h
           result
         end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["edition"] = @edition
+          result["overridableFeatures"] = @overridable_features&.as_json
+          result["fixedFeatures"] = @fixed_features&.as_json
+          result
+        end
       end
       # required field readers
 
@@ -33329,6 +34386,41 @@ module ProtoBoeuf
         result["defaults".to_sym] = @defaults
         result["minimum_edition".to_sym] = @minimum_edition
         result["maximum_edition".to_sym] = @maximum_edition
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["defaults"] = @defaults.map(&:as_json)
+        result["minimumEdition"] = @minimum_edition
+        result["maximumEdition"] = @maximum_edition
         result
       end
     end
@@ -34618,6 +35710,43 @@ module ProtoBoeuf
           ] = @leading_detached_comments
           result
         end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["path"] = @path
+          result["span"] = @span
+          result["leadingComments"] = @leading_comments
+          result["trailingComments"] = @trailing_comments
+          result["leadingDetachedComments"] = @leading_detached_comments
+          result
+        end
       end
       # required field readers
 
@@ -35036,6 +36165,39 @@ module ProtoBoeuf
       def to_h
         result = {}
         result["location".to_sym] = @location
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["location"] = @location.map(&:as_json)
         result
       end
     end
@@ -36284,6 +37446,43 @@ module ProtoBoeuf
           result["semantic".to_sym] = @semantic
           result
         end
+
+        def to_json(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[
+                k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+              ] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        def as_json
+          result = {}
+          result["path"] = @path
+          result["sourceFile"] = @source_file
+          result["begin"] = @begin
+          result["end"] = @end
+          result["semantic"] = @semantic
+          result
+        end
       end
       # required field readers
 
@@ -36702,6 +37901,39 @@ module ProtoBoeuf
       def to_h
         result = {}
         result["annotation".to_sym] = @annotation
+        result
+      end
+
+      def to_json(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[
+              k.to_s.gsub(/_[a-z]/) { |m| m.delete_prefix("_").capitalize }
+            ] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      def as_json
+        result = {}
+        result["annotation"] = @annotation.map(&:as_json)
         result
       end
     end
