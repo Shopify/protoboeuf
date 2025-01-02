@@ -6,6 +6,15 @@ require "google/protobuf/descriptor_pb"
 require_relative "fixtures/package_test_pb.rb"
 
 module ProtoBoeuf
+  # Allow CI to default the append_as_bytes option to false.
+  class CodeGen
+    prepend(Module.new do
+      def to_ruby(this_file = nil, options = { append_as_bytes: !ENV["NO_APPEND_AS_BYTES"] })
+        super
+      end
+    end)
+  end
+
   class CodeGenTest < Test
     def test_enum_with_underscore
       unit = parse_string(<<~EOPROTO)
