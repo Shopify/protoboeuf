@@ -314,6 +314,10 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal(3, obj.something["c"])
     assert_equal(0xFF, obj.something["d"])
     assert_equal(1234, obj.number)
+
+    # 1:LEN 0
+    obj = HasMap.decode("\x0a\x00")
+    assert_equal({}, obj.something)
   end
 
   def test_decode_repeated_unpacked
