@@ -343,6 +343,25 @@ module ProtoBoeuf
       )
     end
 
+    def test_circular_messages
+      ours, theirs = parse_string(<<-EOPROTO)
+syntax = "proto3";
+
+message Circular {
+  CircularValue circ = 1;
+}
+
+message CircularValue {
+  oneof kind {
+    Circular circ = 1;
+    CircularValue val = 2;
+  }
+}
+      EOPROTO
+
+      assert_same_tree theirs, ours
+    end
+
     def test_fixture_file
       ours, theirs = parse_string(File.binread("./test/fixtures/test.proto"))
       assert_same_tree(theirs, ours)
