@@ -161,20 +161,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -230,15 +248,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -493,7 +525,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -804,20 +836,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -873,15 +923,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -3279,7 +3343,7 @@ module ProtoBoeuf
             buff << byte
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -3471,20 +3535,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -3540,15 +3622,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -4089,7 +4185,7 @@ module ProtoBoeuf
 
             buff
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -4245,20 +4341,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -4314,15 +4428,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -4686,7 +4814,7 @@ module ProtoBoeuf
               buff << byte
             end
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -4896,20 +5024,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -4965,15 +5111,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -6826,7 +6986,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -7049,20 +7209,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -7118,15 +7296,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -7771,7 +7963,7 @@ module ProtoBoeuf
           else
             raise "bool values should be true or false"
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -7950,20 +8142,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -8019,15 +8229,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -8799,7 +9023,7 @@ module ProtoBoeuf
             buff << byte
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -9262,20 +9486,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -9331,15 +9573,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -10941,7 +11197,7 @@ module ProtoBoeuf
         else
           raise "bool values should be true or false"
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -11085,20 +11341,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -11154,15 +11428,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -11541,7 +11829,7 @@ module ProtoBoeuf
 
           buff
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -11703,20 +11991,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -11772,15 +12078,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -12144,7 +12464,7 @@ module ProtoBoeuf
               buff << byte
             end
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -12304,20 +12624,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -12373,15 +12711,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -13289,7 +13641,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -13455,20 +13807,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -13524,15 +13894,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -14060,7 +14444,7 @@ module ProtoBoeuf
 
           buff
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -14205,20 +14589,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -14274,15 +14676,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -14850,7 +15266,7 @@ module ProtoBoeuf
 
           buff
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -15069,20 +15485,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -15138,15 +15572,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -15955,7 +16403,7 @@ module ProtoBoeuf
         else
           raise "bool values should be true or false"
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -16495,20 +16943,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -16564,15 +17030,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -19163,7 +19643,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -19413,20 +19893,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -19482,15 +19980,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -20313,7 +20825,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -20463,20 +20975,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -20532,15 +21062,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -20892,7 +21436,7 @@ module ProtoBoeuf
 
             buff << (val.ascii_only? ? val : val.b)
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -21068,20 +21612,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -21137,15 +21699,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -21795,7 +22371,7 @@ module ProtoBoeuf
               buff << byte
             end
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -22276,20 +22852,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -22345,15 +22939,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -24234,7 +24842,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -24371,20 +24979,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -24440,15 +25066,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -24881,7 +25521,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -25070,20 +25710,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -25139,15 +25797,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -25814,7 +26486,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -26007,20 +26679,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -26076,15 +26766,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -26850,7 +27554,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -26997,20 +27701,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -27066,15 +27788,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -27587,7 +28323,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -27785,20 +28521,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -27854,15 +28608,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -28525,7 +29293,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -28641,20 +29409,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -28710,15 +29496,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -28997,7 +29797,7 @@ module ProtoBoeuf
           else
             raise "bool values should be true or false"
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -29237,20 +30037,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -29306,15 +30124,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -30332,7 +31164,7 @@ module ProtoBoeuf
 
           buff << (val.ascii_only? ? val : val.b)
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -30711,20 +31543,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -30780,15 +31630,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -31748,7 +32612,7 @@ module ProtoBoeuf
             buff << byte
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -31916,20 +32780,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -31985,15 +32867,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -32562,7 +33458,7 @@ module ProtoBoeuf
 
             buff
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -32690,20 +33586,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -32759,15 +33673,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -33320,7 +34248,7 @@ module ProtoBoeuf
             buff << byte
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -33523,20 +34451,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -33592,15 +34538,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -34603,7 +35563,7 @@ module ProtoBoeuf
               end
             end
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -34697,20 +35657,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -34766,15 +35744,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -35029,7 +36021,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 
@@ -35288,20 +36280,38 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              while val != 0
+                byte = val & 0x7F
+
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
               case wire_type
               when 0
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  break if newbyte.nil? || newbyte < 0x80
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when 1
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when 2
-                ## PULL_BYTES
                 value =
                   if (byte0 = buff.getbyte(index)) < 0x80
                     index += 1
@@ -35357,15 +36367,29 @@ module ProtoBoeuf
                     raise "integer decoding error"
                   end
 
-                buff.byteslice(index, value)
-                index += value
+                val = value
+                while val != 0
+                  byte = val & 0x7F
 
-                ## END PULL_BYTES
+                  val >>= 7
+                  # This drops the top bits,
+                  # Otherwise, with a signed right shift,
+                  # we get infinity one bits at the top
+                  val &= (1 << 57) - 1
+
+                  byte |= 0x80 if val != 0
+                  unknown_bytes << byte
+                end
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when 5
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type #{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               ## PULL_UINT64
               tag =
@@ -36271,7 +37295,7 @@ module ProtoBoeuf
               buff << byte
             end
           end
-
+          buff << @_unknown_fields if @_unknown_fields
           buff
         end
 
@@ -36363,20 +37387,38 @@ module ProtoBoeuf
           # unexpected, so discard it and continue.
           if !found
             wire_type = tag & 0x7
+
+            unknown_bytes = +"".b
+            val = tag
+            while val != 0
+              byte = val & 0x7F
+
+              val >>= 7
+              # This drops the top bits,
+              # Otherwise, with a signed right shift,
+              # we get infinity one bits at the top
+              val &= (1 << 57) - 1
+
+              byte |= 0x80 if val != 0
+              unknown_bytes << byte
+            end
+
             case wire_type
             when 0
               i = 0
               while true
                 newbyte = buff.getbyte(index)
                 index += 1
-                break if newbyte.nil? || newbyte < 0x80
+                break if newbyte.nil?
+                unknown_bytes << newbyte
+                break if newbyte < 0x80
                 i += 1
                 break if i > 9
               end
             when 1
+              unknown_bytes << buff.byteslice(index, 8)
               index += 8
             when 2
-              ## PULL_BYTES
               value =
                 if (byte0 = buff.getbyte(index)) < 0x80
                   index += 1
@@ -36432,15 +37474,29 @@ module ProtoBoeuf
                   raise "integer decoding error"
                 end
 
-              buff.byteslice(index, value)
-              index += value
+              val = value
+              while val != 0
+                byte = val & 0x7F
 
-              ## END PULL_BYTES
+                val >>= 7
+                # This drops the top bits,
+                # Otherwise, with a signed right shift,
+                # we get infinity one bits at the top
+                val &= (1 << 57) - 1
+
+                byte |= 0x80 if val != 0
+                unknown_bytes << byte
+              end
+
+              unknown_bytes << buff.byteslice(index, value)
+              index += value
             when 5
+              unknown_bytes << buff.byteslice(index, 4)
               index += 4
             else
               raise "unknown wire type #{wire_type}"
             end
+            (@_unknown_fields ||= +"".b) << unknown_bytes
             return self if index >= len
             ## PULL_UINT64
             tag =
@@ -36695,7 +37751,7 @@ module ProtoBoeuf
             end
           end
         end
-
+        buff << @_unknown_fields if @_unknown_fields
         buff
       end
 

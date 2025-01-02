@@ -542,7 +542,7 @@ module ProtoBoeuf
 
       # The goal of this test is to ensure that we generate valid sorbet signatures.
       #
-      # This tests will break whenever any implementation of field encoding/deconding etc changes.
+      # This tests will break whenever any implementation of field encoding/decoding etc changes.
       # While this is not great, writing tests that ensure that signatures are generated
       # correctly without pulling in all of sorbet is at the very least incredibly complex.
       # So this is the solution for now.
@@ -666,6 +666,12 @@ module ProtoBoeuf
 
       m2_decoded = less::M2.decode(msg)
       assert_equal({ a: "A", sint64: -2**63 }, m2_decoded.to_h)
+
+      assert_equal(
+        attr,
+        more::M1.decode(m2_decoded.to_proto).to_h,
+        "expected unknown fields to be present in encoded message",
+      )
     end
 
     def test_high_field_number
@@ -865,20 +871,7 @@ module ProtoBoeuf
     end
 
     def parse_file(path)
-      string = File.binread(path)
-
-      begin
-        binfile = Tempfile.new
-        Tempfile.create do |f|
-          f.write(string)
-          f.flush
-          system("protoc -o #{binfile.path} -I/:'#{import_path}' #{f.path}")
-        end
-        binfile.rewind
-        Google::Protobuf::FileDescriptorSet.decode(binfile.read)
-      ensure
-        binfile.unlink
-      end
+      parse_string(File.binread(path))
     end
   end
 end

@@ -57,8 +57,6 @@ module ProtoBoeuf
     end
 
     def test_unknown_fields
-      skip("FIXME: our to_proto doesn't currently preserve unknown fields")
-
       our_m1, their_m1 = codegen_string(<<~EOPROTO)
         syntax = "proto3";
         message M1 {
