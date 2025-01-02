@@ -1122,6 +1122,7 @@ class Test1
           ## END PULL_UINT64
 
           index += 1 # skip the tag, assume it's the key
+          return self if index >= len
           ## PULL_STRING
           value =
             if (byte0 = buff.getbyte(index)) < 0x80
