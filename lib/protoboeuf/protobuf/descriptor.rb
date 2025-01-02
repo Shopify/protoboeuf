@@ -502,6 +502,55 @@ module ProtoBoeuf
         result["file".to_sym] = @file
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class FileDescriptorProto
       def self.decode(buff)
@@ -1388,71 +1437,74 @@ module ProtoBoeuf
             while true
               break if index >= goal
               ## PULL_INT32
-              list << if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              list << (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffff
+              )
               ## END PULL_INT32
             end
 
@@ -1580,71 +1632,74 @@ module ProtoBoeuf
             while true
               break if index >= goal
               ## PULL_INT32
-              list << if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              list << (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffff
+              )
               ## END PULL_INT32
             end
 
@@ -3300,6 +3355,55 @@ module ProtoBoeuf
         result["edition".to_sym] = @edition
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class DescriptorProto
       def self.decode(buff)
@@ -3614,71 +3718,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @start =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000001
@@ -3745,71 +3855,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @end =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000002
@@ -4100,6 +4216,55 @@ module ProtoBoeuf
           result["options".to_sym] = @options.to_h
           result
         end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
+        end
       end
 
       class ReservedRange
@@ -4388,71 +4553,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @start =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000001
@@ -4519,71 +4690,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @end =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000002
@@ -4695,6 +4872,55 @@ module ProtoBoeuf
           result["start".to_sym] = @start
           result["end".to_sym] = @end
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -6844,6 +7070,55 @@ module ProtoBoeuf
         result["reserved_name".to_sym] = @reserved_name
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class ExtensionRangeOptions
       def self.decode(buff)
@@ -7192,71 +7467,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @number =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000001
@@ -7783,6 +8064,55 @@ module ProtoBoeuf
           result["reserved".to_sym] = @reserved
           result["repeated".to_sym] = @repeated
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       module VerificationState
@@ -8811,6 +9141,55 @@ module ProtoBoeuf
         result["verification".to_sym] = @verification
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class FieldDescriptorProto
       def self.decode(buff)
@@ -9528,71 +9907,74 @@ module ProtoBoeuf
             found = true
             ## PULL_INT32
             @number =
-              if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffff
+              )
             ## END PULL_INT32
 
             @_bitmask |= 0x0000000000000002
@@ -10293,71 +10675,74 @@ module ProtoBoeuf
             found = true
             ## PULL_INT32
             @oneof_index =
-              if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffff
+              )
             ## END PULL_INT32
 
             @_bitmask |= 0x0000000000000080
@@ -10960,6 +11345,55 @@ module ProtoBoeuf
         result["proto3_optional".to_sym] = @proto3_optional
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class OneofDescriptorProto
       def self.decode(buff)
@@ -11551,6 +11985,55 @@ module ProtoBoeuf
         result["options".to_sym] = @options.to_h
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class EnumDescriptorProto
       def self.decode(buff)
@@ -11846,71 +12329,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @start =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000001
@@ -11977,71 +12466,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @end =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000002
@@ -12153,6 +12648,55 @@ module ProtoBoeuf
           result["start".to_sym] = @start
           result["end".to_sym] = @end
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -13302,6 +13846,55 @@ module ProtoBoeuf
         result["reserved_name".to_sym] = @reserved_name
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class EnumValueDescriptorProto
       def self.decode(buff)
@@ -13721,71 +14314,74 @@ module ProtoBoeuf
             found = true
             ## PULL_INT32
             @number =
-              if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffff
+              )
             ## END PULL_INT32
 
             @_bitmask |= 0x0000000000000002
@@ -14070,6 +14666,55 @@ module ProtoBoeuf
         result["number".to_sym] = @number
         result["options".to_sym] = @options.to_h
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class ServiceDescriptorProto
@@ -14860,6 +15505,55 @@ module ProtoBoeuf
         result["method".to_sym] = @method
         result["options".to_sym] = @options.to_h
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class MethodDescriptorProto
@@ -15968,6 +16662,55 @@ module ProtoBoeuf
         result["client_streaming".to_sym] = @client_streaming
         result["server_streaming".to_sym] = @server_streaming
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FileOptions
@@ -19194,6 +19937,55 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class MessageOptions
       def self.decode(buff)
@@ -20332,6 +21124,55 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class FieldOptions
       def self.decode(buff)
@@ -20901,6 +21742,55 @@ module ProtoBoeuf
           result["edition".to_sym] = @edition
           result["value".to_sym] = @value
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
 
@@ -21806,6 +22696,55 @@ module ProtoBoeuf
           result["deprecation_warning".to_sym] = @deprecation_warning
           result["edition_removed".to_sym] = @edition_removed
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       module CType
@@ -24256,6 +25195,55 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class OneofOptions
       def self.decode(buff)
@@ -24890,6 +25878,55 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumOptions
@@ -25828,6 +26865,55 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumValueOptions
@@ -26863,6 +27949,55 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class ServiceOptions
       def self.decode(buff)
@@ -27597,6 +28732,55 @@ module ProtoBoeuf
         result["deprecated".to_sym] = @deprecated
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class MethodOptions
@@ -28537,6 +29721,55 @@ module ProtoBoeuf
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class UninterpretedOption
       def self.decode(buff)
@@ -29006,6 +30239,55 @@ module ProtoBoeuf
           result["name_part".to_sym] = @name_part
           result["is_extension".to_sym] = @is_extension
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -29640,60 +30922,63 @@ module ProtoBoeuf
             found = true
             ## PULL_UINT64
             @positive_int_value =
-              if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                  ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              else
-                raise "integer decoding error"
-              end
-
+                    (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                      ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffffffffffff
+              )
             ## END PULL_UINT64
 
             @_bitmask |= 0x0000000000000002
@@ -29760,71 +31045,74 @@ module ProtoBoeuf
             found = true
             ## PULL_INT64
             @negative_int_value =
-              if (byte0 = buff.getbyte(index)) < 0x80
-                index += 1
-                byte0
-              elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                index += 2
-                (byte1 << 7) | (byte0 & 0x7F)
-              elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                index += 3
-                (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                index += 4
-                (byte3 << 21) | ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                index += 5
-                (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                index += 6
-                (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                index += 7
-                (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                index += 8
-                (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                  ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                  ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                  ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-              elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                index += 9
-                (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                  ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                  ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                  ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                  (byte0 & 0x7F)
-              elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                index += 10
+              (
+                (
+                  if (byte0 = buff.getbyte(index)) < 0x80
+                    index += 1
+                    byte0
+                  elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                    index += 2
+                    (byte1 << 7) | (byte0 & 0x7F)
+                  elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                    index += 3
+                    (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                    index += 4
+                    (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                    index += 5
+                    (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                    index += 6
+                    (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                    index += 7
+                    (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                    index += 8
+                    (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                      ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                      ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                      ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                  elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                    index += 9
+                    (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                      ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                      ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                      ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                      (byte0 & 0x7F)
+                  elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                    index += 10
 
-                # Negative 32 bit integers are still encoded with 10 bytes
-                # handle 2's complement negative numbers
-                # If the top bit is 1, then it must be negative.
-                -(
-                  (
-                    (
-                      ~(
-                        (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                          ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                          ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                          ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                          ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                      )
-                    ) & 0xFFFF_FFFF_FFFF_FFFF
-                  ) + 1
-                )
-              else
-                raise "integer decoding error"
-              end
-
+                    # Negative 32 bit integers are still encoded with 10 bytes
+                    # handle 2's complement negative numbers
+                    # If the top bit is 1, then it must be negative.
+                    -(
+                      (
+                        (
+                          ~(
+                            (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                              ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
+                              ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                              ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                              ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                          )
+                        ) & 0xFFFF_FFFF_FFFF_FFFF
+                      ) + 1
+                    )
+                  else
+                    raise "integer decoding error"
+                  end
+                ) & 0xffffffffffffffff
+              )
             ## END PULL_INT64
 
             @_bitmask |= 0x0000000000000004
@@ -30346,6 +31634,55 @@ module ProtoBoeuf
         result["string_value".to_sym] = @string_value
         result["aggregate_value".to_sym] = @aggregate_value
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FeatureSet
@@ -31762,6 +33099,55 @@ module ProtoBoeuf
         result["json_format".to_sym] = @json_format
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class FeatureSetDefaults
       def self.decode(buff)
@@ -32573,6 +33959,55 @@ module ProtoBoeuf
           result["fixed_features".to_sym] = @fixed_features.to_h
           result
         end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
+        end
       end
       # required field readers
 
@@ -33331,6 +34766,55 @@ module ProtoBoeuf
         result["maximum_edition".to_sym] = @maximum_edition
         result
       end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
+      end
     end
     class SourceCodeInfo
       def self.decode(buff)
@@ -33727,71 +35211,77 @@ module ProtoBoeuf
               while true
                 break if index >= goal
                 ## PULL_INT32
-                list << if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                list << (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
                 ## END PULL_INT32
               end
 
@@ -33919,71 +35409,77 @@ module ProtoBoeuf
               while true
                 break if index >= goal
                 ## PULL_INT32
-                list << if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                list << (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
                 ## END PULL_INT32
               end
 
@@ -34618,6 +36114,55 @@ module ProtoBoeuf
           ] = @leading_detached_comments
           result
         end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
+        end
       end
       # required field readers
 
@@ -35037,6 +36582,55 @@ module ProtoBoeuf
         result = {}
         result["location".to_sym] = @location
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class GeneratedCodeInfo
@@ -35492,71 +37086,77 @@ module ProtoBoeuf
               while true
                 break if index >= goal
                 ## PULL_INT32
-                list << if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                list << (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
                 ## END PULL_INT32
               end
 
@@ -35747,71 +37347,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @begin =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000002
@@ -35878,71 +37484,77 @@ module ProtoBoeuf
               found = true
               ## PULL_INT32
               @end =
-                if (byte0 = buff.getbyte(index)) < 0x80
-                  index += 1
-                  byte0
-                elsif (byte1 = buff.getbyte(index + 1)) < 0x80
-                  index += 2
-                  (byte1 << 7) | (byte0 & 0x7F)
-                elsif (byte2 = buff.getbyte(index + 2)) < 0x80
-                  index += 3
-                  (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte3 = buff.getbyte(index + 3)) < 0x80
-                  index += 4
-                  (byte3 << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte4 = buff.getbyte(index + 4)) < 0x80
-                  index += 5
-                  (byte4 << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte5 = buff.getbyte(index + 5)) < 0x80
-                  index += 6
-                  (byte5 << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte6 = buff.getbyte(index + 6)) < 0x80
-                  index += 7
-                  (byte6 << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte7 = buff.getbyte(index + 7)) < 0x80
-                  index += 8
-                  (byte7 << 49) | ((byte6 & 0x7F) << 42) |
-                    ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                    ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                    ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                elsif (byte8 = buff.getbyte(index + 8)) < 0x80
-                  index += 9
-                  (byte8 << 56) | ((byte7 & 0x7F) << 49) |
-                    ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
-                    ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
-                    ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
-                    (byte0 & 0x7F)
-                elsif (byte9 = buff.getbyte(index + 9)) < 0x80
-                  index += 10
+                (
+                  (
+                    if (byte0 = buff.getbyte(index)) < 0x80
+                      index += 1
+                      byte0
+                    elsif (byte1 = buff.getbyte(index + 1)) < 0x80
+                      index += 2
+                      (byte1 << 7) | (byte0 & 0x7F)
+                    elsif (byte2 = buff.getbyte(index + 2)) < 0x80
+                      index += 3
+                      (byte2 << 14) | ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte3 = buff.getbyte(index + 3)) < 0x80
+                      index += 4
+                      (byte3 << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte4 = buff.getbyte(index + 4)) < 0x80
+                      index += 5
+                      (byte4 << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte5 = buff.getbyte(index + 5)) < 0x80
+                      index += 6
+                      (byte5 << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte6 = buff.getbyte(index + 6)) < 0x80
+                      index += 7
+                      (byte6 << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte7 = buff.getbyte(index + 7)) < 0x80
+                      index += 8
+                      (byte7 << 49) | ((byte6 & 0x7F) << 42) |
+                        ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
+                        ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
+                        ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
+                    elsif (byte8 = buff.getbyte(index + 8)) < 0x80
+                      index += 9
+                      (byte8 << 56) | ((byte7 & 0x7F) << 49) |
+                        ((byte6 & 0x7F) << 42) | ((byte5 & 0x7F) << 35) |
+                        ((byte4 & 0x7F) << 28) | ((byte3 & 0x7F) << 21) |
+                        ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                        (byte0 & 0x7F)
+                    elsif (byte9 = buff.getbyte(index + 9)) < 0x80
+                      index += 10
 
-                  # Negative 32 bit integers are still encoded with 10 bytes
-                  # handle 2's complement negative numbers
-                  # If the top bit is 1, then it must be negative.
-                  -(
-                    (
-                      (
-                        ~(
-                          (byte9 << 63) | ((byte8 & 0x7F) << 56) |
-                            ((byte7 & 0x7F) << 49) | ((byte6 & 0x7F) << 42) |
-                            ((byte5 & 0x7F) << 35) | ((byte4 & 0x7F) << 28) |
-                            ((byte3 & 0x7F) << 21) | ((byte2 & 0x7F) << 14) |
-                            ((byte1 & 0x7F) << 7) | (byte0 & 0x7F)
-                        )
-                      ) & 0xFFFF_FFFF
-                    ) + 1
-                  )
-                else
-                  raise "integer decoding error"
-                end
-
+                      # Negative 32 bit integers are still encoded with 10 bytes
+                      # handle 2's complement negative numbers
+                      # If the top bit is 1, then it must be negative.
+                      -(
+                        (
+                          (
+                            ~(
+                              (byte9 << 63) | ((byte8 & 0x7F) << 56) |
+                                ((byte7 & 0x7F) << 49) |
+                                ((byte6 & 0x7F) << 42) |
+                                ((byte5 & 0x7F) << 35) |
+                                ((byte4 & 0x7F) << 28) |
+                                ((byte3 & 0x7F) << 21) |
+                                ((byte2 & 0x7F) << 14) | ((byte1 & 0x7F) << 7) |
+                                (byte0 & 0x7F)
+                            )
+                          ) & 0xFFFF_FFFF
+                        ) + 1
+                      )
+                    else
+                      raise "integer decoding error"
+                    end
+                  ) & 0xffffffff
+                )
               ## END PULL_INT32
 
               @_bitmask |= 0x0000000000000004
@@ -36283,6 +37895,55 @@ module ProtoBoeuf
           result["end".to_sym] = @end
           result["semantic".to_sym] = @semantic
           result
+        end
+
+        def to_json_without_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          JSON.generate(obj, options)
+        end
+
+        # sig: any
+        def to_json_with_debug(options = {})
+          require "json"
+          obj = transform_for_json!(to_h)
+          $stderr.puts "to_json options: #{options}"
+          JSON.generate(obj, options)
+        end
+
+        alias_method :to_json, :to_json_without_debug
+
+        # sig: any
+        private def transform_for_json!(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = transform_for_json!(v)
+            end
+          when Array
+            obj.map { |v| transform_for_json!(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m")
+          when Numeric
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /[A-Zd_]+/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -36703,6 +38364,55 @@ module ProtoBoeuf
         result = {}
         result["annotation".to_sym] = @annotation
         result
+      end
+
+      def to_json_without_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        JSON.generate(obj, options)
+      end
+
+      # sig: any
+      def to_json_with_debug(options = {})
+        require "json"
+        obj = transform_for_json!(to_h)
+        $stderr.puts "to_json options: #{options}"
+        JSON.generate(obj, options)
+      end
+
+      alias_method :to_json, :to_json_without_debug
+
+      # sig: any
+      private def transform_for_json!(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = transform_for_json!(v)
+          end
+        when Array
+          obj.map { |v| transform_for_json!(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m")
+        when Numeric
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /[A-Zd_]+/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
   end
