@@ -19,10 +19,9 @@ well_known_types = Rake::FileList[File.join(BASE_DIR, "lib/protoboeuf/protobuf/*
 WELL_KNOWN_PB = well_known_types.pathmap("%X.rb")
 
 # Clobber/clean rules
-rb_files.each { |x| CLOBBER.append(x) }
-CLOBBER.append(BENCHMARK_UPSTREAM_PB)
-CLOBBER.append(BENCHMARK_PROTOBOEUF_PB)
-CLOBBER.append(WELL_KNOWN_PB)
+(rb_files + [BENCHMARK_UPSTREAM_PB, BENCHMARK_PROTOBOEUF_PB] + WELL_KNOWN_PB).each do |file|
+  CLOBBER.append(file) if File.exist?(file)
+end
 
 rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
