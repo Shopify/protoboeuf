@@ -405,6 +405,14 @@ module ProtoBoeuf
       assert_equal(:oneof_u32, msg.oneof_field)
     end
 
+    def test_decode_no_fields
+      unit = parse_string('syntax = "proto3"; message NoFields { }')
+      gen = CodeGen.new(unit)
+      klass = Class.new { class_eval gen.to_ruby }
+      obj = klass::NoFields.decode("")
+      assert_kind_of(klass::NoFields, obj)
+    end
+
     def test_decode_empty_many_fields
       # Use field number high enough to require looking for second varint byte.
       unit = parse_string('syntax = "proto3"; message DecodeEmpty { string a = 16; }')
