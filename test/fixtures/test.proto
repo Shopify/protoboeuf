@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+// We may replace the following line with a package name to allow processing this file more than once in the test suite.
+// package_placeholder
+
 option cc_enable_arenas = true;
 option java_multiple_files = true;
 option java_outer_classname = "FooProto";
