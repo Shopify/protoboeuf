@@ -104,3 +104,13 @@ task bench: [BENCHMARK_UPSTREAM_PB, BENCHMARK_PROTOBOEUF_PB] do
   puts "###### YJIT ######"
   ruby "--yjit -I lib:bench/lib bench/benchmark.rb"
 end
+
+desc "Regenerate test/fixtures/typed_test.correct.rb"
+task :regenerate_typed_test_fixture do
+  parsed = ProtoBoeuf.parse_file("test/fixtures/typed_test.proto")
+  gen = CodeGen.new(unit, generate_types: true)
+
+  File.write("test/fixtures/typed_test.correct.rb", gen.to_ruby)
+
+  puts "Regenerated test/fixtures/typed_test.correct.rb"
+end
