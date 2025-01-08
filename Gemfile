@@ -3,6 +3,7 @@
 source "https://rubygems.org"
 gemspec
 
+gem "debug", ">= 1.0.0", require: false
 gem "minitest-color"
 gem "google-protobuf"
 gem "rake"
