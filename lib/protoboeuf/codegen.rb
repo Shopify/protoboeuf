@@ -173,7 +173,7 @@ module ProtoBoeuf
         type_signature(params: { buff: "String" }, returns: "String", newline: true) +
           "def _encode(buff)\n" +
           fields.map { |field| encode_subtype(field) }.compact.join("\n") +
-          "\nbuff\n end\n\n"
+          "buff << @_unknown_fields if @_unknown_fields\nbuff\n end\n\n"
       end
 
       def encode_subtype(field, value_expr = iv_name(field), tagged = true)
@@ -469,18 +469,24 @@ module ProtoBoeuf
           val = #{value_expr}
           if val != 0
             #{encode_tag_and_length(field, tagged)}
-            while val != 0
-              byte = val & 0x7F
+            #{encode_varint}
+          end
+        RUBY
+      end
 
-              val >>= 7
-              # This drops the top bits,
-              # Otherwise, with a signed right shift,
-              # we get infinity one bits at the top
-              val &= (1 << 57) - 1
+      def encode_varint(dest = "buff")
+        <<~RUBY
+          while val != 0
+            byte = val & 0x7F
 
-              byte |= 0x80 if val != 0
-              buff << byte
-            end
+            val >>= 7
+            # This drops the top bits,
+            # Otherwise, with a signed right shift,
+            # we get infinity one bits at the top
+            val &= (1 << 57) - 1
+
+            byte |= 0x80 if val != 0
+            #{dest} << byte
           end
         RUBY
       end
@@ -1103,27 +1109,41 @@ module ProtoBoeuf
             # unexpected, so discard it and continue.
             if !found
               wire_type = tag & 0x7
+
+              unknown_bytes = +"".b
+              val = tag
+              <%= encode_varint("unknown_bytes") %>
+
               case wire_type
               when <%= VARINT %>
                 i = 0
                 while true
                   newbyte = buff.getbyte(index)
                   index += 1
-                  if newbyte.nil? || newbyte < 0x80
-                    break
-                  end
+                  break if newbyte.nil?
+                  unknown_bytes << newbyte
+                  break if newbyte < 0x80
                   i += 1
                   break if i > 9
                 end
               when <%= I64 %>
+                unknown_bytes << buff.byteslice(index, 8)
                 index += 8
               when <%= LEN %>
-                <%= pull_bytes("", "") %>
+                value = <%= pull_varint %>
+
+                val = value
+                <%= encode_varint("unknown_bytes") %>
+
+                unknown_bytes << buff.byteslice(index, value)
+                index += value
               when <%= I32 %>
+                unknown_bytes << buff.byteslice(index, 4)
                 index += 4
               else
                 raise "unknown wire type \#{wire_type}"
               end
+              (@_unknown_fields ||= +"".b) << unknown_bytes
               return self if index >= len
               <%= pull_tag %>
             end
