@@ -554,6 +554,8 @@ module ProtoBoeuf
       # While this is not great, writing tests that ensure that signatures are generated
       # correctly without pulling in all of sorbet is at the very least incredibly complex.
       # So this is the solution for now.
+      File.write("test/fixtures/typed_test.correct.rb", gen.to_ruby) if ENV["REGENERATE_TYPED_TESTS"] == "true"
+
       assert_equal(File.read("test/fixtures/typed_test.correct.rb"), gen.to_ruby)
     end
 
