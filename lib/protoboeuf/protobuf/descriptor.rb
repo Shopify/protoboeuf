@@ -499,8 +499,54 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["file".to_sym] = @file
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FileDescriptorProto
@@ -3285,6 +3331,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["package".to_sym] = @package
         result["dependency".to_sym] = @dependency
@@ -3299,6 +3346,51 @@ module ProtoBoeuf
         result["syntax".to_sym] = @syntax
         result["edition".to_sym] = @edition
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class DescriptorProto
@@ -4095,10 +4187,56 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["start".to_sym] = @start
           result["end".to_sym] = @end
           result["options".to_sym] = @options.to_h
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
 
@@ -4692,9 +4830,55 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["start".to_sym] = @start
           result["end".to_sym] = @end
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -6832,6 +7016,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["field".to_sym] = @field
         result["extension".to_sym] = @extension
@@ -6843,6 +7028,51 @@ module ProtoBoeuf
         result["reserved_range".to_sym] = @reserved_range
         result["reserved_name".to_sym] = @reserved_name
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class ExtensionRangeOptions
@@ -7777,12 +8007,58 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["number".to_sym] = @number
           result["full_name".to_sym] = @full_name
           result["type".to_sym] = @type
           result["reserved".to_sym] = @reserved
           result["repeated".to_sym] = @repeated
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       module VerificationState
@@ -8805,11 +9081,57 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result["declaration".to_sym] = @declaration
         result["features".to_sym] = @features.to_h
         result["verification".to_sym] = @verification
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FieldDescriptorProto
@@ -10947,6 +11269,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["number".to_sym] = @number
         result["label".to_sym] = @label
@@ -10959,6 +11282,51 @@ module ProtoBoeuf
         result["options".to_sym] = @options.to_h
         result["proto3_optional".to_sym] = @proto3_optional
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class OneofDescriptorProto
@@ -11547,9 +11915,55 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["options".to_sym] = @options.to_h
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumDescriptorProto
@@ -12150,9 +12564,55 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["start".to_sym] = @start
           result["end".to_sym] = @end
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -13295,12 +13755,58 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["value".to_sym] = @value
         result["options".to_sym] = @options.to_h
         result["reserved_range".to_sym] = @reserved_range
         result["reserved_name".to_sym] = @reserved_name
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumValueDescriptorProto
@@ -14066,10 +14572,56 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["number".to_sym] = @number
         result["options".to_sym] = @options.to_h
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class ServiceDescriptorProto
@@ -14856,10 +15408,56 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["method".to_sym] = @method
         result["options".to_sym] = @options.to_h
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class MethodDescriptorProto
@@ -15961,6 +16559,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["input_type".to_sym] = @input_type
         result["output_type".to_sym] = @output_type
@@ -15968,6 +16567,51 @@ module ProtoBoeuf
         result["client_streaming".to_sym] = @client_streaming
         result["server_streaming".to_sym] = @server_streaming
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FileOptions
@@ -19169,6 +19813,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["java_package".to_sym] = @java_package
         result["java_outer_classname".to_sym] = @java_outer_classname
         result["java_multiple_files".to_sym] = @java_multiple_files
@@ -19193,6 +19838,51 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class MessageOptions
@@ -20319,6 +21009,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["message_set_wire_format".to_sym] = @message_set_wire_format
         result[
           "no_standard_descriptor_accessor".to_sym
@@ -20331,6 +21022,51 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FieldOptions
@@ -20898,9 +21634,55 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["edition".to_sym] = @edition
           result["value".to_sym] = @value
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
 
@@ -21801,11 +22583,57 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["edition_introduced".to_sym] = @edition_introduced
           result["edition_deprecated".to_sym] = @edition_deprecated
           result["deprecation_warning".to_sym] = @deprecation_warning
           result["edition_removed".to_sym] = @edition_removed
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       module CType
@@ -24240,6 +25068,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["ctype".to_sym] = @ctype
         result["packed".to_sym] = @packed
         result["jstype".to_sym] = @jstype
@@ -24255,6 +25084,51 @@ module ProtoBoeuf
         result["feature_support".to_sym] = @feature_support.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class OneofOptions
@@ -24887,9 +25761,55 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumOptions
@@ -25820,6 +26740,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["allow_alias".to_sym] = @allow_alias
         result["deprecated".to_sym] = @deprecated
         result[
@@ -25828,6 +26749,51 @@ module ProtoBoeuf
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class EnumValueOptions
@@ -26856,12 +27822,58 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["deprecated".to_sym] = @deprecated
         result["features".to_sym] = @features.to_h
         result["debug_redact".to_sym] = @debug_redact
         result["feature_support".to_sym] = @feature_support.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class ServiceOptions
@@ -27593,10 +28605,56 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["features".to_sym] = @features.to_h
         result["deprecated".to_sym] = @deprecated
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class MethodOptions
@@ -28531,11 +29589,57 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["deprecated".to_sym] = @deprecated
         result["idempotency_level".to_sym] = @idempotency_level
         result["features".to_sym] = @features.to_h
         result["uninterpreted_option".to_sym] = @uninterpreted_option
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class UninterpretedOption
@@ -29003,9 +30107,55 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["name_part".to_sym] = @name_part
           result["is_extension".to_sym] = @is_extension
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -30338,6 +31488,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["name".to_sym] = @name
         result["identifier_value".to_sym] = @identifier_value
         result["positive_int_value".to_sym] = @positive_int_value
@@ -30346,6 +31497,51 @@ module ProtoBoeuf
         result["string_value".to_sym] = @string_value
         result["aggregate_value".to_sym] = @aggregate_value
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FeatureSet
@@ -31754,6 +32950,7 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["field_presence".to_sym] = @field_presence
         result["enum_type".to_sym] = @enum_type
         result["repeated_field_encoding".to_sym] = @repeated_field_encoding
@@ -31761,6 +32958,51 @@ module ProtoBoeuf
         result["message_encoding".to_sym] = @message_encoding
         result["json_format".to_sym] = @json_format
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class FeatureSetDefaults
@@ -32568,10 +33810,56 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["edition".to_sym] = @edition
           result["overridable_features".to_sym] = @overridable_features.to_h
           result["fixed_features".to_sym] = @fixed_features.to_h
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -33326,10 +34614,56 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["defaults".to_sym] = @defaults
         result["minimum_edition".to_sym] = @minimum_edition
         result["maximum_edition".to_sym] = @maximum_edition
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class SourceCodeInfo
@@ -34609,6 +35943,7 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["path".to_sym] = @path
           result["span".to_sym] = @span
           result["leading_comments".to_sym] = @leading_comments
@@ -34617,6 +35952,51 @@ module ProtoBoeuf
             "leading_detached_comments".to_sym
           ] = @leading_detached_comments
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -35035,8 +36415,54 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["location".to_sym] = @location
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
     class GeneratedCodeInfo
@@ -36277,12 +37703,58 @@ module ProtoBoeuf
 
         def to_h
           result = {}
+
           result["path".to_sym] = @path
           result["source_file".to_sym] = @source_file
           result["begin".to_sym] = @begin
           result["end".to_sym] = @end
           result["semantic".to_sym] = @semantic
           result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.generate(json_value(to_h), options)
+        end
+
+        private def json_value(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(k, v), result|
+              result[json_field_name(k.to_s)] = json_value(v)
+            end
+          when Array
+            obj.map { |v| json_value(v) }
+          when String
+            # TODO: when field.type == :TYPE_BYTES
+            [obj].pack("m").gsub(
+              "
+",
+              ""
+            )
+          when Numeric
+            # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+            #   https://protobuf.dev/programming-guides/json/
+            obj.to_s
+          else
+            obj
+          end
+        end
+
+        # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+        # JSON name.
+        # See: https://protobuf.dev/programming-guides/json/#json-options
+
+        private def json_field_name(name)
+          return name unless name.include?("_")
+          # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+          return name if name =~ /^[A-Z0-9_]+$/
+
+          name
+            .split(/_+/)
+            .each_with_index
+            .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+            .join
         end
       end
       # required field readers
@@ -36701,8 +38173,54 @@ module ProtoBoeuf
 
       def to_h
         result = {}
+
         result["annotation".to_sym] = @annotation
         result
+      end
+
+      def to_json(options = {})
+        require "json"
+        JSON.generate(json_value(to_h), options)
+      end
+
+      private def json_value(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            result[json_field_name(k.to_s)] = json_value(v)
+          end
+        when Array
+          obj.map { |v| json_value(v) }
+        when String
+          # TODO: when field.type == :TYPE_BYTES
+          [obj].pack("m").gsub(
+            "
+",
+            ""
+          )
+        when Numeric
+          # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+          #   https://protobuf.dev/programming-guides/json/
+          obj.to_s
+        else
+          obj
+        end
+      end
+
+      # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+      # JSON name.
+      # See: https://protobuf.dev/programming-guides/json/#json-options
+
+      private def json_field_name(name)
+        return name unless name.include?("_")
+        # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+        return name if name =~ /^[A-Z0-9_]+$/
+
+        name
+          .split(/_+/)
+          .each_with_index
+          .map { |part, i| i.zero? ? part : part.downcase.capitalize }
+          .join
       end
     end
   end

@@ -3,6 +3,8 @@
 require "helper"
 require "tempfile"
 require "google/protobuf/descriptor_pb"
+require "json"
+
 require_relative "fixtures/package_test_pb.rb"
 
 module ProtoBoeuf
@@ -823,6 +825,56 @@ module ProtoBoeuf
       assert_raises(RangeError) do
         obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
       end
+    end
+
+    def test_to_json
+      unit = parse_string(<<~EOPROTO)
+        syntax = "proto3";
+
+        message ToJsonChild {
+          string field_____ONE = 1;
+          bool field2 = 2;
+        }
+
+        message ToJsonParent {
+          string field_one1 = 1;
+          bool   field_2 = 2;
+          uint64 FIELD_THREE3 = 3;
+          sint64 Field_four_____4 = 4;
+          double fieldfive5 = 5;
+          float Field_________Six = 6;
+          ToJsonChild fieldSeven_7 = 7;
+        }
+      EOPROTO
+
+      gen = CodeGen.new(unit)
+      more = Class.new { class_eval gen.to_ruby }
+
+      message_object = more::ToJsonParent.new(
+        field_one1: "asdf",
+        field_2: true,
+        _FIELD_THREE3: 123,
+        _Field_four_____4: -123,
+        fieldfive5: 1.5,
+        _Field_________Six: 1.5,
+        fieldSeven_7: more::ToJsonChild.new(field_____ONE: "one", field2: false),
+      )
+
+      assert_equal(
+        {
+          "fieldOne1" => ["asdf"].pack("m").gsub("\n", ""),
+          "field2" => true,
+          "FIELD_THREE3" => "123",
+          "FieldFour4" => "-123",
+          "fieldfive5" => "1.5",
+          "FieldSix" => "1.5",
+          "fieldSeven7" => {
+            "fieldOne" => ["one"].pack("m").gsub("\n", ""),
+            "field2" => false,
+          },
+        },
+        JSON.parse(message_object.to_json),
+      )
     end
 
     private

@@ -144,28 +144,73 @@ module ProtoBoeuf
           field.has_oneof_index? && !optional_field?(field)
         end
 
-        oneofs = @oneof_selection_fields.map do |field|
-          "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
-        end
+        oneofs = @oneof_selection_fields
 
         <<~RUBY
           #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
           def to_h
             result = {}
-            #{(oneofs + fields.map { |field| convert_field(field) }).join("\n")}
+            #{oneofs.map { |field| oneof_to_hash_assignment(field) }.join("\n")}
+            #{fields.map { |field| field_to_hash_assignment(field) }.join("\n")}
             result
+          end
+
+          #{type_signature(params: { options: "T::Hash" }, returns: "String")}
+          def to_json(options = {})
+            require 'json'
+            JSON.generate(json_value(to_h), options)
+          end
+
+          #{type_signature(params: { obj: "T.untyped" }, returns: "T.untyped")}
+          private def json_value(obj)
+            case obj
+            when Hash
+              obj.each_with_object({}) do |(k, v), result|
+                result[json_field_name(k.to_s)] = json_value(v)
+              end
+            when Array
+              obj.map { |v| json_value(v) }
+            when String
+              # TODO: when field.type == :TYPE_BYTES
+              [obj].pack('m').gsub("\n", '')
+            when Numeric
+              # TODO: (davebenvenuti 2024-11-08) some numerics should be stringified, some shouldn't.  See:
+              #   https://protobuf.dev/programming-guides/json/
+              obj.to_s
+            else
+              obj
+            end
+          end
+
+          # By default the protobuf JSON printer should convert the field name to lowerCamelCase and use that as the
+          # JSON name.
+          # See: https://protobuf.dev/programming-guides/json/#json-options
+
+          #{type_signature(params: { name: String }, returns: "String")}
+          private def json_field_name(name)
+            return name unless name.include?("_")
+            # Names like FIELD_NAME11 (all caps + underscores + numbers) should remain as-is
+            return name if name =~ /^[A-Z0-9_]+$/
+
+            name.split(/_+/).each_with_index.map { |part, i| i.zero? ? part : part.downcase.capitalize }.join
           end
         RUBY
       end
 
-      def convert_field(field)
+      def field_to_hash_assignment(field)
+        key = "'#{field.name}'.to_sym"
+
         if repeated?(field)
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
+          "result[#{key}] = #{iv_name(field)}"
         elsif field.type == :TYPE_MESSAGE
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}.to_h"
+          "result[#{key}] = #{iv_name(field)}.to_h"
         else
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
+          "result[#{key}] = #{iv_name(field)}"
         end
+      end
+
+      def oneof_to_hash_assignment(field)
+        "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
       end
 
       def encode
