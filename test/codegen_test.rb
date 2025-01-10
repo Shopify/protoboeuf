@@ -2,7 +2,6 @@
 
 require "helper"
 require "tempfile"
-require "google/protobuf/descriptor_pb"
 require_relative "fixtures/package_test_pb.rb"
 
 module ProtoBoeuf
@@ -17,7 +16,7 @@ module ProtoBoeuf
 
   class CodeGenTest < Test
     def test_enum_with_underscore
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message Vehicle
@@ -41,7 +40,7 @@ module ProtoBoeuf
     end
 
     def test_too_many_fields_multiple
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TooManyFieldsAgain {
@@ -64,7 +63,7 @@ module ProtoBoeuf
     end
 
     def test_too_many_fields
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TooManyFields {
@@ -84,7 +83,7 @@ module ProtoBoeuf
     end
 
     def test_uppercase_field_name
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message Foo {
@@ -104,7 +103,7 @@ module ProtoBoeuf
     end
 
     def test_map_complex_types
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message Foo {
@@ -128,7 +127,7 @@ module ProtoBoeuf
     end
 
     def test_decode_embedder
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TestEmbeddee {
@@ -156,7 +155,7 @@ module ProtoBoeuf
     end
 
     def test_decode_repeated_unpacked
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message UnpackedFields {
@@ -183,7 +182,7 @@ module ProtoBoeuf
     end
 
     def test_decode_repeated
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TestRepeatedField {
@@ -208,7 +207,7 @@ module ProtoBoeuf
     end
 
     def test_oneof_decoding
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TestMessageWithOneOf {
@@ -225,7 +224,7 @@ module ProtoBoeuf
     end
 
     def test_optional_fields
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message ManyOptional {
@@ -238,7 +237,7 @@ module ProtoBoeuf
     end
 
     def test_many_optional_fields
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TestManyOptionalFields {
@@ -256,7 +255,7 @@ module ProtoBoeuf
     end
 
     def test_enum_field
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         enum TestEnum {
@@ -281,7 +280,7 @@ module ProtoBoeuf
     end
 
     def test_neg_enum
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         enum TestEnum {
@@ -303,7 +302,7 @@ module ProtoBoeuf
     end
 
     def test_optional_enum
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         enum TestEnum {
@@ -328,7 +327,7 @@ module ProtoBoeuf
     end
 
     def test_required_field
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         message Test1 {
           required uint32 u32 = 1;
           optional int32 i32 = 2;
@@ -347,7 +346,7 @@ module ProtoBoeuf
     end
 
     def test_map_fields
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message Test1 {
@@ -367,7 +366,7 @@ module ProtoBoeuf
     end
 
     def test_oneof
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
 
         message TestEmbeddee {
@@ -406,7 +405,7 @@ module ProtoBoeuf
     end
 
     def test_decode_no_fields
-      unit = parse_string('syntax = "proto3"; message NoFields { }')
+      unit = parse_proto_string('syntax = "proto3"; message NoFields { }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval gen.to_ruby }
       obj = klass::NoFields.decode("")
@@ -415,7 +414,7 @@ module ProtoBoeuf
 
     def test_decode_empty_many_fields
       # Use field number high enough to require looking for second varint byte.
-      unit = parse_string('syntax = "proto3"; message DecodeEmpty { string a = 16; }')
+      unit = parse_proto_string('syntax = "proto3"; message DecodeEmpty { string a = 16; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval gen.to_ruby }
       encoded = klass::DecodeEmpty.new.to_proto
@@ -425,7 +424,7 @@ module ProtoBoeuf
     end
 
     def test_make_ruby
-      unit = parse_string(
+      unit = parse_proto_string(
         'syntax = "proto3"; message TestMessage { string id = 1; uint64 shop_id = 2; bool boolean = 3; }',
       )
       gen = CodeGen.new(unit)
@@ -437,7 +436,7 @@ module ProtoBoeuf
     end
 
     def test_int32
-      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 a = 1; }')
+      unit = parse_proto_string('syntax = "proto3"; message Test1 { optional int32 a = 1; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new
@@ -445,9 +444,7 @@ module ProtoBoeuf
     end
 
     def test_oneof_edition_2023
-      skip("Editions not supported by parser") if protoboeuf_parser?
-
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         edition = "2023";
 
         message TestMessageWithOneOf {
@@ -474,9 +471,7 @@ module ProtoBoeuf
 
     # One of our well known types (descriptor.proto) has proto2 syntax so we want to test our codegen of it.
     def test_optional_predicate_proto2
-      skip("Syntax proto2 not supported by parser") if protoboeuf_parser?
-
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto2";
 
         message TestMessageWithOptional {
@@ -493,7 +488,7 @@ module ProtoBoeuf
     end
 
     def test_fixture_file
-      unit = parse_file("./test/fixtures/test.proto")
+      unit = parse_proto_file("./test/fixtures/test.proto")
 
       gen = CodeGen.new(unit)
 
@@ -505,7 +500,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_end
-      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 end = 1; }')
+      unit = parse_proto_string('syntax = "proto3"; message Test1 { optional int32 end = 1; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new(end: 1234)
@@ -513,7 +508,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_class
-      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 class = 1; }')
+      unit = parse_proto_string('syntax = "proto3"; message Test1 { optional int32 class = 1; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new(class: 1234)
@@ -521,7 +516,7 @@ module ProtoBoeuf
     end
 
     def test_fields_keyword_nil
-      unit = parse_string('syntax = "proto3"; message Test1 { optional int32 nil = 1; }')
+      unit = parse_proto_string('syntax = "proto3"; message Test1 { optional int32 nil = 1; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new(nil: 1234)
@@ -529,7 +524,7 @@ module ProtoBoeuf
     end
 
     def test_repeated
-      unit = parse_string('syntax = "proto3"; message Test1 { repeated int32 repeated_ints = 1; }')
+      unit = parse_proto_string('syntax = "proto3"; message Test1 { repeated int32 repeated_ints = 1; }')
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
       obj = klass::Test1.new
@@ -542,7 +537,7 @@ module ProtoBoeuf
 
     def test_generate_types
       proto = File.read("test/fixtures/typed_test.proto")
-      unit = parse_string(proto)
+      unit = parse_proto_string(proto)
 
       gen = CodeGen.new(unit, generate_types: true)
 
@@ -558,7 +553,7 @@ module ProtoBoeuf
     end
 
     def test_modules_with_package
-      unit = parse_string(<<~PROTO)
+      unit = parse_proto_string(<<~PROTO)
         package example.code_gen.package;
 
         message Foo {}
@@ -570,7 +565,7 @@ module ProtoBoeuf
     end
 
     def test_modules_with_ruby_package
-      unit = parse_string(<<~PROTO)
+      unit = parse_proto_string(<<~PROTO)
         package example.proto;
 
         option ruby_package = "Example::Ruby::Package";
@@ -584,7 +579,7 @@ module ProtoBoeuf
     end
 
     def test_type_name_to_class_name
-      unit = parse_string(<<~PROTO)
+      unit = parse_proto_string(<<~PROTO)
         package example_foo.proto;
         import "package_test.proto";
 
@@ -592,6 +587,9 @@ module ProtoBoeuf
           required package_test.proto3.Test1 t = 1;
         }
       PROTO
+
+      # require "debug"
+      # debugger
 
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
@@ -612,26 +610,8 @@ module ProtoBoeuf
       ))
     end
 
-    def test_requires
-      skip("no implicit well known type for protoc tests") unless protoboeuf_parser?
-
-      unit = parse_string(<<~PROTO)
-        package example.proto;
-
-        message Foo {
-          optional google.protobuf.StringValue s = 1;
-        }
-      PROTO
-
-      gen = CodeGen.new(unit)
-      path = "protoboeuf/protobuf/stringvalue"
-      require_line = /require ['"]#{path}['"]/
-      assert(ruby_script_header(gen.to_ruby.to_s).match?(require_line), "require should be in header")
-      refute(gen.to_ruby(path).to_s.match?(require_line), "require should not be present")
-    end
-
     def test_to_proto
-      unit = parse_string(<<~PROTO)
+      unit = parse_proto_string(<<~PROTO)
         syntax = "proto3";
 
         message Foo {
@@ -648,7 +628,7 @@ module ProtoBoeuf
     end
 
     def test_unknown_fields
-      unit = parse_string(<<~EOPROTO)
+      unit = parse_proto_string(<<~EOPROTO)
         syntax = "proto3";
         message M1 {
           string a = 1;
@@ -668,7 +648,7 @@ module ProtoBoeuf
       assert_equal(attr, more::M1.decode(msg).to_h)
 
       # Include a gap in field numbers so that we test finding a field after discarding some.
-      unit = parse_string('syntax = "proto3"; message M2 { string a = 1; sint64 sint64 = 4; }')
+      unit = parse_proto_string('syntax = "proto3"; message M2 { string a = 1; sint64 sint64 = 4; }')
       gen = CodeGen.new(unit)
       less = Class.new { class_eval gen.to_ruby }
 
@@ -684,7 +664,7 @@ module ProtoBoeuf
 
     def test_high_field_number
       max_field = 2**29 - 1
-      unit = parse_string(%(syntax = "proto3"; message Max { int32 a = #{max_field}; }))
+      unit = parse_proto_string(%(syntax = "proto3"; message Max { int32 a = #{max_field}; }))
       gen = CodeGen.new(unit)
       max_class = Class.new { class_eval gen.to_ruby }
 
@@ -693,7 +673,7 @@ module ProtoBoeuf
 
       # Use high enough field number to be a multi-byte varint.
       small_field = 0x10 << 3
-      unit = parse_string(%(syntax = "proto3"; message Small { int32 a = #{small_field}; }))
+      unit = parse_proto_string(%(syntax = "proto3"; message Small { int32 a = #{small_field}; }))
       gen = CodeGen.new(unit)
       small_class = Class.new { class_eval gen.to_ruby }
 
@@ -702,7 +682,7 @@ module ProtoBoeuf
       assert_equal(1, small_class::Small.decode(msg).a, "expected field #{small_field} to populate")
 
       # Also test message with only low field numbers.
-      unit = parse_string(%(syntax = "proto3"; message One { int32 a = 1; }))
+      unit = parse_proto_string(%(syntax = "proto3"; message One { int32 a = 1; }))
       gen = CodeGen.new(unit)
       one_class = Class.new { class_eval gen.to_ruby }
 
@@ -728,7 +708,7 @@ module ProtoBoeuf
           repeated uint64 u64s = 12;
         }
       PROTO
-      unit = parse_string(proto)
+      unit = parse_proto_string(proto)
 
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
@@ -835,51 +815,6 @@ module ProtoBoeuf
       assert_raises(RangeError) do
         obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
       end
-    end
-
-    private
-
-    def parse_string(string)
-      ProtoBoeuf.parse_string(string)
-    end
-
-    def parse_file(string)
-      ProtoBoeuf.parse_file(string)
-    end
-
-    def protoboeuf_parser?
-      true
-    end
-
-    def ruby_script_header(string)
-      string.split(/^(module|class)/).first
-    end
-  end
-
-  class ProtoCCodeGenTest < CodeGenTest
-    def protoboeuf_parser?
-      false
-    end
-
-    def import_path
-      File.expand_path("fixtures", __dir__)
-    end
-
-    def parse_string(string)
-      binfile = Tempfile.new
-      Tempfile.create do |f|
-        f.write(string)
-        f.flush
-        system("protoc -o #{binfile.path} -I/:'#{import_path}' #{f.path}")
-      end
-      binfile.rewind
-      Google::Protobuf::FileDescriptorSet.decode(binfile.read)
-    ensure
-      binfile.unlink
-    end
-
-    def parse_file(path)
-      parse_string(File.binread(path))
     end
   end
 end

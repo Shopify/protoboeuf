@@ -4,7 +4,7 @@ require "helper"
 
 class MessageTest < ProtoBoeuf::Test
   FIXTURE_FILE = File.join(File.dirname(__FILE__), "fixtures/test.proto")
-  unit = ProtoBoeuf.parse_file(FIXTURE_FILE)
+  unit = parse_proto_file(FIXTURE_FILE)
   gen = ProtoBoeuf::CodeGen.new(unit)
 
   class_eval gen.to_ruby
@@ -509,101 +509,101 @@ class MessageTest < ProtoBoeuf::Test
 
   def test_translate_known_type_bool
     data = ::HasKnownTypeBool.encode(::HasKnownTypeBool.new.tap do |x|
-      x.id = Google::Protobuf::BoolValue.new(value: true)
+      x.id = ::Google::Protobuf::BoolValue.new(value: true)
     end)
 
     instance = HasKnownTypeBool.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::BoolValue, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::BoolValue, instance.id)
     assert_equal(true, instance.id.value)
   end
 
   def test_translate_known_type_int32
     data = ::HasKnownTypeInt32.encode(::HasKnownTypeInt32.new.tap do |x|
-      x.id = Google::Protobuf::Int32Value.new(value: -123456)
+      x.id = ::Google::Protobuf::Int32Value.new(value: -123456)
     end)
 
     instance = HasKnownTypeInt32.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::Int32Value, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::Int32Value, instance.id)
     assert_equal(-123456, instance.id.value)
   end
 
   def test_translate_known_type_int64
     data = ::HasKnownTypeInt64.encode(::HasKnownTypeInt64.new.tap do |x|
-      x.id = Google::Protobuf::Int64Value.new(value: -123456)
+      x.id = ::Google::Protobuf::Int64Value.new(value: -123456)
     end)
 
     instance = HasKnownTypeInt64.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::Int64Value, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::Int64Value, instance.id)
     assert_equal(-123456, instance.id.value)
   end
 
   def test_translate_known_type_uint32
     data = ::HasKnownTypeUInt32.encode(::HasKnownTypeUInt32.new.tap do |x|
-      x.id = Google::Protobuf::UInt32Value.new(value: 123456)
+      x.id = ::Google::Protobuf::UInt32Value.new(value: 123456)
     end)
 
     instance = HasKnownTypeUInt32.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::UInt32Value, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::UInt32Value, instance.id)
     assert_equal(123456, instance.id.value)
   end
 
   def test_translate_known_type_uint64
     data = ::HasKnownTypeUInt64.encode(::HasKnownTypeUInt64.new.tap do |x|
-      x.id = Google::Protobuf::UInt64Value.new(value: 123456)
+      x.id = ::Google::Protobuf::UInt64Value.new(value: 123456)
     end)
 
     instance = HasKnownTypeUInt64.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::UInt64Value, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::UInt64Value, instance.id)
     assert_equal(123456, instance.id.value)
   end
 
   def test_translate_known_type_float
     data = ::HasKnownTypeFloat.encode(::HasKnownTypeFloat.new.tap do |x|
-      x.id = Google::Protobuf::FloatValue.new(value: 123.5)
+      x.id = ::Google::Protobuf::FloatValue.new(value: 123.5)
     end)
 
     instance = HasKnownTypeFloat.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::FloatValue, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::FloatValue, instance.id)
     assert_equal(123.5, instance.id.value)
   end
 
   def test_translate_known_type_double
     data = ::HasKnownTypeDouble.encode(::HasKnownTypeDouble.new.tap do |x|
-      x.id = Google::Protobuf::DoubleValue.new(value: 123.75)
+      x.id = ::Google::Protobuf::DoubleValue.new(value: 123.75)
     end)
 
     instance = HasKnownTypeDouble.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::DoubleValue, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::DoubleValue, instance.id)
     assert_equal(123.75, instance.id.value)
   end
 
   def test_translate_known_type_string
     data = ::HasKnownTypeString.encode(::HasKnownTypeString.new.tap do |x|
-      x.id = Google::Protobuf::StringValue.new(value: "foobar bif")
+      x.id = ::Google::Protobuf::StringValue.new(value: "foobar bif")
     end)
 
     instance = HasKnownTypeString.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::StringValue, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::StringValue, instance.id)
     assert_equal("foobar bif", instance.id.value)
   end
 
   def test_translate_known_type_bytes
     data = ::HasKnownTypeBytes.encode(::HasKnownTypeBytes.new.tap do |x|
-      x.id = Google::Protobuf::BytesValue.new(value: "string of bytes")
+      x.id = ::Google::Protobuf::BytesValue.new(value: "string of bytes")
     end)
 
     instance = HasKnownTypeBytes.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::BytesValue, instance.id)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::BytesValue, instance.id)
     assert_equal("string of bytes", instance.id.value)
   end
 
   def test_translate_known_type_timestamp
     data = ::HasKnownTypeTimestamp.encode(::HasKnownTypeTimestamp.new.tap do |x|
-      x.t = Google::Protobuf::Timestamp.new(seconds: 5555, nanos: 3337)
+      x.t = ::Google::Protobuf::Timestamp.new(seconds: 5555, nanos: 3337)
     end)
 
     instance = HasKnownTypeTimestamp.decode(data)
-    assert_kind_of(::ProtoBoeuf::Protobuf::Timestamp, instance.t)
+    assert_kind_of(::ProtoBoeuf::Google::Protobuf::Timestamp, instance.t)
     assert_equal(5555, instance.t.seconds)
     assert_equal(3337, instance.t.nanos)
   end
@@ -619,7 +619,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_bool
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message BoolValue {
@@ -627,7 +627,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     # False
     actual = m::BoolValue.encode(m::BoolValue.new(value: false))
@@ -649,7 +649,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_bytes
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message BytesValue {
@@ -657,7 +657,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     ["", "hello world", "foobar", "nöel", "some emoji 🎉👍❤️ and some math ∮𝛅x", "\x01\x02\x00\x01\x02"].each do |s|
       s = s.b
@@ -710,7 +710,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_string
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message StringValue {
@@ -718,7 +718,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     ["", "hello world", "foobar", "nöel", "some emoji 🎉👍❤️ and some math ∮𝛅x"].each do |s|
       actual = m::StringValue.encode(m::StringValue.new(value: s))
@@ -741,7 +741,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_uint32
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message UInt32Value {
@@ -749,7 +749,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     [0, 12, 0xFF, 0xFFFF_FFFF].each do |n|
       actual = m::UInt32Value.encode(m::UInt32Value.new(value: n))
@@ -759,7 +759,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_uint64
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message UInt64Value {
@@ -767,7 +767,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     [0, 12, 0xFF, 0xFFFF_FFFF_FFFF_FFFF].each do |n|
       actual = m::UInt64Value.encode(m::UInt64Value.new(value: n))
@@ -777,7 +777,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_int64
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message Int64Value {
@@ -785,7 +785,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     [0, 1, 0xFF, -1, -2, -9001, 9223372036854775807, -9223372036854775808].each do |n|
       actual = m::Int64Value.encode(m::Int64Value.new(value: n))
@@ -795,7 +795,7 @@ class MessageTest < ProtoBoeuf::Test
   end
 
   def test_encode_int32
-    code = ProtoBoeuf.parse_string(<<~eoboeuf)
+    code = parse_proto_string(<<~eoboeuf)
       syntax = "proto3";
 
       message Int32Value {
@@ -803,7 +803,7 @@ class MessageTest < ProtoBoeuf::Test
       }
     eoboeuf
 
-    m = Module.new { class_eval code.to_ruby }
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     [0, 1, 0xFF, -1, -2, -9001, -2147483648, 2147483647].each do |n|
       actual = m::Int32Value.encode(m::Int32Value.new(value: n))

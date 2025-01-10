@@ -193,7 +193,7 @@ module ProtoBoeuf
           end
         end
 
-        unit = ProtoBoeuf.parse_file(file)
+        unit = parse_proto_file(file)
       end
 
       boeuf_code = ProtoBoeuf::CodeGen.new(unit).to_ruby
@@ -201,7 +201,18 @@ module ProtoBoeuf
 
       [
         Module.new { module_eval boeuf_code },
-        Module.new { module_eval protoc_code.join("\n") },
+        Module.new do
+          module_eval(
+            # This gsub is a temporary workaround because protoc doesn't properly qualify the global Google module and
+            # this particular line ends up resolving to Protoboeuf::Google::Protobuf::DescriptorPool, which doesn't
+            # exist.
+            # See: https://github.com/protocolbuffers/protobuf/pull/19981
+            protoc_code.join("\n").gsub(
+              "pool = Google::Protobuf::DescriptorPool.generated_pool",
+              "pool = ::Google::Protobuf::DescriptorPool.generated_pool",
+            ),
+          )
+        end,
       ]
     end
   end

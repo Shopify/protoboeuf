@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto_boeuf.protobuf;
+package google.protobuf;
 
 message BytesValue {
   bytes value = 1;

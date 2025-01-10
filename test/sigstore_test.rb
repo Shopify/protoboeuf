@@ -10,7 +10,7 @@ class SigStoreTest < ProtoBoeuf::Test
       file_name = File.join("test/fixtures/sigstore", entry)
       # puts file_name
 
-      unit = ProtoBoeuf.parse_file(file_name)
+      unit = parse_proto_file(file_name, File.expand_path("fixtures/sigstore", __dir__))
       gen = ProtoBoeuf::CodeGen.new(unit)
 
       gen.to_ruby
