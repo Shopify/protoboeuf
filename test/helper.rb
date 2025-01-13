@@ -11,7 +11,7 @@ require "protoboeuf/codegen"
 
 module ProtoBoeuf
   class Test < Minitest::Test
-    PROTOC_IMPORT_PATHS = [
+    DEFAULT_PROTOC_IMPORT_PATHS = [
       "/",
       *[
         "../lib/protoboeuf",
@@ -36,13 +36,18 @@ module ProtoBoeuf
       private
 
       def protoc_parse(proto_path, additional_import_paths)
-        all_import_paths = PROTOC_IMPORT_PATHS + additional_import_paths
-        import_path_string = "'#{all_import_paths.join("':'")}'"
+        all_import_paths = (DEFAULT_PROTOC_IMPORT_PATHS + additional_import_paths).uniq
 
         Tempfile.create do |binfile|
-          cmd_string = "protoc -o #{binfile.path} -I#{import_path_string} #{File.expand_path(proto_path)}"
+          cmd = [
+            "protoc",
+            "-o",
+            binfile.path,
+            all_import_paths.map { |path| ["-I", path] },
+            File.expand_path(proto_path),
+          ].flatten
 
-          stdout, stderr, status = Open3.capture3(cmd_string)
+          stdout, stderr, status = Open3.capture3(*cmd)
 
           raise <<~MSG.chomp unless status == 0
             protoc #{status}:
@@ -64,17 +69,17 @@ module ProtoBoeuf
 
           binfile.rewind
 
-          Google::Protobuf::FileDescriptorSet.decode(binfile.read)
+          ::Google::Protobuf::FileDescriptorSet.decode(binfile.read)
         end
       end
     end
 
     def parse_proto_file(path, *additional_import_paths)
-      self.class.parse_proto_file(path, additional_import_paths)
+      self.class.parse_proto_file(path, *additional_import_paths)
     end
 
     def parse_proto_string(string, *additional_import_paths)
-      self.class.parse_proto_string(string, additional_import_paths)
+      self.class.parse_proto_string(string, *additional_import_paths)
     end
   end
 end

@@ -26,8 +26,6 @@ CLOBBER.append(BENCHMARK_UPSTREAM_PB)
 CLOBBER.append(BENCHMARK_PROTOBOEUF_PB)
 CLOBBER.append(WELL_KNOWN_PB)
 
-protoc_import_path_string = "'#{well_known_types.pathmap("%d").uniq.join("':'")}'"
-
 rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
 
@@ -36,7 +34,14 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
 
   unit = Tempfile.create(File.basename(t.source)) do |f|
     File.unlink(f.path)
-    sh("protoc -I #{protoc_import_path_string} #{File.basename(t.source)} -o #{f.path}")
+    sh(*[
+      "protoc",
+      well_known_types.map { |file| ["-I", file.pathmap("%d")] }.uniq,
+      File.basename(t.source),
+      "-o",
+      f.path,
+    ].flatten)
+
     require "google/protobuf/descriptor_pb"
     Google::Protobuf::FileDescriptorSet.decode(File.binread(f.path))
   end
