@@ -84,16 +84,14 @@ module ProtoBoeuf
     end
 
     def test_syntax2
-      skip("parser doesn't yet support proto2")
-      ours, theirs = codegen_string('syntax = "proto2"; message ToProto { string s = 1; }')
-      our_bin, their_bin = [ours, theirs].map { |m| m::ToProto.new(s: "s").to_proto }
+      ours, theirs = codegen_string('syntax = "proto2"; message ToProtoSyntax2 { required string s = 1; }')
+      our_bin, their_bin = [ours, theirs].map { |m| m::ToProtoSyntax2.new(s: "s").to_proto }
       assert_equal(their_bin, our_bin)
     end
 
     def test_edition_2023
-      skip("parser doesn't yet support editions")
-      ours, theirs = codegen_string('edition = "2023"; message ToProto { string s = 1; }')
-      our_bin, their_bin = [ours, theirs].map { |m| m::ToProto.new(s: "s").to_proto }
+      ours, theirs = codegen_string('edition = "2023"; message ToProtoEdition2023 { string s = 1; }')
+      our_bin, their_bin = [ours, theirs].map { |m| m::ToProtoEdition2023.new(s: "s").to_proto }
       assert_equal(their_bin, our_bin)
     end
 
