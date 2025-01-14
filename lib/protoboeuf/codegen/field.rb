@@ -18,7 +18,8 @@ module ProtoBoeuf
         :number,
         :options,
         :oneof_index,
-        :has_oneof_index?
+        :has_oneof_index?,
+        :json_name
 
       def initialize(field:, message:, syntax:)
         @original_field = field

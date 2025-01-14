@@ -597,9 +597,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["seconds".to_sym] = @seconds
-          result["nanos".to_sym] = @nanos
+
+          result[:"seconds"] = @seconds
+          result[:"nanos"] = @nanos
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["seconds"] = @seconds
+          result["nanos"] = @nanos
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
     end
