@@ -77,6 +77,139 @@ module ProtoBoeuf
       end
     end
 
+    # Generates #to_h, #as_json, and #to_json methods
+    class HashSerializationCompiler
+      include TypeHelper
+
+      attr_reader :message, :fields, :oneof_selection_fields, :generate_types
+
+      class << self
+        def result(message:, fields:, oneof_selection_fields:, generate_types:)
+          new(message:, fields:, oneof_selection_fields:, generate_types:).result
+        end
+      end
+
+      def initialize(message:, fields:, oneof_selection_fields:, generate_types:)
+        @message = message
+        @fields = fields.sort_by(&:number) # Serialize fields in their proto order
+        @oneof_selection_fields = oneof_selection_fields
+        @generate_types = generate_types
+      end
+
+      def result
+        <<~RUBY
+          #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
+          def to_h
+            result = {}
+
+            #{fields.map { |f| to_h_assign_statement_rb(f) }.join("\n")}
+
+            result
+          end
+
+          #{type_signature(params: { options: "T::Hash[T.untyped, T.untyped]" }, returns: "T::Hash[Symbol, T.untyped]")}
+          def as_json(options = {})
+            result = {}
+
+            #{fields.map { |f| as_json_assign_statement_rb(f) }.join("\n")}
+
+            result
+          end
+
+          def to_json(options = {})
+            require 'json'
+            JSON.dump(as_json(options))
+          end
+        RUBY
+      end
+
+      private
+
+      def to_h_assign_statement_rb(field)
+        key = to_h_hash_key_rb(field)
+        value = to_h_hash_value_rb(field)
+
+        if field.has_oneof_index? && !field.optional?
+          oneof_selection_field_name = oneof_selection_fields[field.oneof_index].name.dump
+          field_name = field.name.dump
+
+          "result[#{key}] = #{value} if send(:#{oneof_selection_field_name}) == :#{field_name}"
+        else
+          "result[#{key}] = #{value}"
+        end
+      end
+
+      def to_h_hash_key_rb(field)
+        ":#{field.name.dump}"
+      end
+
+      def to_h_hash_value_rb(field)
+        return to_h_hash_value_for_map_rb(field) if field.map_field?
+
+        # For primitives or arrays of primitives we can just use the instance variable value
+        return field.iv_name unless field.type == :TYPE_MESSAGE
+
+        if field.repeated?
+          # repeated maps aren't possible so we don't have to worry about to_h arity or as_json not being defined
+          "#{field.iv_name}.map { |v| v.to_h }"
+        else
+          "#{field.iv_name}.to_h"
+        end
+      end
+
+      def to_h_hash_value_for_map_rb(field)
+        if field.map_type.value.type == :TYPE_MESSAGE
+          "#{field.iv_name}.transform_values { |value| value.to_h }"
+        else
+          field.iv_name
+        end
+      end
+
+      def as_json_assign_statement_rb(field)
+        key = as_json_hash_key_rb(field)
+        value = as_json_hash_value_rb(field)
+
+        if field.has_oneof_index? && !field.optional?
+          oneof_selection_field_name = oneof_selection_fields[field.oneof_index].name.dump
+          field_name = field.name.dump
+
+          "result[#{key}] = #{value} if send(:#{oneof_selection_field_name}) == :#{field_name}"
+        elsif field.repeated?
+          "#{value}.tap { |v| result[#{key}] = v if !options[:compact] || v.any? }"
+        elsif field.optional?
+          "result[#{key}] = #{value} if !options[:compact] || has_#{field.name}?"
+        else
+          "result[#{key}] = #{value}"
+        end
+      end
+
+      def as_json_hash_key_rb(field)
+        field.json_name.dump
+      end
+
+      def as_json_hash_value_rb(field)
+        return as_json_hash_value_for_map_rb(field) if field.map_field?
+
+        # For primitives or arrays of primitives we can just use the instance variable value
+        return field.iv_name unless field.type == :TYPE_MESSAGE
+
+        if field.repeated?
+          # repeated maps aren't possible so we don't have to worry about to_h arity or as_json not being defined
+          "#{field.iv_name}.map { |v| v.as_json(options) }"
+        else
+          "#{field.iv_name}.nil? ? {} : #{field.iv_name}.as_json(options)"
+        end
+      end
+
+      def as_json_hash_value_for_map_rb(field)
+        if field.map_type.value.type == :TYPE_MESSAGE
+          "#{field.iv_name}.transform_values { |value| value.as_json(options) }"
+        else
+          field.iv_name
+        end
+      end
+    end
+
     class MessageCompiler
       attr_reader :generate_types, :requires
 
@@ -88,8 +221,13 @@ module ProtoBoeuf
         end
       end
 
-      attr_reader :message, :fields, :oneof_fields, :syntax
-      attr_reader :optional_fields, :enum_field_types
+      attr_reader :message,
+        :fields,
+        :oneof_fields,
+        :syntax,
+        :optional_fields,
+        :enum_field_types,
+        :oneof_selection_fields
 
       def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, options:)
         @message = message
@@ -160,32 +298,7 @@ module ProtoBoeuf
       end
 
       def conversion
-        fields = self.fields.reject do |field|
-          field.has_oneof_index? && !field.optional?
-        end
-
-        oneofs = @oneof_selection_fields.map do |field|
-          "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
-        end
-
-        <<~RUBY
-          #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
-          def to_h
-            result = {}
-            #{(oneofs + fields.map { |field| convert_field(field) }).join("\n")}
-            result
-          end
-        RUBY
-      end
-
-      def convert_field(field)
-        if field.repeated?
-          "result['#{field.name}'.to_sym] = #{field.iv_name}"
-        elsif field.type == :TYPE_MESSAGE
-          "result['#{field.name}'.to_sym] = #{field.iv_name}.to_h"
-        else
-          "result['#{field.name}'.to_sym] = #{field.iv_name}"
-        end
+        HashSerializationCompiler.result(message:, fields:, oneof_selection_fields:, generate_types:)
       end
 
       def encode

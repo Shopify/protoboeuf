@@ -628,8 +628,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["fields".to_sym] = @fields
+
+          result[:"fields"] = @fields.transform_values { |value| value.to_h }
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @fields
+            .transform_values { |value| value.as_json(options) }
+            .tap { |v| result["fields"] = v if !options[:compact] || v.any? }
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class Value
@@ -1784,8 +1801,51 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          send("kind").tap { |f| result[f.to_sym] = send(f) if f }
+
+          result[:"null_value"] = @null_value if send(:"kind") == :"null_value"
+          result[:"number_value"] = @number_value if send(:"kind") ==
+            :"number_value"
+          result[:"string_value"] = @string_value if send(:"kind") ==
+            :"string_value"
+          result[:"bool_value"] = @bool_value if send(:"kind") == :"bool_value"
+          result[:"struct_value"] = @struct_value.to_h if send(:"kind") ==
+            :"struct_value"
+          result[:"list_value"] = @list_value.to_h if send(:"kind") ==
+            :"list_value"
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["nullValue"] = @null_value if send(:"kind") == :"null_value"
+          result["numberValue"] = @number_value if send(:"kind") ==
+            :"number_value"
+          result["stringValue"] = @string_value if send(:"kind") ==
+            :"string_value"
+          result["boolValue"] = @bool_value if send(:"kind") == :"bool_value"
+          result["structValue"] = (
+            if @struct_value.nil?
+              {}
+            else
+              @struct_value.as_json(options)
+            end
+          ) if send(:"kind") == :"struct_value"
+          result["listValue"] = (
+            if @list_value.nil?
+              {}
+            else
+              @list_value.as_json(options)
+            end
+          ) if send(:"kind") == :"list_value"
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class ListValue
@@ -2250,8 +2310,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["values".to_sym] = @values
+
+          result[:"values"] = @values.map { |v| v.to_h }
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @values
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["values"] = v if !options[:compact] || v.any? }
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
     end
