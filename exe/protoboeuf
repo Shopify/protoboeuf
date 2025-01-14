@@ -2,34 +2,23 @@
 # frozen_string_literal: true
 
 require "protoboeuf/codegen"
-require "protoboeuf/parser"
 require "optparse"
 
 generate_types = false
-binary = false
 
 op = OptionParser.new do |opts|
-  opts.banner = "Usage: protoboeuf file.proto"
+  opts.banner = "Usage: protoboeuf file.bproto"
   opts.on("-t", "--typed", "Generate sorbet types") { generate_types = true }
-  opts.on("-b", "--bin", "Read binary proto file") { binary = true }
 end
 op.parse!
 
 def parse_binary(file)
-  require "protoboeuf/protobuf/descriptor"
-  ProtoBoeuf::Protobuf::FileDescriptorSet.decode(File.binread(file))
-end
-
-def parse_file(file)
-  ProtoBoeuf.parse_file(file)
+  require "protoboeuf/google/protobuf/descriptor"
+  ProtoBoeuf::Google::Protobuf::FileDescriptorSet.decode(File.binread(file))
 end
 
 if ARGV[0] && File.exist?(ARGV[0])
-  unit = if binary
-    parse_binary(ARGV[0])
-  else
-    parse_file(ARGV[0])
-  end
+  unit = parse_binary(ARGV[0])
 
   gen = ProtoBoeuf::CodeGen.new(unit, generate_types:)
   puts gen.to_ruby
