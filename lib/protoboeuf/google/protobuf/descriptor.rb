@@ -512,8 +512,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["file".to_sym] = @file
+
+          result[:"file"] = @file.map { |v| v.to_h }
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @file
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["file"] = v if !options[:compact] || v.any? }
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FileDescriptorProto
@@ -3357,20 +3374,75 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["package".to_sym] = @package
-          result["dependency".to_sym] = @dependency
-          result["public_dependency".to_sym] = @public_dependency
-          result["weak_dependency".to_sym] = @weak_dependency
-          result["message_type".to_sym] = @message_type
-          result["enum_type".to_sym] = @enum_type
-          result["service".to_sym] = @service
-          result["extension".to_sym] = @extension
-          result["options".to_sym] = @options.to_h
-          result["source_code_info".to_sym] = @source_code_info.to_h
-          result["syntax".to_sym] = @syntax
-          result["edition".to_sym] = @edition
+
+          result[:"name"] = @name
+          result[:"package"] = @package
+          result[:"dependency"] = @dependency
+          result[:"message_type"] = @message_type.map { |v| v.to_h }
+          result[:"enum_type"] = @enum_type.map { |v| v.to_h }
+          result[:"service"] = @service.map { |v| v.to_h }
+          result[:"extension"] = @extension.map { |v| v.to_h }
+          result[:"options"] = @options.to_h
+          result[:"source_code_info"] = @source_code_info.to_h
+          result[:"public_dependency"] = @public_dependency
+          result[:"weak_dependency"] = @weak_dependency
+          result[:"syntax"] = @syntax
+          result[:"edition"] = @edition
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          result["package"] = @package if !options[:compact] || has_package?
+          @dependency.tap do |v|
+            result["dependency"] = v if !options[:compact] || v.any?
+          end
+          @message_type
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["messageType"] = v if !options[:compact] || v.any?
+            end
+          @enum_type
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["enumType"] = v if !options[:compact] || v.any? }
+          @service
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["service"] = v if !options[:compact] || v.any? }
+          @extension
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["extension"] = v if !options[:compact] || v.any? }
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+          result["sourceCodeInfo"] = (
+            if @source_code_info.nil?
+              {}
+            else
+              @source_code_info.as_json(options)
+            end
+          ) if !options[:compact] || has_source_code_info?
+          @public_dependency.tap do |v|
+            result["publicDependency"] = v if !options[:compact] || v.any?
+          end
+          @weak_dependency.tap do |v|
+            result["weakDependency"] = v if !options[:compact] || v.any?
+          end
+          result["syntax"] = @syntax if !options[:compact] || has_syntax?
+          result["edition"] = @edition if !options[:compact] || has_edition?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class DescriptorProto
@@ -4205,10 +4277,33 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["start".to_sym] = @start
-            result["end".to_sym] = @end
-            result["options".to_sym] = @options.to_h
+
+            result[:"start"] = @start
+            result[:"end"] = @end
+            result[:"options"] = @options.to_h
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["start"] = @start if !options[:compact] || has_start?
+            result["end"] = @end if !options[:compact] || has_end?
+            result["options"] = (
+              if @options.nil?
+                {}
+              else
+                @options.as_json(options)
+              end
+            ) if !options[:compact] || has_options?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
 
@@ -4840,9 +4935,25 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["start".to_sym] = @start
-            result["end".to_sym] = @end
+
+            result[:"start"] = @start
+            result[:"end"] = @end
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["start"] = @start if !options[:compact] || has_start?
+            result["end"] = @end if !options[:compact] || has_end?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -7055,17 +7166,69 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["field".to_sym] = @field
-          result["extension".to_sym] = @extension
-          result["nested_type".to_sym] = @nested_type
-          result["enum_type".to_sym] = @enum_type
-          result["extension_range".to_sym] = @extension_range
-          result["oneof_decl".to_sym] = @oneof_decl
-          result["options".to_sym] = @options.to_h
-          result["reserved_range".to_sym] = @reserved_range
-          result["reserved_name".to_sym] = @reserved_name
+
+          result[:"name"] = @name
+          result[:"field"] = @field.map { |v| v.to_h }
+          result[:"nested_type"] = @nested_type.map { |v| v.to_h }
+          result[:"enum_type"] = @enum_type.map { |v| v.to_h }
+          result[:"extension_range"] = @extension_range.map { |v| v.to_h }
+          result[:"extension"] = @extension.map { |v| v.to_h }
+          result[:"options"] = @options.to_h
+          result[:"oneof_decl"] = @oneof_decl.map { |v| v.to_h }
+          result[:"reserved_range"] = @reserved_range.map { |v| v.to_h }
+          result[:"reserved_name"] = @reserved_name
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          @field
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["field"] = v if !options[:compact] || v.any? }
+          @nested_type
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["nestedType"] = v if !options[:compact] || v.any?
+            end
+          @enum_type
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["enumType"] = v if !options[:compact] || v.any? }
+          @extension_range
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["extensionRange"] = v if !options[:compact] || v.any?
+            end
+          @extension
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["extension"] = v if !options[:compact] || v.any? }
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+          @oneof_decl
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["oneofDecl"] = v if !options[:compact] || v.any? }
+          @reserved_range
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["reservedRange"] = v if !options[:compact] || v.any?
+            end
+          @reserved_name.tap do |v|
+            result["reservedName"] = v if !options[:compact] || v.any?
+          end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class ExtensionRangeOptions
@@ -8038,12 +8201,34 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["number".to_sym] = @number
-            result["full_name".to_sym] = @full_name
-            result["type".to_sym] = @type
-            result["reserved".to_sym] = @reserved
-            result["repeated".to_sym] = @repeated
+
+            result[:"number"] = @number
+            result[:"full_name"] = @full_name
+            result[:"type"] = @type
+            result[:"reserved"] = @reserved
+            result[:"repeated"] = @repeated
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["number"] = @number if !options[:compact] || has_number?
+            result["fullName"] = @full_name if !options[:compact] ||
+              has_full_name?
+            result["type"] = @type if !options[:compact] || has_type?
+            result["reserved"] = @reserved if !options[:compact] ||
+              has_reserved?
+            result["repeated"] = @repeated if !options[:compact] ||
+              has_repeated?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         module VerificationState
@@ -9104,11 +9289,46 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
-          result["declaration".to_sym] = @declaration
-          result["features".to_sym] = @features.to_h
-          result["verification".to_sym] = @verification
+
+          result[:"declaration"] = @declaration.map { |v| v.to_h }
+          result[:"verification"] = @verification
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @declaration
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["declaration"] = v if !options[:compact] || v.any?
+            end
+          result["verification"] = @verification if !options[:compact] ||
+            has_verification?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FieldDescriptorProto
@@ -11243,18 +11463,54 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["number".to_sym] = @number
-          result["label".to_sym] = @label
-          result["type".to_sym] = @type
-          result["type_name".to_sym] = @type_name
-          result["extendee".to_sym] = @extendee
-          result["default_value".to_sym] = @default_value
-          result["oneof_index".to_sym] = @oneof_index
-          result["json_name".to_sym] = @json_name
-          result["options".to_sym] = @options.to_h
-          result["proto3_optional".to_sym] = @proto3_optional
+
+          result[:"name"] = @name
+          result[:"extendee"] = @extendee
+          result[:"number"] = @number
+          result[:"label"] = @label
+          result[:"type"] = @type
+          result[:"type_name"] = @type_name
+          result[:"default_value"] = @default_value
+          result[:"options"] = @options.to_h
+          result[:"oneof_index"] = @oneof_index
+          result[:"json_name"] = @json_name
+          result[:"proto3_optional"] = @proto3_optional
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          result["extendee"] = @extendee if !options[:compact] || has_extendee?
+          result["number"] = @number if !options[:compact] || has_number?
+          result["label"] = @label if !options[:compact] || has_label?
+          result["type"] = @type if !options[:compact] || has_type?
+          result["typeName"] = @type_name if !options[:compact] ||
+            has_type_name?
+          result["defaultValue"] = @default_value if !options[:compact] ||
+            has_default_value?
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+          result["oneofIndex"] = @oneof_index if !options[:compact] ||
+            has_oneof_index?
+          result["jsonName"] = @json_name if !options[:compact] ||
+            has_json_name?
+          result["proto3Optional"] = @proto3_optional if !options[:compact] ||
+            has_proto3_optional?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class OneofDescriptorProto
@@ -11876,9 +12132,31 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["options".to_sym] = @options.to_h
+
+          result[:"name"] = @name
+          result[:"options"] = @options.to_h
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class EnumDescriptorProto
@@ -12517,9 +12795,25 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["start".to_sym] = @start
-            result["end".to_sym] = @end
+
+            result[:"start"] = @start
+            result[:"end"] = @end
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["start"] = @start if !options[:compact] || has_start?
+            result["end"] = @end if !options[:compact] || has_end?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -13707,12 +14001,45 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["value".to_sym] = @value
-          result["options".to_sym] = @options.to_h
-          result["reserved_range".to_sym] = @reserved_range
-          result["reserved_name".to_sym] = @reserved_name
+
+          result[:"name"] = @name
+          result[:"value"] = @value.map { |v| v.to_h }
+          result[:"options"] = @options.to_h
+          result[:"reserved_range"] = @reserved_range.map { |v| v.to_h }
+          result[:"reserved_name"] = @reserved_name
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          @value
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["value"] = v if !options[:compact] || v.any? }
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+          @reserved_range
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["reservedRange"] = v if !options[:compact] || v.any?
+            end
+          @reserved_name.tap do |v|
+            result["reservedName"] = v if !options[:compact] || v.any?
+          end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class EnumValueDescriptorProto
@@ -14511,10 +14838,33 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["number".to_sym] = @number
-          result["options".to_sym] = @options.to_h
+
+          result[:"name"] = @name
+          result[:"number"] = @number
+          result[:"options"] = @options.to_h
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          result["number"] = @number if !options[:compact] || has_number?
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class ServiceDescriptorProto
@@ -15340,10 +15690,35 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["method".to_sym] = @method
-          result["options".to_sym] = @options.to_h
+
+          result[:"name"] = @name
+          result[:"method"] = @method.map { |v| v.to_h }
+          result[:"options"] = @options.to_h
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          @method
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["method"] = v if !options[:compact] || v.any? }
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class MethodDescriptorProto
@@ -16478,13 +16853,43 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["input_type".to_sym] = @input_type
-          result["output_type".to_sym] = @output_type
-          result["options".to_sym] = @options.to_h
-          result["client_streaming".to_sym] = @client_streaming
-          result["server_streaming".to_sym] = @server_streaming
+
+          result[:"name"] = @name
+          result[:"input_type"] = @input_type
+          result[:"output_type"] = @output_type
+          result[:"options"] = @options.to_h
+          result[:"client_streaming"] = @client_streaming
+          result[:"server_streaming"] = @server_streaming
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["name"] = @name if !options[:compact] || has_name?
+          result["inputType"] = @input_type if !options[:compact] ||
+            has_input_type?
+          result["outputType"] = @output_type if !options[:compact] ||
+            has_output_type?
+          result["options"] = (
+            if @options.nil?
+              {}
+            else
+              @options.as_json(options)
+            end
+          ) if !options[:compact] || has_options?
+          result["clientStreaming"] = @client_streaming if !options[:compact] ||
+            has_client_streaming?
+          result["serverStreaming"] = @server_streaming if !options[:compact] ||
+            has_server_streaming?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FileOptions
@@ -19719,30 +20124,106 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["java_package".to_sym] = @java_package
-          result["java_outer_classname".to_sym] = @java_outer_classname
-          result["java_multiple_files".to_sym] = @java_multiple_files
+
+          result[:"java_package"] = @java_package
+          result[:"java_outer_classname"] = @java_outer_classname
+          result[:"optimize_for"] = @optimize_for
+          result[:"java_multiple_files"] = @java_multiple_files
+          result[:"go_package"] = @go_package
+          result[:"cc_generic_services"] = @cc_generic_services
+          result[:"java_generic_services"] = @java_generic_services
+          result[:"py_generic_services"] = @py_generic_services
           result[
-            "java_generate_equals_and_hash".to_sym
+            :"java_generate_equals_and_hash"
           ] = @java_generate_equals_and_hash
-          result["java_string_check_utf8".to_sym] = @java_string_check_utf8
-          result["optimize_for".to_sym] = @optimize_for
-          result["go_package".to_sym] = @go_package
-          result["cc_generic_services".to_sym] = @cc_generic_services
-          result["java_generic_services".to_sym] = @java_generic_services
-          result["py_generic_services".to_sym] = @py_generic_services
-          result["deprecated".to_sym] = @deprecated
-          result["cc_enable_arenas".to_sym] = @cc_enable_arenas
-          result["objc_class_prefix".to_sym] = @objc_class_prefix
-          result["csharp_namespace".to_sym] = @csharp_namespace
-          result["swift_prefix".to_sym] = @swift_prefix
-          result["php_class_prefix".to_sym] = @php_class_prefix
-          result["php_namespace".to_sym] = @php_namespace
-          result["php_metadata_namespace".to_sym] = @php_metadata_namespace
-          result["ruby_package".to_sym] = @ruby_package
-          result["features".to_sym] = @features.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+          result[:"deprecated"] = @deprecated
+          result[:"java_string_check_utf8"] = @java_string_check_utf8
+          result[:"cc_enable_arenas"] = @cc_enable_arenas
+          result[:"objc_class_prefix"] = @objc_class_prefix
+          result[:"csharp_namespace"] = @csharp_namespace
+          result[:"swift_prefix"] = @swift_prefix
+          result[:"php_class_prefix"] = @php_class_prefix
+          result[:"php_namespace"] = @php_namespace
+          result[:"php_metadata_namespace"] = @php_metadata_namespace
+          result[:"ruby_package"] = @ruby_package
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["javaPackage"] = @java_package if !options[:compact] ||
+            has_java_package?
+          result["javaOuterClassname"] = @java_outer_classname if !options[
+            :compact
+          ] || has_java_outer_classname?
+          result["optimizeFor"] = @optimize_for if !options[:compact] ||
+            has_optimize_for?
+          result["javaMultipleFiles"] = @java_multiple_files if !options[
+            :compact
+          ] || has_java_multiple_files?
+          result["goPackage"] = @go_package if !options[:compact] ||
+            has_go_package?
+          result["ccGenericServices"] = @cc_generic_services if !options[
+            :compact
+          ] || has_cc_generic_services?
+          result["javaGenericServices"] = @java_generic_services if !options[
+            :compact
+          ] || has_java_generic_services?
+          result["pyGenericServices"] = @py_generic_services if !options[
+            :compact
+          ] || has_py_generic_services?
+          result[
+            "javaGenerateEqualsAndHash"
+          ] = @java_generate_equals_and_hash if !options[:compact] ||
+            has_java_generate_equals_and_hash?
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["javaStringCheckUtf8"] = @java_string_check_utf8 if !options[
+            :compact
+          ] || has_java_string_check_utf8?
+          result["ccEnableArenas"] = @cc_enable_arenas if !options[:compact] ||
+            has_cc_enable_arenas?
+          result["objcClassPrefix"] = @objc_class_prefix if !options[
+            :compact
+          ] || has_objc_class_prefix?
+          result["csharpNamespace"] = @csharp_namespace if !options[:compact] ||
+            has_csharp_namespace?
+          result["swiftPrefix"] = @swift_prefix if !options[:compact] ||
+            has_swift_prefix?
+          result["phpClassPrefix"] = @php_class_prefix if !options[:compact] ||
+            has_php_class_prefix?
+          result["phpNamespace"] = @php_namespace if !options[:compact] ||
+            has_php_namespace?
+          result["phpMetadataNamespace"] = @php_metadata_namespace if !options[
+            :compact
+          ] || has_php_metadata_namespace?
+          result["rubyPackage"] = @ruby_package if !options[:compact] ||
+            has_ruby_package?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class MessageOptions
@@ -20908,18 +21389,61 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["message_set_wire_format".to_sym] = @message_set_wire_format
+
+          result[:"message_set_wire_format"] = @message_set_wire_format
           result[
-            "no_standard_descriptor_accessor".to_sym
+            :"no_standard_descriptor_accessor"
           ] = @no_standard_descriptor_accessor
-          result["deprecated".to_sym] = @deprecated
-          result["map_entry".to_sym] = @map_entry
+          result[:"deprecated"] = @deprecated
+          result[:"map_entry"] = @map_entry
           result[
-            "deprecated_legacy_json_field_conflicts".to_sym
+            :"deprecated_legacy_json_field_conflicts"
           ] = @deprecated_legacy_json_field_conflicts
-          result["features".to_sym] = @features.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["messageSetWireFormat"] = @message_set_wire_format if !options[
+            :compact
+          ] || has_message_set_wire_format?
+          result[
+            "noStandardDescriptorAccessor"
+          ] = @no_standard_descriptor_accessor if !options[:compact] ||
+            has_no_standard_descriptor_accessor?
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["mapEntry"] = @map_entry if !options[:compact] ||
+            has_map_entry?
+          result[
+            "deprecatedLegacyJsonFieldConflicts"
+          ] = @deprecated_legacy_json_field_conflicts if !options[:compact] ||
+            has_deprecated_legacy_json_field_conflicts?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FieldOptions
@@ -21527,9 +22051,25 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["edition".to_sym] = @edition
-            result["value".to_sym] = @value
+
+            result[:"value"] = @value
+            result[:"edition"] = @edition
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["value"] = @value if !options[:compact] || has_value?
+            result["edition"] = @edition if !options[:compact] || has_edition?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
 
@@ -22476,11 +23016,36 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["edition_introduced".to_sym] = @edition_introduced
-            result["edition_deprecated".to_sym] = @edition_deprecated
-            result["deprecation_warning".to_sym] = @deprecation_warning
-            result["edition_removed".to_sym] = @edition_removed
+
+            result[:"edition_introduced"] = @edition_introduced
+            result[:"edition_deprecated"] = @edition_deprecated
+            result[:"deprecation_warning"] = @deprecation_warning
+            result[:"edition_removed"] = @edition_removed
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["editionIntroduced"] = @edition_introduced if !options[
+              :compact
+            ] || has_edition_introduced?
+            result["editionDeprecated"] = @edition_deprecated if !options[
+              :compact
+            ] || has_edition_deprecated?
+            result["deprecationWarning"] = @deprecation_warning if !options[
+              :compact
+            ] || has_deprecation_warning?
+            result["editionRemoved"] = @edition_removed if !options[:compact] ||
+              has_edition_removed?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         module CType
@@ -24927,21 +25492,77 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["ctype".to_sym] = @ctype
-          result["packed".to_sym] = @packed
-          result["jstype".to_sym] = @jstype
-          result["lazy".to_sym] = @lazy
-          result["unverified_lazy".to_sym] = @unverified_lazy
-          result["deprecated".to_sym] = @deprecated
-          result["weak".to_sym] = @weak
-          result["debug_redact".to_sym] = @debug_redact
-          result["retention".to_sym] = @retention
-          result["targets".to_sym] = @targets
-          result["edition_defaults".to_sym] = @edition_defaults
-          result["features".to_sym] = @features.to_h
-          result["feature_support".to_sym] = @feature_support.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+
+          result[:"ctype"] = @ctype
+          result[:"packed"] = @packed
+          result[:"deprecated"] = @deprecated
+          result[:"lazy"] = @lazy
+          result[:"jstype"] = @jstype
+          result[:"weak"] = @weak
+          result[:"unverified_lazy"] = @unverified_lazy
+          result[:"debug_redact"] = @debug_redact
+          result[:"retention"] = @retention
+          result[:"targets"] = @targets
+          result[:"edition_defaults"] = @edition_defaults.map { |v| v.to_h }
+          result[:"features"] = @features.to_h
+          result[:"feature_support"] = @feature_support.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["ctype"] = @ctype if !options[:compact] || has_ctype?
+          result["packed"] = @packed if !options[:compact] || has_packed?
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["lazy"] = @lazy if !options[:compact] || has_lazy?
+          result["jstype"] = @jstype if !options[:compact] || has_jstype?
+          result["weak"] = @weak if !options[:compact] || has_weak?
+          result["unverifiedLazy"] = @unverified_lazy if !options[:compact] ||
+            has_unverified_lazy?
+          result["debugRedact"] = @debug_redact if !options[:compact] ||
+            has_debug_redact?
+          result["retention"] = @retention if !options[:compact] ||
+            has_retention?
+          @targets.tap do |v|
+            result["targets"] = v if !options[:compact] || v.any?
+          end
+          @edition_defaults
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["editionDefaults"] = v if !options[:compact] || v.any?
+            end
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          result["featureSupport"] = (
+            if @feature_support.nil?
+              {}
+            else
+              @feature_support.as_json(options)
+            end
+          ) if !options[:compact] || has_feature_support?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class OneofOptions
@@ -25612,9 +26233,37 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["features".to_sym] = @features.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class EnumOptions
@@ -26584,14 +27233,50 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["allow_alias".to_sym] = @allow_alias
-          result["deprecated".to_sym] = @deprecated
+
+          result[:"allow_alias"] = @allow_alias
+          result[:"deprecated"] = @deprecated
           result[
-            "deprecated_legacy_json_field_conflicts".to_sym
+            :"deprecated_legacy_json_field_conflicts"
           ] = @deprecated_legacy_json_field_conflicts
-          result["features".to_sym] = @features.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["allowAlias"] = @allow_alias if !options[:compact] ||
+            has_allow_alias?
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result[
+            "deprecatedLegacyJsonFieldConflicts"
+          ] = @deprecated_legacy_json_field_conflicts if !options[:compact] ||
+            has_deprecated_legacy_json_field_conflicts?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class EnumValueOptions
@@ -27658,12 +28343,51 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["deprecated".to_sym] = @deprecated
-          result["features".to_sym] = @features.to_h
-          result["debug_redact".to_sym] = @debug_redact
-          result["feature_support".to_sym] = @feature_support.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+
+          result[:"deprecated"] = @deprecated
+          result[:"features"] = @features.to_h
+          result[:"debug_redact"] = @debug_redact
+          result[:"feature_support"] = @feature_support.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          result["debugRedact"] = @debug_redact if !options[:compact] ||
+            has_debug_redact?
+          result["featureSupport"] = (
+            if @feature_support.nil?
+              {}
+            else
+              @feature_support.as_json(options)
+            end
+          ) if !options[:compact] || has_feature_support?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class ServiceOptions
@@ -28433,10 +29157,40 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["features".to_sym] = @features.to_h
-          result["deprecated".to_sym] = @deprecated
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+
+          result[:"deprecated"] = @deprecated
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class MethodOptions
@@ -29403,11 +30157,44 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["deprecated".to_sym] = @deprecated
-          result["idempotency_level".to_sym] = @idempotency_level
-          result["features".to_sym] = @features.to_h
-          result["uninterpreted_option".to_sym] = @uninterpreted_option
+
+          result[:"deprecated"] = @deprecated
+          result[:"idempotency_level"] = @idempotency_level
+          result[:"features"] = @features.to_h
+          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
+            v.to_h
+          end
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["deprecated"] = @deprecated if !options[:compact] ||
+            has_deprecated?
+          result["idempotencyLevel"] = @idempotency_level if !options[
+            :compact
+          ] || has_idempotency_level?
+          result["features"] = (
+            if @features.nil?
+              {}
+            else
+              @features.as_json(options)
+            end
+          ) if !options[:compact] || has_features?
+          @uninterpreted_option
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["uninterpretedOption"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class UninterpretedOption
@@ -29913,9 +30700,25 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["name_part".to_sym] = @name_part
-            result["is_extension".to_sym] = @is_extension
+
+            result[:"name_part"] = @name_part
+            result[:"is_extension"] = @is_extension
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["namePart"] = @name_part
+            result["isExtension"] = @is_extension
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -31287,14 +32090,45 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["name".to_sym] = @name
-          result["identifier_value".to_sym] = @identifier_value
-          result["positive_int_value".to_sym] = @positive_int_value
-          result["negative_int_value".to_sym] = @negative_int_value
-          result["double_value".to_sym] = @double_value
-          result["string_value".to_sym] = @string_value
-          result["aggregate_value".to_sym] = @aggregate_value
+
+          result[:"name"] = @name.map { |v| v.to_h }
+          result[:"identifier_value"] = @identifier_value
+          result[:"positive_int_value"] = @positive_int_value
+          result[:"negative_int_value"] = @negative_int_value
+          result[:"double_value"] = @double_value
+          result[:"string_value"] = @string_value
+          result[:"aggregate_value"] = @aggregate_value
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @name
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["name"] = v if !options[:compact] || v.any? }
+          result["identifierValue"] = @identifier_value if !options[:compact] ||
+            has_identifier_value?
+          result["positiveIntValue"] = @positive_int_value if !options[
+            :compact
+          ] || has_positive_int_value?
+          result["negativeIntValue"] = @negative_int_value if !options[
+            :compact
+          ] || has_negative_int_value?
+          result["doubleValue"] = @double_value if !options[:compact] ||
+            has_double_value?
+          result["stringValue"] = @string_value if !options[:compact] ||
+            has_string_value?
+          result["aggregateValue"] = @aggregate_value if !options[:compact] ||
+            has_aggregate_value?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FeatureSet
@@ -32698,13 +33532,41 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["field_presence".to_sym] = @field_presence
-          result["enum_type".to_sym] = @enum_type
-          result["repeated_field_encoding".to_sym] = @repeated_field_encoding
-          result["utf8_validation".to_sym] = @utf8_validation
-          result["message_encoding".to_sym] = @message_encoding
-          result["json_format".to_sym] = @json_format
+
+          result[:"field_presence"] = @field_presence
+          result[:"enum_type"] = @enum_type
+          result[:"repeated_field_encoding"] = @repeated_field_encoding
+          result[:"utf8_validation"] = @utf8_validation
+          result[:"message_encoding"] = @message_encoding
+          result[:"json_format"] = @json_format
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["fieldPresence"] = @field_presence if !options[:compact] ||
+            has_field_presence?
+          result["enumType"] = @enum_type if !options[:compact] ||
+            has_enum_type?
+          result[
+            "repeatedFieldEncoding"
+          ] = @repeated_field_encoding if !options[:compact] ||
+            has_repeated_field_encoding?
+          result["utf8Validation"] = @utf8_validation if !options[:compact] ||
+            has_utf8_validation?
+          result["messageEncoding"] = @message_encoding if !options[:compact] ||
+            has_message_encoding?
+          result["jsonFormat"] = @json_format if !options[:compact] ||
+            has_json_format?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class FeatureSetDefaults
@@ -33552,10 +34414,39 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["edition".to_sym] = @edition
-            result["overridable_features".to_sym] = @overridable_features.to_h
-            result["fixed_features".to_sym] = @fixed_features.to_h
+
+            result[:"edition"] = @edition
+            result[:"overridable_features"] = @overridable_features.to_h
+            result[:"fixed_features"] = @fixed_features.to_h
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            result["edition"] = @edition if !options[:compact] || has_edition?
+            result["overridableFeatures"] = (
+              if @overridable_features.nil?
+                {}
+              else
+                @overridable_features.as_json(options)
+              end
+            ) if !options[:compact] || has_overridable_features?
+            result["fixedFeatures"] = (
+              if @fixed_features.nil?
+                {}
+              else
+                @fixed_features.as_json(options)
+              end
+            ) if !options[:compact] || has_fixed_features?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -34352,10 +35243,31 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["defaults".to_sym] = @defaults
-          result["minimum_edition".to_sym] = @minimum_edition
-          result["maximum_edition".to_sym] = @maximum_edition
+
+          result[:"defaults"] = @defaults.map { |v| v.to_h }
+          result[:"minimum_edition"] = @minimum_edition
+          result[:"maximum_edition"] = @maximum_edition
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @defaults
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["defaults"] = v if !options[:compact] || v.any? }
+          result["minimumEdition"] = @minimum_edition if !options[:compact] ||
+            has_minimum_edition?
+          result["maximumEdition"] = @maximum_edition if !options[:compact] ||
+            has_maximum_edition?
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class SourceCodeInfo
@@ -35673,14 +36585,38 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["path".to_sym] = @path
-            result["span".to_sym] = @span
-            result["leading_comments".to_sym] = @leading_comments
-            result["trailing_comments".to_sym] = @trailing_comments
-            result[
-              "leading_detached_comments".to_sym
-            ] = @leading_detached_comments
+
+            result[:"path"] = @path
+            result[:"span"] = @span
+            result[:"leading_comments"] = @leading_comments
+            result[:"trailing_comments"] = @trailing_comments
+            result[:"leading_detached_comments"] = @leading_detached_comments
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            @path.tap { |v| result["path"] = v if !options[:compact] || v.any? }
+            @span.tap { |v| result["span"] = v if !options[:compact] || v.any? }
+            result["leadingComments"] = @leading_comments if !options[
+              :compact
+            ] || has_leading_comments?
+            result["trailingComments"] = @trailing_comments if !options[
+              :compact
+            ] || has_trailing_comments?
+            @leading_detached_comments.tap do |v|
+              result["leadingDetachedComments"] = v if !options[:compact] ||
+                v.any?
+            end
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -36137,8 +37073,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["location".to_sym] = @location
+
+          result[:"location"] = @location.map { |v| v.to_h }
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @location
+            .map { |v| v.as_json(options) }
+            .tap { |v| result["location"] = v if !options[:compact] || v.any? }
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
       class GeneratedCodeInfo
@@ -37409,12 +38362,33 @@ module ProtoBoeuf
 
           def to_h
             result = {}
-            result["path".to_sym] = @path
-            result["source_file".to_sym] = @source_file
-            result["begin".to_sym] = @begin
-            result["end".to_sym] = @end
-            result["semantic".to_sym] = @semantic
+
+            result[:"path"] = @path
+            result[:"source_file"] = @source_file
+            result[:"begin"] = @begin
+            result[:"end"] = @end
+            result[:"semantic"] = @semantic
+
             result
+          end
+
+          def as_json(options = {})
+            result = {}
+
+            @path.tap { |v| result["path"] = v if !options[:compact] || v.any? }
+            result["sourceFile"] = @source_file if !options[:compact] ||
+              has_source_file?
+            result["begin"] = @begin if !options[:compact] || has_begin?
+            result["end"] = @end if !options[:compact] || has_end?
+            result["semantic"] = @semantic if !options[:compact] ||
+              has_semantic?
+
+            result
+          end
+
+          def to_json(options = {})
+            require "json"
+            JSON.dump(as_json(options))
           end
         end
         # required field readers
@@ -37871,8 +38845,27 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["annotation".to_sym] = @annotation
+
+          result[:"annotation"] = @annotation.map { |v| v.to_h }
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @annotation
+            .map { |v| v.as_json(options) }
+            .tap do |v|
+              result["annotation"] = v if !options[:compact] || v.any?
+            end
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
     end

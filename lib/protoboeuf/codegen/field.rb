@@ -12,6 +12,7 @@ module ProtoBoeuf
 
       def_delegators :@original_field,
         :has_oneof_index?,
+        :json_name,
         :label,
         :name,
         :number,

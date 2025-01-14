@@ -423,8 +423,23 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["paths".to_sym] = @paths
+
+          result[:"paths"] = @paths
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          @paths.tap { |v| result["paths"] = v if !options[:compact] || v.any? }
+
+          result
+        end
+
+        def to_json(options = {})
+          require "json"
+          JSON.dump(as_json(options))
         end
       end
     end
