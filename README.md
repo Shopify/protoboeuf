@@ -187,3 +187,12 @@ To view the protobuf encoding for a given message:
 bundle exec ruby -I lib -r ./test/fixtures/test_pb -e 'p TestSigned.new(a: -123).to_proto'
 "\b\xF5\x01"
 ```
+
+## Attributions and Copyrights
+
+The `*.proto` files in `lib/protoboeuf/google/protobuf` are from the
+[protobuf](https://https://github.com/protocolbuffers/protobuf) repository and are Copyright 2008 Google Inc.
+All rights reserved.  They are subject to [this license agreement](https://github.com/protocolbuffers/protobuf/blob/32838e8c2ce88f1c040f5b68c9ac4941fa97fa09/LICENSE).
+
+The `*.proto` files in `lib/protoboeuf/google/api` are from the [googleapis](https://github.com/googleapis/googleapis)
+repository and are Copyright 2024 Google LLC.  They are subject to the [Apache 2.0 license](https://github.com/Shopify/protoboeuf/blob/main/contrib/LICENSE.Apache2-0.txt).
