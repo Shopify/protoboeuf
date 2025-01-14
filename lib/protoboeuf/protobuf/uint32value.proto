@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package proto_boeuf.protobuf;
-
-message UInt32Value {
-  uint64 value = 1;
-}

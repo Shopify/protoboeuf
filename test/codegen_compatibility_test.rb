@@ -84,16 +84,14 @@ module ProtoBoeuf
     end
 
     def test_syntax2
-      skip("parser doesn't yet support proto2")
-      ours, theirs = codegen_string('syntax = "proto2"; message ToProto { string s = 1; }')
-      our_bin, their_bin = [ours, theirs].map { |m| m::ToProto.new(s: "s").to_proto }
+      ours, theirs = codegen_string('syntax = "proto2"; message ToProtoSyntax2 { required string s = 1; }')
+      our_bin, their_bin = [ours, theirs].map { |m| m::ToProtoSyntax2.new(s: "s").to_proto }
       assert_equal(their_bin, our_bin)
     end
 
     def test_edition_2023
-      skip("parser doesn't yet support editions")
-      ours, theirs = codegen_string('edition = "2023"; message ToProto { string s = 1; }')
-      our_bin, their_bin = [ours, theirs].map { |m| m::ToProto.new(s: "s").to_proto }
+      ours, theirs = codegen_string('edition = "2023"; message ToProtoEdition2023 { string s = 1; }')
+      our_bin, their_bin = [ours, theirs].map { |m| m::ToProtoEdition2023.new(s: "s").to_proto }
       assert_equal(their_bin, our_bin)
     end
 
@@ -193,7 +191,7 @@ module ProtoBoeuf
           end
         end
 
-        unit = ProtoBoeuf.parse_file(file)
+        unit = parse_proto_file(file)
       end
 
       boeuf_code = ProtoBoeuf::CodeGen.new(unit).to_ruby
@@ -201,7 +199,18 @@ module ProtoBoeuf
 
       [
         Module.new { module_eval boeuf_code },
-        Module.new { module_eval protoc_code.join("\n") },
+        Module.new do
+          module_eval(
+            # This gsub is a temporary workaround because protoc doesn't properly qualify the global Google module and
+            # this particular line ends up resolving to Protoboeuf::Google::Protobuf::DescriptorPool, which doesn't
+            # exist.
+            # See: https://github.com/protocolbuffers/protobuf/pull/19981
+            protoc_code.join("\n").gsub(
+              "pool = Google::Protobuf::DescriptorPool.generated_pool",
+              "pool = ::Google::Protobuf::DescriptorPool.generated_pool",
+            ),
+          )
+        end,
       ]
     end
   end

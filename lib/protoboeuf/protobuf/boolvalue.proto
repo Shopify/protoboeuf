@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package proto_boeuf.protobuf;
-
-message BoolValue {
-  bool value = 1;
-}

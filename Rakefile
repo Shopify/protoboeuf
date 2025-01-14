@@ -7,14 +7,16 @@ require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
 BASE_DIR = File.dirname(__FILE__)
-codegen_rb_files = ["lib/protoboeuf/codegen.rb", "lib/protoboeuf/parser.rb"]
+codegen_rb_files = ["lib/protoboeuf/codegen.rb"]
 proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
 rb_files = proto_files.pathmap("#{BASE_DIR}/test/fixtures/%n_pb.rb")
 
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
 
-well_known_types = Rake::FileList[File.join(BASE_DIR, "lib/protoboeuf/protobuf/*.proto")]
+well_known_types = Rake::FileList[
+  File.join(BASE_DIR, "lib/protoboeuf/google/**/*.proto")
+]
 
 WELL_KNOWN_PB = well_known_types.pathmap("%X.rb")
 
@@ -32,13 +34,24 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
 
   unit = Tempfile.create(File.basename(t.source)) do |f|
     File.unlink(f.path)
-    sh("protoc -I #{File.dirname(t.source)} #{File.basename(t.source)} -o #{f.path}")
+    sh(*[
+      "protoc",
+      well_known_types.map { |file| ["-I", file.pathmap("%d")] }.uniq,
+      File.basename(t.source),
+      "-o",
+      f.path,
+    ].flatten)
+
     require "google/protobuf/descriptor_pb"
     Google::Protobuf::FileDescriptorSet.decode(File.binread(f.path))
   end
 
-  # force the package to be our own so we generate classes insode our namespace
-  unit.file.each { |f| f.package = "proto_boeuf.protobuf" }
+  # force the package to be our own so we generate classes inside our namespace
+  unit.file.each do |f|
+    next if f.package == "proto_boeuf" || f.package.start_with?("proto_boeuf.")
+
+    f.package = "proto_boeuf.#{f.package}"
+  end
 
   puts "writing #{t.name}"
   dest = Pathname.new(t.name).relative_path_from(File.join(BASE_DIR, "lib")).to_s.delete_suffix(".rb")
@@ -73,7 +86,12 @@ file BENCHMARK_PROTOBOEUF_PB => ["bench/fixtures/benchmark.proto"] + codegen_rb_
   codegen_rb_files.each { |f| require_relative f }
 
   unit = ProtoBoeuf.parse_file(t.source)
-  unit.file.each { |f| f.package = "proto_boeuf" }
+  unit.file.each do |f|
+    next if f.package == "proto_boeuf" || f.package.start_with?("proto_boeuf.")
+
+    f.package = "proto_boeuf.#{f.package}"
+  end
+
   gen = ProtoBoeuf::CodeGen.new(unit)
 
   File.binwrite(t.name, gen.to_ruby)

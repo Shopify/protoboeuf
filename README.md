@@ -24,11 +24,12 @@ $ bundle
 
 ## Compiling .proto Files
 
-You can compile your own `.proto` files to generate importable `.rb` files:
+`protoboeuf` expects a compiled binary protobuf file.  These can be generated with the `protoc` command line tool that
+comes with the protobuf library.
 
 ```
 $ protoc -I examples test.proto -o test.bproto
-$ protoboeuf -b test.bproto > test.rb
+$ protoboeuf test.bproto > test.rb
 ```
 
 The above will produce a `.rb` file with Ruby classes representing each message type.
@@ -36,7 +37,7 @@ The above will produce a `.rb` file with Ruby classes representing each message 
 You can also generate Ruby that contains Sorbet types by using the `-t` flag like this:
 
 ```
-$ protoboeuf -t -b test.bproto > test.rb
+$ protoboeuf -t test.bproto > test.rb
 ```
 
 ## Generating Code with ProtoBoeuf AST
@@ -68,9 +69,9 @@ service HelloWorld {
 We can write code to process the AST and produce a very basic client:
 
 ```ruby
-require "protoboeuf/protobuf/descriptor"
+require "protoboeuf/google/protobuf/descriptor"
 
-fds = ProtoBoeuf::Protobuf::FileDescriptorSet.decode(File.binread(ARGV[0]))
+fds = ProtoBoeuf::Google::Protobuf::FileDescriptorSet.decode(File.binread(ARGV[0]))
 fds.file.each do |file|
   file.service.each do |service|
     puts "class #{service.name}"
@@ -146,7 +147,7 @@ bundle exec ruby -I lib:test test/message_test.rb -n test_decoding
 
 ## Generated files
 
-Ruby files under `lib/protoboeuf/protobuf/` are generated from the `.proto` files in the same directory.
+Ruby files under `lib/protoboeuf/google` are generated from the `.proto` files in any subdirectories.
 The same is true for `test/fixtures`.
 
 For example, currently `test/fixtures/test_pb.rb`
@@ -186,3 +187,12 @@ To view the protobuf encoding for a given message:
 bundle exec ruby -I lib -r ./test/fixtures/test_pb -e 'p TestSigned.new(a: -123).to_proto'
 "\b\xF5\x01"
 ```
+
+## Attributions and Copyrights
+
+The `*.proto` files in `lib/protoboeuf/google/protobuf` are from the
+[protobuf](https://https://github.com/protocolbuffers/protobuf) repository and are Copyright 2008 Google Inc.
+All rights reserved.  They are subject to [this license agreement](https://github.com/protocolbuffers/protobuf/blob/32838e8c2ce88f1c040f5b68c9ac4941fa97fa09/LICENSE).
+
+The `*.proto` files in `lib/protoboeuf/google/api` are from the [googleapis](https://github.com/googleapis/googleapis)
+repository and are Copyright 2024 Google LLC.  They are subject to the [Apache 2.0 license](https://github.com/Shopify/protoboeuf/blob/main/contrib/LICENSE.Apache2-0.txt).

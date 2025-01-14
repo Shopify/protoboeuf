@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package proto_boeuf.protobuf;
-
-message Int32Value {
-  int32 value = 1;
-}
