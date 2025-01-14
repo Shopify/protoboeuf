@@ -65,8 +65,7 @@ module ProtoBoeuf
         end
       end
 
-      attr_reader :message, :fields, :oneof_fields, :syntax
-      attr_reader :optional_fields, :enum_field_types
+      attr_reader :message, :fields, :oneof_fields, :syntax, :optional_fields, :enum_field_types, :oneof_json_names
 
       def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, options:)
         @message = message
@@ -84,6 +83,7 @@ module ProtoBoeuf
         @oneof_fields = []
         @enum_fields = []
         @oneof_selection_fields = []
+        @oneof_json_names = {}
 
         optional_field_count = 0
 
@@ -98,6 +98,7 @@ module ProtoBoeuf
             optional_field_count += 1
           elsif field.has_oneof_index?
             (@oneof_fields[field.oneof_index] ||= []) << field
+            @oneof_json_names[field.name] = field.json_name
           elsif field.type == :TYPE_ENUM
             @enum_fields << field
           else
@@ -144,27 +145,46 @@ module ProtoBoeuf
           field.has_oneof_index? && !optional_field?(field)
         end
 
-        oneofs = @oneof_selection_fields.map do |field|
-          "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
-        end
+        oneofs = @oneof_selection_fields
 
         <<~RUBY
           #{type_signature(returns: "T::Hash[Symbol, T.untyped]")}
           def to_h
             result = {}
-            #{(oneofs + fields.map { |field| convert_field(field) }).join("\n")}
+            #{oneofs.map { |oneof| hash_assignment_for_oneof(oneof, json: false) }.join("\n")}
+            #{fields.map { |field| hash_assignment_for_field(field, json: false) }.join("\n")}
             result
+          end
+
+          #{type_signature(params: "T::Hash[T.untyped, T.untyped]", returns: "T::Hash[Symbol, T.untyped]")}
+          def as_json(options = {})
+            result = {}
+            #{oneofs.map { |oneof| hash_assignment_for_oneof(oneof, json: true) }.join("\n")}
+            #{fields.map { |field| hash_assignment_for_field(field, json: true) }.join("\n")}
+            result
+          end
+
+          def to_json(options = {})
+            require 'json'
+            JSON.dump(as_json(options))
           end
         RUBY
       end
 
-      def convert_field(field)
+      def hash_assignment_for_oneof(oneof, json: false)
+        "send(#{field.name.dump}).tap { |f| result[f.to_sym] = send(f) if f }"
+      end
+
+      def hash_assignment_for_field(field, json: false)
+        key_string = "#{(json ? field.json_name : field.name).dump}.to_sym"
+        recurse_with = json ? "as_json" : "to_h"
+
         if repeated?(field)
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
+          "result[#{key_string}] = #{iv_name(field)}"
         elsif field.type == :TYPE_MESSAGE
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}.to_h"
+          "result[#{key_string}] = #{iv_name(field)}.#{recurse_with}"
         else
-          "result['#{field.name}'.to_sym] = #{iv_name(field)}"
+          "result[#{key_string}] = #{iv_name(field)}"
         end
       end
 
@@ -762,6 +782,7 @@ module ProtoBoeuf
         initialize_type_signature(fields) +
           "def initialize(" + initialize_signature + ")\n" +
           init_bitmask(message) +
+          init_oneof_json_names(message) +
           initialize_oneofs +
           fields.map { |field|
             if field.has_oneof_index? && !optional_field?(field)
@@ -888,6 +909,13 @@ module ProtoBoeuf
       # Return an instance variable name for use in generated code
       def iv_name(field)
         "@#{field.name}"
+      end
+
+      # Our generated code needs to keep a hash of oneof field names to their corresponding JSON name.  This is
+      # unnecessary for other field types since we can access the json_name upon code generation, but the particular
+      # oneof field isn't known until runtime.
+      def oneof_json_name(field)
+        "@_oneof_json_names[:#{field.name}]"
       end
 
       def initialize_required_field(field)
@@ -1648,6 +1676,18 @@ module ProtoBoeuf
         else
           "    @_bitmask = 0\n\n"
         end
+      end
+
+      ONEOF_JSON_NAMES = ERB.new(<<~RUBY, trim_mode: "-")
+        @_oneof_json_names = {
+          <%- oneof_json_names.each do |field_name, json_name| -%>
+          :<%= field_name.dump %> => <%= json_name.dump %>,
+          <%- end %>
+        }
+      RUBY
+
+      def init_oneof_json_names(_msg)
+        ONEOF_JSON_NAMES.result(binding)
       end
 
       def set_bitmask(field) # rubocop:disable Naming/AccessorMethodName
