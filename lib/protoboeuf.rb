@@ -1,4 +1,6 @@
 # frozen_string_literal: true
 
-module Protoboeuf
+module ProtoBoeuf
+  autoload :CodeGen, "protoboeuf/codegen"
+  autoload :Google, "protoboeuf/google"
 end

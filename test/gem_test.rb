@@ -14,9 +14,10 @@ class GemTest < ProtoBoeuf::Test
 
         ::ProtoBoeuf
 
-        require "protoboeuf/codegen"
-
+        # The following should auto/eagerload
         ::ProtoBoeuf::CodeGen
+        ::ProtoBoeuf::Google::Api::FieldBehavior
+        ::ProtoBoeuf::Google::Protobuf::Any
 
         exit 0
       RUBY
