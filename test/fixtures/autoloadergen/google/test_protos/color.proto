@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package google.test_protos;
+
+enum Color {
+  UNKNOWN = 0;
+  RED = 1;
+  BLUE = 2;
+  GREEN = 3;
+}

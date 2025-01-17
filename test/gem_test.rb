@@ -14,10 +14,12 @@ class GemTest < ProtoBoeuf::Test
 
         ::ProtoBoeuf
 
-        # The following should auto/eagerload
+        # The following should autoloaded
         ::ProtoBoeuf::CodeGen
         ::ProtoBoeuf::Google::Api::FieldBehavior
         ::ProtoBoeuf::Google::Protobuf::Any
+        ::ProtoBoeuf::Google::Protobuf::FileDescriptorProto
+        ::ProtoBoeuf::Google::Protobuf::FileDescriptorSet
 
         exit 0
       RUBY

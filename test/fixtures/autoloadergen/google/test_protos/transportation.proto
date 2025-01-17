@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package google.test_protos;
+
+import "color.proto";
+
+message Boat {
+  string make = 1;
+  int32 year = 2;
+  Color color = 3;
+}
+
+message Bicycle {
+  string make = 1;
+  int32 year = 2;
+  Color color = 3;
+}
+
+message Vehicle {
+  string make = 1;
+  string model = 2;
+  int32 year = 3;
+  Color color = 4;
+}

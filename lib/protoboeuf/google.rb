@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
-# There isn't a clean 1:1 mapping between constants and *.rb files, so eager load instead of autoload.
-
-Dir[File.expand_path("google/**/*.rb", __dir__)].each { |file| require file }
+module ProtoBoeuf
+  module Google
+    autoload :Api, "protoboeuf/google/api"
+    autoload :Protobuf, "protoboeuf/google/protobuf"
+  end
+end
