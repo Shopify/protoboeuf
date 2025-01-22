@@ -7,9 +7,17 @@ require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
 BASE_DIR = File.dirname(__FILE__)
-codegen_rb_files = ["lib/protoboeuf/codegen.rb"]
-proto_files = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
-rb_files = proto_files.pathmap("#{BASE_DIR}/test/fixtures/%n_pb.rb")
+LIB_DIR = File.expand_path(BASE_DIR, "lib")
+
+codegen_rb_files = ["lib/protoboeuf/codegen.rb", "lib/protoboeuf/autoloadergen.rb"]
+
+# Fixture protos we want to compile with protoc
+protoc_test_fixtures = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
+protoc_test_fixtures_rb_files = protoc_test_fixtures.pathmap("%X_pb.rb")
+
+# Fixture protos we want to compile with protoboeuf
+protoboeuf_test_fixtures = Rake::FileList[File.join(BASE_DIR, "test/fixtures/autoloadergen/**/*.proto")]
+protoboeuf_test_fixtures_rb_files = protoboeuf_test_fixtures.pathmap("%X.rb")
 
 BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
@@ -19,12 +27,16 @@ well_known_types = Rake::FileList[
 ]
 
 WELL_KNOWN_PB = well_known_types.pathmap("%X.rb")
+# For a directory like lib/protoboeuf/google/protobuf, create an autoloader in lib/protoboeuf/google/protobuf.rb
+WELL_KNOWN_AUTOLOADERS = well_known_types.pathmap("%d.rb").uniq
 
 # Clobber/clean rules
-rb_files.each { |x| CLOBBER.append(x) }
+protoc_test_fixtures_rb_files.each { |x| CLOBBER.append(x) }
+protoboeuf_test_fixtures_rb_files.each { |x| CLOBBER.append(x) }
 CLOBBER.append(BENCHMARK_UPSTREAM_PB)
 CLOBBER.append(BENCHMARK_PROTOBOEUF_PB)
 CLOBBER.append(WELL_KNOWN_PB)
+CLOBBER.append(WELL_KNOWN_AUTOLOADERS)
 
 rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   codegen_rb_files.each { |f| require_relative f }
@@ -34,9 +46,10 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
 
   unit = Tempfile.create(File.basename(t.source)) do |f|
     File.unlink(f.path)
+
     sh(*[
       "protoc",
-      well_known_types.map { |file| ["-I", file.pathmap("%d")] }.uniq,
+      (well_known_types + [t.source]).map { |file| ["-I", file.pathmap("%d")] }.uniq,
       File.basename(t.source),
       "-o",
       f.path,
@@ -61,7 +74,27 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   File.binwrite(t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby(dest, options))
 end
 
-task well_known_types: WELL_KNOWN_PB
+rule ".rb" => "%X" do |t|
+  # Given lib/protoboeuf/google/protobuf/foo.rb and lib/protoboeuf/google/protobuf/bar.rb, generate
+  # lib/protoboeuf/google/protobuf.rb that looks like:
+  #
+  # module ProtoBoeuf
+  #   module Google
+  #     module Protobuf
+  #       autoload :FooMessage1, "proto_boeuf/google/protobuf/foo"
+  #       autoload :FooMessage2, "proto_boeuf/google/protobuf/foo"
+  #       autoload :BarMessage1, "proto_boeuf/google/protobuf/bar"
+  #     end
+  #   end
+  # end
+
+  require_relative "lib/protoboeuf/autoloadergen"
+
+  puts "writing autoloader module #{t.name}"
+  File.binwrite(t.name, ProtoBoeuf::AutoloaderGen.new(t.name).to_ruby)
+end
+
+task well_known_types: WELL_KNOWN_PB + WELL_KNOWN_AUTOLOADERS
 
 # Makefile-like rule to generate "_pb.rb"
 rule "_pb.rb" => "test/fixtures/%{_pb,}n.proto" do |task|
@@ -104,7 +137,7 @@ Rake::TestTask.new do |t|
 end
 
 desc "Regenerate protobuf files"
-task gen_proto: rb_files
+task gen_proto: protoc_test_fixtures_rb_files + protoboeuf_test_fixtures_rb_files
 
 task test: [:gen_proto, :well_known_types]
 task default: :test

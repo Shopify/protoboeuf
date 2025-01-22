@@ -1,1 +1,3 @@
 lib/protoboeuf/google/**/*.rb linguist-generated=true
+test/fixtures/autoloadergen/google/**/*.rb linguist-generated=true
+test/fixtures/autoloadergen/google/test_protos.correct.rb linguist-generated=false
