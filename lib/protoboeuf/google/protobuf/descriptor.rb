@@ -2,10 +2,14 @@
 # rubocop:disable all
 # frozen_string_literal: true
 
+# @@protoc_insertion_point(requires)
+
 module ProtoBoeuf
   module Google
     module Protobuf
       module Edition
+        # @@protoc_insertion_point(class_definitions)
+
         EDITION_UNKNOWN = 0
         EDITION_LEGACY = 900
         EDITION_PROTO2 = 998
@@ -19,76 +23,91 @@ module ProtoBoeuf
         EDITION_99999_TEST_ONLY = 99_999
         EDITION_MAX = 2_147_483_647
 
-        def self.lookup(val)
-          if val == 0
-            :EDITION_UNKNOWN
-          elsif val == 900
-            :EDITION_LEGACY
-          elsif val == 998
-            :EDITION_PROTO2
-          elsif val == 999
-            :EDITION_PROTO3
-          elsif val == 1000
-            :EDITION_2023
-          elsif val == 1001
-            :EDITION_2024
-          elsif val == 1
-            :EDITION_1_TEST_ONLY
-          elsif val == 2
-            :EDITION_2_TEST_ONLY
-          elsif val == 99_997
-            :EDITION_99997_TEST_ONLY
-          elsif val == 99_998
-            :EDITION_99998_TEST_ONLY
-          elsif val == 99_999
-            :EDITION_99999_TEST_ONLY
-          elsif val == 2_147_483_647
-            :EDITION_MAX
-          end
-        end
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.resolve(val)
-          if val == :EDITION_UNKNOWN
-            0
-          elsif val == :EDITION_LEGACY
-            900
-          elsif val == :EDITION_PROTO2
-            998
-          elsif val == :EDITION_PROTO3
-            999
-          elsif val == :EDITION_2023
-            1000
-          elsif val == :EDITION_2024
-            1001
-          elsif val == :EDITION_1_TEST_ONLY
-            1
-          elsif val == :EDITION_2_TEST_ONLY
-            2
-          elsif val == :EDITION_99997_TEST_ONLY
-            99_997
-          elsif val == :EDITION_99998_TEST_ONLY
-            99_998
-          elsif val == :EDITION_99999_TEST_ONLY
-            99_999
-          elsif val == :EDITION_MAX
-            2_147_483_647
+          def lookup(val)
+            if val == 0
+              :EDITION_UNKNOWN
+            elsif val == 900
+              :EDITION_LEGACY
+            elsif val == 998
+              :EDITION_PROTO2
+            elsif val == 999
+              :EDITION_PROTO3
+            elsif val == 1000
+              :EDITION_2023
+            elsif val == 1001
+              :EDITION_2024
+            elsif val == 1
+              :EDITION_1_TEST_ONLY
+            elsif val == 2
+              :EDITION_2_TEST_ONLY
+            elsif val == 99_997
+              :EDITION_99997_TEST_ONLY
+            elsif val == 99_998
+              :EDITION_99998_TEST_ONLY
+            elsif val == 99_999
+              :EDITION_99999_TEST_ONLY
+            elsif val == 2_147_483_647
+              :EDITION_MAX
+            end
+          end
+
+          def resolve(val)
+            if val == :EDITION_UNKNOWN
+              0
+            elsif val == :EDITION_LEGACY
+              900
+            elsif val == :EDITION_PROTO2
+              998
+            elsif val == :EDITION_PROTO3
+              999
+            elsif val == :EDITION_2023
+              1000
+            elsif val == :EDITION_2024
+              1001
+            elsif val == :EDITION_1_TEST_ONLY
+              1
+            elsif val == :EDITION_2_TEST_ONLY
+              2
+            elsif val == :EDITION_99997_TEST_ONLY
+              99_997
+            elsif val == :EDITION_99998_TEST_ONLY
+              99_998
+            elsif val == :EDITION_99999_TEST_ONLY
+              99_999
+            elsif val == :EDITION_MAX
+              2_147_483_647
+            end
           end
         end
       end
 
       class FileDescriptorSet
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :file
+        def file
+          # @@protoc_insertion_point(get_file)
+
+          @file
+        end
 
         def file=(v)
+          # @@protoc_insertion_point(set_file)
+
           @file = v
         end
 
@@ -543,50 +562,110 @@ module ProtoBoeuf
         end
       end
       class FileDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :dependency
+        def dependency
+          # @@protoc_insertion_point(get_dependency)
 
-        attr_reader :public_dependency
+          @dependency
+        end
 
-        attr_reader :weak_dependency
+        def public_dependency
+          # @@protoc_insertion_point(get_public_dependency)
 
-        attr_reader :message_type
+          @public_dependency
+        end
 
-        attr_reader :enum_type
+        def weak_dependency
+          # @@protoc_insertion_point(get_weak_dependency)
 
-        attr_reader :service
+          @weak_dependency
+        end
 
-        attr_reader :extension
+        def message_type
+          # @@protoc_insertion_point(get_message_type)
+
+          @message_type
+        end
+
+        def enum_type
+          # @@protoc_insertion_point(get_enum_type)
+
+          @enum_type
+        end
+
+        def service
+          # @@protoc_insertion_point(get_service)
+
+          @service
+        end
+
+        def extension
+          # @@protoc_insertion_point(get_extension)
+
+          @extension
+        end
 
         # enum readers
         def edition
+          # @@protoc_insertion_point(get_edition)
+
           ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@edition) || @edition
         end
+
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :package
+          @name
+        end
 
-        attr_reader :options
+        def package
+          # @@protoc_insertion_point(get_package)
 
-        attr_reader :source_code_info
+          @package
+        end
 
-        attr_reader :syntax
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
+
+        def source_code_info
+          # @@protoc_insertion_point(get_source_code_info)
+
+          @source_code_info
+        end
+
+        def syntax
+          # @@protoc_insertion_point(get_syntax)
+
+          @syntax
+        end
 
         def dependency=(v)
+          # @@protoc_insertion_point(set_dependency)
+
           @dependency = v
         end
 
         def public_dependency=(v)
+          # @@protoc_insertion_point(set_public_dependency)
+
           v.each do |v|
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
@@ -598,6 +677,8 @@ module ProtoBoeuf
         end
 
         def weak_dependency=(v)
+          # @@protoc_insertion_point(set_weak_dependency)
+
           v.each do |v|
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
@@ -609,49 +690,69 @@ module ProtoBoeuf
         end
 
         def message_type=(v)
+          # @@protoc_insertion_point(set_message_type)
+
           @message_type = v
         end
 
         def enum_type=(v)
+          # @@protoc_insertion_point(set_enum_type)
+
           @enum_type = v
         end
 
         def service=(v)
+          # @@protoc_insertion_point(set_service)
+
           @service = v
         end
 
         def extension=(v)
+          # @@protoc_insertion_point(set_extension)
+
           @extension = v
         end
 
         # enum writers
         def edition=(v)
+          # @@protoc_insertion_point(set_edition)
+
           @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
         end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def package=(v)
+          # @@protoc_insertion_point(set_package)
+
           @_bitmask |= 0x0000000000000002
           @package = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000004
           @options = v
         end
 
         def source_code_info=(v)
+          # @@protoc_insertion_point(set_source_code_info)
+
           @_bitmask |= 0x0000000000000008
           @source_code_info = v
         end
 
         def syntax=(v)
+          # @@protoc_insertion_point(set_syntax)
+
           @_bitmask |= 0x0000000000000010
           @syntax = v
         end
@@ -3400,34 +3501,47 @@ module ProtoBoeuf
         end
       end
       class DescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class ExtensionRange
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # optional field readers
 
-          attr_reader :start
+          def start
+            # @@protoc_insertion_point(get_start)
 
-          attr_reader :end
+            @start
+          end
 
-          attr_reader :options
+          def end
+            # @@protoc_insertion_point(get_end)
+
+            @end
+          end
+
+          def options
+            # @@protoc_insertion_point(get_options)
+
+            @options
+          end
 
           # BEGIN writers for optional fields
 
           def start=(v)
+            # @@protoc_insertion_point(set_start)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field start is out of bounds (-2147483648..2147483647)"
@@ -3438,6 +3552,8 @@ module ProtoBoeuf
           end
 
           def end=(v)
+            # @@protoc_insertion_point(set_end)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field end is out of bounds (-2147483648..2147483647)"
@@ -3448,6 +3564,8 @@ module ProtoBoeuf
           end
 
           def options=(v)
+            # @@protoc_insertion_point(set_options)
+
             @_bitmask |= 0x0000000000000004
             @options = v
           end
@@ -4239,24 +4357,39 @@ module ProtoBoeuf
         end
 
         class ReservedRange
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # optional field readers
 
-          attr_reader :start
+          def start
+            # @@protoc_insertion_point(get_start)
 
-          attr_reader :end
+            @start
+          end
+
+          def end
+            # @@protoc_insertion_point(get_end)
+
+            @end
+          end
 
           # BEGIN writers for optional fields
 
           def start=(v)
+            # @@protoc_insertion_point(set_start)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field start is out of bounds (-2147483648..2147483647)"
@@ -4267,6 +4400,8 @@ module ProtoBoeuf
           end
 
           def end=(v)
+            # @@protoc_insertion_point(set_end)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field end is out of bounds (-2147483648..2147483647)"
@@ -4871,70 +5006,141 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :field
+        def field
+          # @@protoc_insertion_point(get_field)
 
-        attr_reader :extension
+          @field
+        end
 
-        attr_reader :nested_type
+        def extension
+          # @@protoc_insertion_point(get_extension)
 
-        attr_reader :enum_type
+          @extension
+        end
 
-        attr_reader :extension_range
+        def nested_type
+          # @@protoc_insertion_point(get_nested_type)
 
-        attr_reader :oneof_decl
+          @nested_type
+        end
 
-        attr_reader :reserved_range
+        def enum_type
+          # @@protoc_insertion_point(get_enum_type)
 
-        attr_reader :reserved_name
+          @enum_type
+        end
+
+        def extension_range
+          # @@protoc_insertion_point(get_extension_range)
+
+          @extension_range
+        end
+
+        def oneof_decl
+          # @@protoc_insertion_point(get_oneof_decl)
+
+          @oneof_decl
+        end
+
+        def reserved_range
+          # @@protoc_insertion_point(get_reserved_range)
+
+          @reserved_range
+        end
+
+        def reserved_name
+          # @@protoc_insertion_point(get_reserved_name)
+
+          @reserved_name
+        end
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :options
+          @name
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
 
         def field=(v)
+          # @@protoc_insertion_point(set_field)
+
           @field = v
         end
 
         def extension=(v)
+          # @@protoc_insertion_point(set_extension)
+
           @extension = v
         end
 
         def nested_type=(v)
+          # @@protoc_insertion_point(set_nested_type)
+
           @nested_type = v
         end
 
         def enum_type=(v)
+          # @@protoc_insertion_point(set_enum_type)
+
           @enum_type = v
         end
 
         def extension_range=(v)
+          # @@protoc_insertion_point(set_extension_range)
+
           @extension_range = v
         end
 
         def oneof_decl=(v)
+          # @@protoc_insertion_point(set_oneof_decl)
+
           @oneof_decl = v
         end
 
         def reserved_range=(v)
+          # @@protoc_insertion_point(set_reserved_range)
+
           @reserved_range = v
         end
 
         def reserved_name=(v)
+          # @@protoc_insertion_point(set_reserved_name)
+
           @reserved_name = v
         end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000002
           @options = v
         end
@@ -7095,38 +7301,59 @@ module ProtoBoeuf
         end
       end
       class ExtensionRangeOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class Declaration
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # optional field readers
 
-          attr_reader :number
+          def number
+            # @@protoc_insertion_point(get_number)
 
-          attr_reader :full_name
+            @number
+          end
 
-          attr_reader :type
+          def full_name
+            # @@protoc_insertion_point(get_full_name)
 
-          attr_reader :reserved
+            @full_name
+          end
 
-          attr_reader :repeated
+          def type
+            # @@protoc_insertion_point(get_type)
+
+            @type
+          end
+
+          def reserved
+            # @@protoc_insertion_point(get_reserved)
+
+            @reserved
+          end
+
+          def repeated
+            # @@protoc_insertion_point(get_repeated)
+
+            @repeated
+          end
 
           # BEGIN writers for optional fields
 
           def number=(v)
+            # @@protoc_insertion_point(set_number)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field number is out of bounds (-2147483648..2147483647)"
@@ -7137,21 +7364,29 @@ module ProtoBoeuf
           end
 
           def full_name=(v)
+            # @@protoc_insertion_point(set_full_name)
+
             @_bitmask |= 0x0000000000000002
             @full_name = v
           end
 
           def type=(v)
+            # @@protoc_insertion_point(set_type)
+
             @_bitmask |= 0x0000000000000004
             @type = v
           end
 
           def reserved=(v)
+            # @@protoc_insertion_point(set_reserved)
+
             @_bitmask |= 0x0000000000000008
             @reserved = v
           end
 
           def repeated=(v)
+            # @@protoc_insertion_point(set_repeated)
+
             @_bitmask |= 0x0000000000000010
             @repeated = v
           end
@@ -8072,52 +8307,90 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         module VerificationState
+          # @@protoc_insertion_point(class_definitions)
+
           DECLARATION = 0
           UNVERIFIED = 1
 
-          def self.lookup(val)
-            if val == 0
-              :DECLARATION
-            elsif val == 1
-              :UNVERIFIED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :DECLARATION
-              0
-            elsif val == :UNVERIFIED
-              1
+            def lookup(val)
+              if val == 0
+                :DECLARATION
+              elsif val == 1
+                :UNVERIFIED
+              end
+            end
+
+            def resolve(val)
+              if val == :DECLARATION
+                0
+              elsif val == :UNVERIFIED
+                1
+              end
             end
           end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
 
-        attr_reader :declaration
+          @uninterpreted_option
+        end
+
+        def declaration
+          # @@protoc_insertion_point(get_declaration)
+
+          @declaration
+        end
 
         # enum readers
         def verification
+          # @@protoc_insertion_point(get_verification)
+
           ::ProtoBoeuf::Google::Protobuf::ExtensionRangeOptions::VerificationState.lookup(
             @verification
           ) || @verification
         end
+
         # optional field readers
 
-        attr_reader :features
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         def declaration=(v)
+          # @@protoc_insertion_point(set_declaration)
+
           @declaration = v
         end
 
         # enum writers
         def verification=(v)
+          # @@protoc_insertion_point(set_verification)
+
           @verification =
             ::ProtoBoeuf::Google::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
               v
@@ -8127,6 +8400,8 @@ module ProtoBoeuf
         # BEGIN writers for optional fields
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000001
           @features = v
         end
@@ -9144,14 +9419,21 @@ module ProtoBoeuf
         end
       end
       class FieldDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         module Type
+          # @@protoc_insertion_point(class_definitions)
+
           TYPE_DOUBLE = 1
           TYPE_FLOAT = 2
           TYPE_INT64 = 3
@@ -9171,109 +9453,119 @@ module ProtoBoeuf
           TYPE_SINT32 = 17
           TYPE_SINT64 = 18
 
-          def self.lookup(val)
-            if val == 1
-              :TYPE_DOUBLE
-            elsif val == 2
-              :TYPE_FLOAT
-            elsif val == 3
-              :TYPE_INT64
-            elsif val == 4
-              :TYPE_UINT64
-            elsif val == 5
-              :TYPE_INT32
-            elsif val == 6
-              :TYPE_FIXED64
-            elsif val == 7
-              :TYPE_FIXED32
-            elsif val == 8
-              :TYPE_BOOL
-            elsif val == 9
-              :TYPE_STRING
-            elsif val == 10
-              :TYPE_GROUP
-            elsif val == 11
-              :TYPE_MESSAGE
-            elsif val == 12
-              :TYPE_BYTES
-            elsif val == 13
-              :TYPE_UINT32
-            elsif val == 14
-              :TYPE_ENUM
-            elsif val == 15
-              :TYPE_SFIXED32
-            elsif val == 16
-              :TYPE_SFIXED64
-            elsif val == 17
-              :TYPE_SINT32
-            elsif val == 18
-              :TYPE_SINT64
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :TYPE_DOUBLE
-              1
-            elsif val == :TYPE_FLOAT
-              2
-            elsif val == :TYPE_INT64
-              3
-            elsif val == :TYPE_UINT64
-              4
-            elsif val == :TYPE_INT32
-              5
-            elsif val == :TYPE_FIXED64
-              6
-            elsif val == :TYPE_FIXED32
-              7
-            elsif val == :TYPE_BOOL
-              8
-            elsif val == :TYPE_STRING
-              9
-            elsif val == :TYPE_GROUP
-              10
-            elsif val == :TYPE_MESSAGE
-              11
-            elsif val == :TYPE_BYTES
-              12
-            elsif val == :TYPE_UINT32
-              13
-            elsif val == :TYPE_ENUM
-              14
-            elsif val == :TYPE_SFIXED32
-              15
-            elsif val == :TYPE_SFIXED64
-              16
-            elsif val == :TYPE_SINT32
-              17
-            elsif val == :TYPE_SINT64
-              18
+            def lookup(val)
+              if val == 1
+                :TYPE_DOUBLE
+              elsif val == 2
+                :TYPE_FLOAT
+              elsif val == 3
+                :TYPE_INT64
+              elsif val == 4
+                :TYPE_UINT64
+              elsif val == 5
+                :TYPE_INT32
+              elsif val == 6
+                :TYPE_FIXED64
+              elsif val == 7
+                :TYPE_FIXED32
+              elsif val == 8
+                :TYPE_BOOL
+              elsif val == 9
+                :TYPE_STRING
+              elsif val == 10
+                :TYPE_GROUP
+              elsif val == 11
+                :TYPE_MESSAGE
+              elsif val == 12
+                :TYPE_BYTES
+              elsif val == 13
+                :TYPE_UINT32
+              elsif val == 14
+                :TYPE_ENUM
+              elsif val == 15
+                :TYPE_SFIXED32
+              elsif val == 16
+                :TYPE_SFIXED64
+              elsif val == 17
+                :TYPE_SINT32
+              elsif val == 18
+                :TYPE_SINT64
+              end
+            end
+
+            def resolve(val)
+              if val == :TYPE_DOUBLE
+                1
+              elsif val == :TYPE_FLOAT
+                2
+              elsif val == :TYPE_INT64
+                3
+              elsif val == :TYPE_UINT64
+                4
+              elsif val == :TYPE_INT32
+                5
+              elsif val == :TYPE_FIXED64
+                6
+              elsif val == :TYPE_FIXED32
+                7
+              elsif val == :TYPE_BOOL
+                8
+              elsif val == :TYPE_STRING
+                9
+              elsif val == :TYPE_GROUP
+                10
+              elsif val == :TYPE_MESSAGE
+                11
+              elsif val == :TYPE_BYTES
+                12
+              elsif val == :TYPE_UINT32
+                13
+              elsif val == :TYPE_ENUM
+                14
+              elsif val == :TYPE_SFIXED32
+                15
+              elsif val == :TYPE_SFIXED64
+                16
+              elsif val == :TYPE_SINT32
+                17
+              elsif val == :TYPE_SINT64
+                18
+              end
             end
           end
         end
 
         module Label
+          # @@protoc_insertion_point(class_definitions)
+
           LABEL_OPTIONAL = 1
           LABEL_REPEATED = 3
           LABEL_REQUIRED = 2
 
-          def self.lookup(val)
-            if val == 1
-              :LABEL_OPTIONAL
-            elsif val == 3
-              :LABEL_REPEATED
-            elsif val == 2
-              :LABEL_REQUIRED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :LABEL_OPTIONAL
-              1
-            elsif val == :LABEL_REPEATED
-              3
-            elsif val == :LABEL_REQUIRED
-              2
+            def lookup(val)
+              if val == 1
+                :LABEL_OPTIONAL
+              elsif val == 3
+                :LABEL_REPEATED
+              elsif val == 2
+                :LABEL_REQUIRED
+              end
+            end
+
+            def resolve(val)
+              if val == :LABEL_OPTIONAL
+                1
+              elsif val == :LABEL_REPEATED
+                3
+              elsif val == :LABEL_REQUIRED
+                2
+              end
             end
           end
         end
@@ -9281,43 +9573,90 @@ module ProtoBoeuf
 
         # enum readers
         def label
+          # @@protoc_insertion_point(get_label)
+
           ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Label.lookup(
             @label
           ) || @label
         end
+
         def type
+          # @@protoc_insertion_point(get_type)
+
           ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Type.lookup(
             @type
           ) || @type
         end
+
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :number
+          @name
+        end
 
-        attr_reader :type_name
+        def number
+          # @@protoc_insertion_point(get_number)
 
-        attr_reader :extendee
+          @number
+        end
 
-        attr_reader :default_value
+        def type_name
+          # @@protoc_insertion_point(get_type_name)
 
-        attr_reader :oneof_index
+          @type_name
+        end
 
-        attr_reader :json_name
+        def extendee
+          # @@protoc_insertion_point(get_extendee)
 
-        attr_reader :options
+          @extendee
+        end
 
-        attr_reader :proto3_optional
+        def default_value
+          # @@protoc_insertion_point(get_default_value)
+
+          @default_value
+        end
+
+        def oneof_index
+          # @@protoc_insertion_point(get_oneof_index)
+
+          @oneof_index
+        end
+
+        def json_name
+          # @@protoc_insertion_point(get_json_name)
+
+          @json_name
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
+
+        def proto3_optional
+          # @@protoc_insertion_point(get_proto3_optional)
+
+          @proto3_optional
+        end
 
         # enum writers
         def label=(v)
+          # @@protoc_insertion_point(set_label)
+
           @label =
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Label.resolve(
               v
             ) || v
         end
+
         def type=(v)
+          # @@protoc_insertion_point(set_type)
+
           @type =
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Type.resolve(
               v
@@ -9327,11 +9666,15 @@ module ProtoBoeuf
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def number=(v)
+          # @@protoc_insertion_point(set_number)
+
           unless -2_147_483_648 <= v && v <= 2_147_483_647
             raise RangeError,
                   "Value (#{v}) for field number is out of bounds (-2147483648..2147483647)"
@@ -9342,21 +9685,29 @@ module ProtoBoeuf
         end
 
         def type_name=(v)
+          # @@protoc_insertion_point(set_type_name)
+
           @_bitmask |= 0x0000000000000010
           @type_name = v
         end
 
         def extendee=(v)
+          # @@protoc_insertion_point(set_extendee)
+
           @_bitmask |= 0x0000000000000020
           @extendee = v
         end
 
         def default_value=(v)
+          # @@protoc_insertion_point(set_default_value)
+
           @_bitmask |= 0x0000000000000040
           @default_value = v
         end
 
         def oneof_index=(v)
+          # @@protoc_insertion_point(set_oneof_index)
+
           unless -2_147_483_648 <= v && v <= 2_147_483_647
             raise RangeError,
                   "Value (#{v}) for field oneof_index is out of bounds (-2147483648..2147483647)"
@@ -9367,16 +9718,22 @@ module ProtoBoeuf
         end
 
         def json_name=(v)
+          # @@protoc_insertion_point(set_json_name)
+
           @_bitmask |= 0x0000000000000100
           @json_name = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000200
           @options = v
         end
 
         def proto3_optional=(v)
+          # @@protoc_insertion_point(set_proto3_optional)
+
           @_bitmask |= 0x0000000000000400
           @proto3_optional = v
         end
@@ -11336,29 +11693,46 @@ module ProtoBoeuf
         end
       end
       class OneofDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :options
+          @name
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000002
           @options = v
         end
@@ -11960,32 +12334,41 @@ module ProtoBoeuf
         end
       end
       class EnumDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class EnumReservedRange
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # optional field readers
 
-          attr_reader :start
+          def start
+            # @@protoc_insertion_point(get_start)
 
-          attr_reader :end
+            @start
+          end
+
+          def end
+            # @@protoc_insertion_point(get_end)
+
+            @end
+          end
 
           # BEGIN writers for optional fields
 
           def start=(v)
+            # @@protoc_insertion_point(set_start)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field start is out of bounds (-2147483648..2147483647)"
@@ -11996,6 +12379,8 @@ module ProtoBoeuf
           end
 
           def end=(v)
+            # @@protoc_insertion_point(set_end)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field end is out of bounds (-2147483648..2147483647)"
@@ -12600,40 +12985,81 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :value
+        def value
+          # @@protoc_insertion_point(get_value)
 
-        attr_reader :reserved_range
+          @value
+        end
 
-        attr_reader :reserved_name
+        def reserved_range
+          # @@protoc_insertion_point(get_reserved_range)
+
+          @reserved_range
+        end
+
+        def reserved_name
+          # @@protoc_insertion_point(get_reserved_name)
+
+          @reserved_name
+        end
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :options
+          @name
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
 
         def value=(v)
+          # @@protoc_insertion_point(set_value)
+
           @value = v
         end
 
         def reserved_range=(v)
+          # @@protoc_insertion_point(set_reserved_range)
+
           @reserved_range = v
         end
 
         def reserved_name=(v)
+          # @@protoc_insertion_point(set_reserved_name)
+
           @reserved_name = v
         end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000002
           @options = v
         end
@@ -13794,31 +14220,52 @@ module ProtoBoeuf
         end
       end
       class EnumValueDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :number
+          @name
+        end
 
-        attr_reader :options
+        def number
+          # @@protoc_insertion_point(get_number)
+
+          @number
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def number=(v)
+          # @@protoc_insertion_point(set_number)
+
           unless -2_147_483_648 <= v && v <= 2_147_483_647
             raise RangeError,
                   "Value (#{v}) for field number is out of bounds (-2147483648..2147483647)"
@@ -13829,6 +14276,8 @@ module ProtoBoeuf
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000004
           @options = v
         end
@@ -14596,35 +15045,58 @@ module ProtoBoeuf
         end
       end
       class ServiceDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :method
+        def method
+          # @@protoc_insertion_point(get_method)
+
+          @method
+        end
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :options
+          @name
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
 
         def method=(v)
+          # @@protoc_insertion_point(set_method)
+
           @method = v
         end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000002
           @options = v
         end
@@ -15425,57 +15897,98 @@ module ProtoBoeuf
         end
       end
       class MethodDescriptorProto
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
         # optional field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
 
-        attr_reader :input_type
+          @name
+        end
 
-        attr_reader :output_type
+        def input_type
+          # @@protoc_insertion_point(get_input_type)
 
-        attr_reader :options
+          @input_type
+        end
 
-        attr_reader :client_streaming
+        def output_type
+          # @@protoc_insertion_point(get_output_type)
 
-        attr_reader :server_streaming
+          @output_type
+        end
+
+        def options
+          # @@protoc_insertion_point(get_options)
+
+          @options
+        end
+
+        def client_streaming
+          # @@protoc_insertion_point(get_client_streaming)
+
+          @client_streaming
+        end
+
+        def server_streaming
+          # @@protoc_insertion_point(get_server_streaming)
+
+          @server_streaming
+        end
 
         # BEGIN writers for optional fields
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @_bitmask |= 0x0000000000000001
           @name = v
         end
 
         def input_type=(v)
+          # @@protoc_insertion_point(set_input_type)
+
           @_bitmask |= 0x0000000000000002
           @input_type = v
         end
 
         def output_type=(v)
+          # @@protoc_insertion_point(set_output_type)
+
           @_bitmask |= 0x0000000000000004
           @output_type = v
         end
 
         def options=(v)
+          # @@protoc_insertion_point(set_options)
+
           @_bitmask |= 0x0000000000000008
           @options = v
         end
 
         def client_streaming=(v)
+          # @@protoc_insertion_point(set_client_streaming)
+
           @_bitmask |= 0x0000000000000010
           @client_streaming = v
         end
 
         def server_streaming=(v)
+          # @@protoc_insertion_point(set_server_streaming)
+
           @_bitmask |= 0x0000000000000020
           @server_streaming = v
         end
@@ -16566,94 +17079,192 @@ module ProtoBoeuf
         end
       end
       class FileOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         module OptimizeMode
+          # @@protoc_insertion_point(class_definitions)
+
           SPEED = 1
           CODE_SIZE = 2
           LITE_RUNTIME = 3
 
-          def self.lookup(val)
-            if val == 1
-              :SPEED
-            elsif val == 2
-              :CODE_SIZE
-            elsif val == 3
-              :LITE_RUNTIME
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :SPEED
-              1
-            elsif val == :CODE_SIZE
-              2
-            elsif val == :LITE_RUNTIME
-              3
+            def lookup(val)
+              if val == 1
+                :SPEED
+              elsif val == 2
+                :CODE_SIZE
+              elsif val == 3
+                :LITE_RUNTIME
+              end
+            end
+
+            def resolve(val)
+              if val == :SPEED
+                1
+              elsif val == :CODE_SIZE
+                2
+              elsif val == :LITE_RUNTIME
+                3
+              end
             end
           end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # enum readers
         def optimize_for
+          # @@protoc_insertion_point(get_optimize_for)
+
           ::ProtoBoeuf::Google::Protobuf::FileOptions::OptimizeMode.lookup(
             @optimize_for
           ) || @optimize_for
         end
+
         # optional field readers
 
-        attr_reader :java_package
+        def java_package
+          # @@protoc_insertion_point(get_java_package)
 
-        attr_reader :java_outer_classname
+          @java_package
+        end
 
-        attr_reader :java_multiple_files
+        def java_outer_classname
+          # @@protoc_insertion_point(get_java_outer_classname)
 
-        attr_reader :java_generate_equals_and_hash
+          @java_outer_classname
+        end
 
-        attr_reader :java_string_check_utf8
+        def java_multiple_files
+          # @@protoc_insertion_point(get_java_multiple_files)
 
-        attr_reader :go_package
+          @java_multiple_files
+        end
 
-        attr_reader :cc_generic_services
+        def java_generate_equals_and_hash
+          # @@protoc_insertion_point(get_java_generate_equals_and_hash)
 
-        attr_reader :java_generic_services
+          @java_generate_equals_and_hash
+        end
 
-        attr_reader :py_generic_services
+        def java_string_check_utf8
+          # @@protoc_insertion_point(get_java_string_check_utf8)
 
-        attr_reader :deprecated
+          @java_string_check_utf8
+        end
 
-        attr_reader :cc_enable_arenas
+        def go_package
+          # @@protoc_insertion_point(get_go_package)
 
-        attr_reader :objc_class_prefix
+          @go_package
+        end
 
-        attr_reader :csharp_namespace
+        def cc_generic_services
+          # @@protoc_insertion_point(get_cc_generic_services)
 
-        attr_reader :swift_prefix
+          @cc_generic_services
+        end
 
-        attr_reader :php_class_prefix
+        def java_generic_services
+          # @@protoc_insertion_point(get_java_generic_services)
 
-        attr_reader :php_namespace
+          @java_generic_services
+        end
 
-        attr_reader :php_metadata_namespace
+        def py_generic_services
+          # @@protoc_insertion_point(get_py_generic_services)
 
-        attr_reader :ruby_package
+          @py_generic_services
+        end
 
-        attr_reader :features
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
+
+          @deprecated
+        end
+
+        def cc_enable_arenas
+          # @@protoc_insertion_point(get_cc_enable_arenas)
+
+          @cc_enable_arenas
+        end
+
+        def objc_class_prefix
+          # @@protoc_insertion_point(get_objc_class_prefix)
+
+          @objc_class_prefix
+        end
+
+        def csharp_namespace
+          # @@protoc_insertion_point(get_csharp_namespace)
+
+          @csharp_namespace
+        end
+
+        def swift_prefix
+          # @@protoc_insertion_point(get_swift_prefix)
+
+          @swift_prefix
+        end
+
+        def php_class_prefix
+          # @@protoc_insertion_point(get_php_class_prefix)
+
+          @php_class_prefix
+        end
+
+        def php_namespace
+          # @@protoc_insertion_point(get_php_namespace)
+
+          @php_namespace
+        end
+
+        def php_metadata_namespace
+          # @@protoc_insertion_point(get_php_metadata_namespace)
+
+          @php_metadata_namespace
+        end
+
+        def ruby_package
+          # @@protoc_insertion_point(get_ruby_package)
+
+          @ruby_package
+        end
+
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # enum writers
         def optimize_for=(v)
+          # @@protoc_insertion_point(set_optimize_for)
+
           @optimize_for =
             ::ProtoBoeuf::Google::Protobuf::FileOptions::OptimizeMode.resolve(
               v
@@ -16663,96 +17274,134 @@ module ProtoBoeuf
         # BEGIN writers for optional fields
 
         def java_package=(v)
+          # @@protoc_insertion_point(set_java_package)
+
           @_bitmask |= 0x0000000000000001
           @java_package = v
         end
 
         def java_outer_classname=(v)
+          # @@protoc_insertion_point(set_java_outer_classname)
+
           @_bitmask |= 0x0000000000000002
           @java_outer_classname = v
         end
 
         def java_multiple_files=(v)
+          # @@protoc_insertion_point(set_java_multiple_files)
+
           @_bitmask |= 0x0000000000000004
           @java_multiple_files = v
         end
 
         def java_generate_equals_and_hash=(v)
+          # @@protoc_insertion_point(set_java_generate_equals_and_hash)
+
           @_bitmask |= 0x0000000000000008
           @java_generate_equals_and_hash = v
         end
 
         def java_string_check_utf8=(v)
+          # @@protoc_insertion_point(set_java_string_check_utf8)
+
           @_bitmask |= 0x0000000000000010
           @java_string_check_utf8 = v
         end
 
         def go_package=(v)
+          # @@protoc_insertion_point(set_go_package)
+
           @_bitmask |= 0x0000000000000040
           @go_package = v
         end
 
         def cc_generic_services=(v)
+          # @@protoc_insertion_point(set_cc_generic_services)
+
           @_bitmask |= 0x0000000000000080
           @cc_generic_services = v
         end
 
         def java_generic_services=(v)
+          # @@protoc_insertion_point(set_java_generic_services)
+
           @_bitmask |= 0x0000000000000100
           @java_generic_services = v
         end
 
         def py_generic_services=(v)
+          # @@protoc_insertion_point(set_py_generic_services)
+
           @_bitmask |= 0x0000000000000200
           @py_generic_services = v
         end
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000400
           @deprecated = v
         end
 
         def cc_enable_arenas=(v)
+          # @@protoc_insertion_point(set_cc_enable_arenas)
+
           @_bitmask |= 0x0000000000000800
           @cc_enable_arenas = v
         end
 
         def objc_class_prefix=(v)
+          # @@protoc_insertion_point(set_objc_class_prefix)
+
           @_bitmask |= 0x0000000000001000
           @objc_class_prefix = v
         end
 
         def csharp_namespace=(v)
+          # @@protoc_insertion_point(set_csharp_namespace)
+
           @_bitmask |= 0x0000000000002000
           @csharp_namespace = v
         end
 
         def swift_prefix=(v)
+          # @@protoc_insertion_point(set_swift_prefix)
+
           @_bitmask |= 0x0000000000004000
           @swift_prefix = v
         end
 
         def php_class_prefix=(v)
+          # @@protoc_insertion_point(set_php_class_prefix)
+
           @_bitmask |= 0x0000000000008000
           @php_class_prefix = v
         end
 
         def php_namespace=(v)
+          # @@protoc_insertion_point(set_php_namespace)
+
           @_bitmask |= 0x0000000000010000
           @php_namespace = v
         end
 
         def php_metadata_namespace=(v)
+          # @@protoc_insertion_point(set_php_metadata_namespace)
+
           @_bitmask |= 0x0000000000020000
           @php_metadata_namespace = v
         end
 
         def ruby_package=(v)
+          # @@protoc_insertion_point(set_ruby_package)
+
           @_bitmask |= 0x0000000000040000
           @ruby_package = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000080000
           @features = v
         end
@@ -19832,63 +20481,110 @@ module ProtoBoeuf
         end
       end
       class MessageOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # optional field readers
 
-        attr_reader :message_set_wire_format
+        def message_set_wire_format
+          # @@protoc_insertion_point(get_message_set_wire_format)
 
-        attr_reader :no_standard_descriptor_accessor
+          @message_set_wire_format
+        end
 
-        attr_reader :deprecated
+        def no_standard_descriptor_accessor
+          # @@protoc_insertion_point(get_no_standard_descriptor_accessor)
 
-        attr_reader :map_entry
+          @no_standard_descriptor_accessor
+        end
 
-        attr_reader :deprecated_legacy_json_field_conflicts
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
 
-        attr_reader :features
+          @deprecated
+        end
+
+        def map_entry
+          # @@protoc_insertion_point(get_map_entry)
+
+          @map_entry
+        end
+
+        def deprecated_legacy_json_field_conflicts
+          # @@protoc_insertion_point(get_deprecated_legacy_json_field_conflicts)
+
+          @deprecated_legacy_json_field_conflicts
+        end
+
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # BEGIN writers for optional fields
 
         def message_set_wire_format=(v)
+          # @@protoc_insertion_point(set_message_set_wire_format)
+
           @_bitmask |= 0x0000000000000001
           @message_set_wire_format = v
         end
 
         def no_standard_descriptor_accessor=(v)
+          # @@protoc_insertion_point(set_no_standard_descriptor_accessor)
+
           @_bitmask |= 0x0000000000000002
           @no_standard_descriptor_accessor = v
         end
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000004
           @deprecated = v
         end
 
         def map_entry=(v)
+          # @@protoc_insertion_point(set_map_entry)
+
           @_bitmask |= 0x0000000000000008
           @map_entry = v
         end
 
         def deprecated_legacy_json_field_conflicts=(v)
+          # @@protoc_insertion_point(set_deprecated_legacy_json_field_conflicts)
+
           @_bitmask |= 0x0000000000000010
           @deprecated_legacy_json_field_conflicts = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000020
           @features = v
         end
@@ -21009,39 +21705,49 @@ module ProtoBoeuf
         end
       end
       class FieldOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class EditionDefault
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # enum readers
           def edition
+            # @@protoc_insertion_point(get_edition)
+
             ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@edition) || @edition
           end
+
           # optional field readers
 
-          attr_reader :value
+          def value
+            # @@protoc_insertion_point(get_value)
+
+            @value
+          end
 
           # enum writers
           def edition=(v)
+            # @@protoc_insertion_point(set_edition)
+
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
           end
 
           # BEGIN writers for optional fields
 
           def value=(v)
+            # @@protoc_insertion_point(set_value)
+
             @_bitmask |= 0x0000000000000002
             @value = v
           end
@@ -21620,44 +22326,70 @@ module ProtoBoeuf
         end
 
         class FeatureSupport
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # enum readers
           def edition_introduced
+            # @@protoc_insertion_point(get_edition_introduced)
+
             ::ProtoBoeuf::Google::Protobuf::Edition.lookup(
               @edition_introduced
             ) || @edition_introduced
           end
+
           def edition_deprecated
+            # @@protoc_insertion_point(get_edition_deprecated)
+
             ::ProtoBoeuf::Google::Protobuf::Edition.lookup(
               @edition_deprecated
             ) || @edition_deprecated
           end
+
           def edition_removed
+            # @@protoc_insertion_point(get_edition_removed)
+
             ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@edition_removed) ||
               @edition_removed
           end
+
           # optional field readers
 
-          attr_reader :deprecation_warning
+          def deprecation_warning
+            # @@protoc_insertion_point(get_deprecation_warning)
+
+            @deprecation_warning
+          end
 
           # enum writers
           def edition_introduced=(v)
+            # @@protoc_insertion_point(set_edition_introduced)
+
             @edition_introduced =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
           end
+
           def edition_deprecated=(v)
+            # @@protoc_insertion_point(set_edition_deprecated)
+
             @edition_deprecated =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
           end
+
           def edition_removed=(v)
+            # @@protoc_insertion_point(set_edition_removed)
+
             @edition_removed =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
           end
@@ -21665,6 +22397,8 @@ module ProtoBoeuf
           # BEGIN writers for optional fields
 
           def deprecation_warning=(v)
+            # @@protoc_insertion_point(set_deprecation_warning)
+
             @_bitmask |= 0x0000000000000004
             @deprecation_warning = v
           end
@@ -22569,85 +23303,116 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         module CType
+          # @@protoc_insertion_point(class_definitions)
+
           STRING = 0
           CORD = 1
           STRING_PIECE = 2
 
-          def self.lookup(val)
-            if val == 0
-              :STRING
-            elsif val == 1
-              :CORD
-            elsif val == 2
-              :STRING_PIECE
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :STRING
-              0
-            elsif val == :CORD
-              1
-            elsif val == :STRING_PIECE
-              2
+            def lookup(val)
+              if val == 0
+                :STRING
+              elsif val == 1
+                :CORD
+              elsif val == 2
+                :STRING_PIECE
+              end
+            end
+
+            def resolve(val)
+              if val == :STRING
+                0
+              elsif val == :CORD
+                1
+              elsif val == :STRING_PIECE
+                2
+              end
             end
           end
         end
 
         module JSType
+          # @@protoc_insertion_point(class_definitions)
+
           JS_NORMAL = 0
           JS_STRING = 1
           JS_NUMBER = 2
 
-          def self.lookup(val)
-            if val == 0
-              :JS_NORMAL
-            elsif val == 1
-              :JS_STRING
-            elsif val == 2
-              :JS_NUMBER
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :JS_NORMAL
-              0
-            elsif val == :JS_STRING
-              1
-            elsif val == :JS_NUMBER
-              2
+            def lookup(val)
+              if val == 0
+                :JS_NORMAL
+              elsif val == 1
+                :JS_STRING
+              elsif val == 2
+                :JS_NUMBER
+              end
+            end
+
+            def resolve(val)
+              if val == :JS_NORMAL
+                0
+              elsif val == :JS_STRING
+                1
+              elsif val == :JS_NUMBER
+                2
+              end
             end
           end
         end
 
         module OptionRetention
+          # @@protoc_insertion_point(class_definitions)
+
           RETENTION_UNKNOWN = 0
           RETENTION_RUNTIME = 1
           RETENTION_SOURCE = 2
 
-          def self.lookup(val)
-            if val == 0
-              :RETENTION_UNKNOWN
-            elsif val == 1
-              :RETENTION_RUNTIME
-            elsif val == 2
-              :RETENTION_SOURCE
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :RETENTION_UNKNOWN
-              0
-            elsif val == :RETENTION_RUNTIME
-              1
-            elsif val == :RETENTION_SOURCE
-              2
+            def lookup(val)
+              if val == 0
+                :RETENTION_UNKNOWN
+              elsif val == 1
+                :RETENTION_RUNTIME
+              elsif val == 2
+                :RETENTION_SOURCE
+              end
+            end
+
+            def resolve(val)
+              if val == :RETENTION_UNKNOWN
+                0
+              elsif val == :RETENTION_RUNTIME
+                1
+              elsif val == :RETENTION_SOURCE
+                2
+              end
             end
           end
         end
 
         module OptionTargetType
+          # @@protoc_insertion_point(class_definitions)
+
           TARGET_TYPE_UNKNOWN = 0
           TARGET_TYPE_FILE = 1
           TARGET_TYPE_EXTENSION_RANGE = 2
@@ -22659,122 +23424,193 @@ module ProtoBoeuf
           TARGET_TYPE_SERVICE = 8
           TARGET_TYPE_METHOD = 9
 
-          def self.lookup(val)
-            if val == 0
-              :TARGET_TYPE_UNKNOWN
-            elsif val == 1
-              :TARGET_TYPE_FILE
-            elsif val == 2
-              :TARGET_TYPE_EXTENSION_RANGE
-            elsif val == 3
-              :TARGET_TYPE_MESSAGE
-            elsif val == 4
-              :TARGET_TYPE_FIELD
-            elsif val == 5
-              :TARGET_TYPE_ONEOF
-            elsif val == 6
-              :TARGET_TYPE_ENUM
-            elsif val == 7
-              :TARGET_TYPE_ENUM_ENTRY
-            elsif val == 8
-              :TARGET_TYPE_SERVICE
-            elsif val == 9
-              :TARGET_TYPE_METHOD
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :TARGET_TYPE_UNKNOWN
-              0
-            elsif val == :TARGET_TYPE_FILE
-              1
-            elsif val == :TARGET_TYPE_EXTENSION_RANGE
-              2
-            elsif val == :TARGET_TYPE_MESSAGE
-              3
-            elsif val == :TARGET_TYPE_FIELD
-              4
-            elsif val == :TARGET_TYPE_ONEOF
-              5
-            elsif val == :TARGET_TYPE_ENUM
-              6
-            elsif val == :TARGET_TYPE_ENUM_ENTRY
-              7
-            elsif val == :TARGET_TYPE_SERVICE
-              8
-            elsif val == :TARGET_TYPE_METHOD
-              9
+            def lookup(val)
+              if val == 0
+                :TARGET_TYPE_UNKNOWN
+              elsif val == 1
+                :TARGET_TYPE_FILE
+              elsif val == 2
+                :TARGET_TYPE_EXTENSION_RANGE
+              elsif val == 3
+                :TARGET_TYPE_MESSAGE
+              elsif val == 4
+                :TARGET_TYPE_FIELD
+              elsif val == 5
+                :TARGET_TYPE_ONEOF
+              elsif val == 6
+                :TARGET_TYPE_ENUM
+              elsif val == 7
+                :TARGET_TYPE_ENUM_ENTRY
+              elsif val == 8
+                :TARGET_TYPE_SERVICE
+              elsif val == 9
+                :TARGET_TYPE_METHOD
+              end
+            end
+
+            def resolve(val)
+              if val == :TARGET_TYPE_UNKNOWN
+                0
+              elsif val == :TARGET_TYPE_FILE
+                1
+              elsif val == :TARGET_TYPE_EXTENSION_RANGE
+                2
+              elsif val == :TARGET_TYPE_MESSAGE
+                3
+              elsif val == :TARGET_TYPE_FIELD
+                4
+              elsif val == :TARGET_TYPE_ONEOF
+                5
+              elsif val == :TARGET_TYPE_ENUM
+                6
+              elsif val == :TARGET_TYPE_ENUM_ENTRY
+                7
+              elsif val == :TARGET_TYPE_SERVICE
+                8
+              elsif val == :TARGET_TYPE_METHOD
+                9
+              end
             end
           end
         end
         # required field readers
 
-        attr_reader :edition_defaults
+        def edition_defaults
+          # @@protoc_insertion_point(get_edition_defaults)
 
-        attr_reader :uninterpreted_option
+          @edition_defaults
+        end
+
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # enum readers
         def ctype
+          # @@protoc_insertion_point(get_ctype)
+
           ::ProtoBoeuf::Google::Protobuf::FieldOptions::CType.lookup(@ctype) ||
             @ctype
         end
+
         def jstype
+          # @@protoc_insertion_point(get_jstype)
+
           ::ProtoBoeuf::Google::Protobuf::FieldOptions::JSType.lookup(
             @jstype
           ) || @jstype
         end
+
         def retention
+          # @@protoc_insertion_point(get_retention)
+
           ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionRetention.lookup(
             @retention
           ) || @retention
         end
+
         def targets
+          # @@protoc_insertion_point(get_targets)
+
           ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionTargetType.lookup(
             @targets
           ) || @targets
         end
+
         # optional field readers
 
-        attr_reader :packed
+        def packed
+          # @@protoc_insertion_point(get_packed)
 
-        attr_reader :lazy
+          @packed
+        end
 
-        attr_reader :unverified_lazy
+        def lazy
+          # @@protoc_insertion_point(get_lazy)
 
-        attr_reader :deprecated
+          @lazy
+        end
 
-        attr_reader :weak
+        def unverified_lazy
+          # @@protoc_insertion_point(get_unverified_lazy)
 
-        attr_reader :debug_redact
+          @unverified_lazy
+        end
 
-        attr_reader :features
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
 
-        attr_reader :feature_support
+          @deprecated
+        end
+
+        def weak
+          # @@protoc_insertion_point(get_weak)
+
+          @weak
+        end
+
+        def debug_redact
+          # @@protoc_insertion_point(get_debug_redact)
+
+          @debug_redact
+        end
+
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
+
+        def feature_support
+          # @@protoc_insertion_point(get_feature_support)
+
+          @feature_support
+        end
 
         def edition_defaults=(v)
+          # @@protoc_insertion_point(set_edition_defaults)
+
           @edition_defaults = v
         end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # enum writers
         def ctype=(v)
+          # @@protoc_insertion_point(set_ctype)
+
           @ctype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::CType.resolve(v) || v
         end
+
         def jstype=(v)
+          # @@protoc_insertion_point(set_jstype)
+
           @jstype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::JSType.resolve(v) || v
         end
+
         def retention=(v)
+          # @@protoc_insertion_point(set_retention)
+
           @retention =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionRetention.resolve(
               v
             ) || v
         end
+
         def targets=(v)
+          # @@protoc_insertion_point(set_targets)
+
           @targets =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionTargetType.resolve(
               v
@@ -22784,41 +23620,57 @@ module ProtoBoeuf
         # BEGIN writers for optional fields
 
         def packed=(v)
+          # @@protoc_insertion_point(set_packed)
+
           @_bitmask |= 0x0000000000000002
           @packed = v
         end
 
         def lazy=(v)
+          # @@protoc_insertion_point(set_lazy)
+
           @_bitmask |= 0x0000000000000008
           @lazy = v
         end
 
         def unverified_lazy=(v)
+          # @@protoc_insertion_point(set_unverified_lazy)
+
           @_bitmask |= 0x0000000000000010
           @unverified_lazy = v
         end
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000020
           @deprecated = v
         end
 
         def weak=(v)
+          # @@protoc_insertion_point(set_weak)
+
           @_bitmask |= 0x0000000000000040
           @weak = v
         end
 
         def debug_redact=(v)
+          # @@protoc_insertion_point(set_debug_redact)
+
           @_bitmask |= 0x0000000000000080
           @debug_redact = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000200
           @features = v
         end
 
         def feature_support=(v)
+          # @@protoc_insertion_point(set_feature_support)
+
           @_bitmask |= 0x0000000000000400
           @feature_support = v
         end
@@ -25077,28 +25929,45 @@ module ProtoBoeuf
         end
       end
       class OneofOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # optional field readers
 
-        attr_reader :features
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # BEGIN writers for optional fields
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000001
           @features = v
         end
@@ -25750,49 +26619,84 @@ module ProtoBoeuf
         end
       end
       class EnumOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # optional field readers
 
-        attr_reader :allow_alias
+        def allow_alias
+          # @@protoc_insertion_point(get_allow_alias)
 
-        attr_reader :deprecated
+          @allow_alias
+        end
 
-        attr_reader :deprecated_legacy_json_field_conflicts
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
 
-        attr_reader :features
+          @deprecated
+        end
+
+        def deprecated_legacy_json_field_conflicts
+          # @@protoc_insertion_point(get_deprecated_legacy_json_field_conflicts)
+
+          @deprecated_legacy_json_field_conflicts
+        end
+
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # BEGIN writers for optional fields
 
         def allow_alias=(v)
+          # @@protoc_insertion_point(set_allow_alias)
+
           @_bitmask |= 0x0000000000000001
           @allow_alias = v
         end
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000002
           @deprecated = v
         end
 
         def deprecated_legacy_json_field_conflicts=(v)
+          # @@protoc_insertion_point(set_deprecated_legacy_json_field_conflicts)
+
           @_bitmask |= 0x0000000000000004
           @deprecated_legacy_json_field_conflicts = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000008
           @features = v
         end
@@ -26727,49 +27631,84 @@ module ProtoBoeuf
         end
       end
       class EnumValueOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # optional field readers
 
-        attr_reader :deprecated
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
 
-        attr_reader :features
+          @deprecated
+        end
 
-        attr_reader :debug_redact
+        def features
+          # @@protoc_insertion_point(get_features)
 
-        attr_reader :feature_support
+          @features
+        end
+
+        def debug_redact
+          # @@protoc_insertion_point(get_debug_redact)
+
+          @debug_redact
+        end
+
+        def feature_support
+          # @@protoc_insertion_point(get_feature_support)
+
+          @feature_support
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # BEGIN writers for optional fields
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000001
           @deprecated = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000002
           @features = v
         end
 
         def debug_redact=(v)
+          # @@protoc_insertion_point(set_debug_redact)
+
           @_bitmask |= 0x0000000000000004
           @debug_redact = v
         end
 
         def feature_support=(v)
+          # @@protoc_insertion_point(set_feature_support)
+
           @_bitmask |= 0x0000000000000008
           @feature_support = v
         end
@@ -27799,35 +28738,58 @@ module ProtoBoeuf
         end
       end
       class ServiceOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # optional field readers
 
-        attr_reader :features
+        def features
+          # @@protoc_insertion_point(get_features)
 
-        attr_reader :deprecated
+          @features
+        end
+
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
+
+          @deprecated
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # BEGIN writers for optional fields
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000001
           @features = v
         end
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000002
           @deprecated = v
         end
@@ -28572,60 +29534,90 @@ module ProtoBoeuf
         end
       end
       class MethodOptions
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         module IdempotencyLevel
+          # @@protoc_insertion_point(class_definitions)
+
           IDEMPOTENCY_UNKNOWN = 0
           NO_SIDE_EFFECTS = 1
           IDEMPOTENT = 2
 
-          def self.lookup(val)
-            if val == 0
-              :IDEMPOTENCY_UNKNOWN
-            elsif val == 1
-              :NO_SIDE_EFFECTS
-            elsif val == 2
-              :IDEMPOTENT
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :IDEMPOTENCY_UNKNOWN
-              0
-            elsif val == :NO_SIDE_EFFECTS
-              1
-            elsif val == :IDEMPOTENT
-              2
+            def lookup(val)
+              if val == 0
+                :IDEMPOTENCY_UNKNOWN
+              elsif val == 1
+                :NO_SIDE_EFFECTS
+              elsif val == 2
+                :IDEMPOTENT
+              end
+            end
+
+            def resolve(val)
+              if val == :IDEMPOTENCY_UNKNOWN
+                0
+              elsif val == :NO_SIDE_EFFECTS
+                1
+              elsif val == :IDEMPOTENT
+                2
+              end
             end
           end
         end
         # required field readers
 
-        attr_reader :uninterpreted_option
+        def uninterpreted_option
+          # @@protoc_insertion_point(get_uninterpreted_option)
+
+          @uninterpreted_option
+        end
 
         # enum readers
         def idempotency_level
+          # @@protoc_insertion_point(get_idempotency_level)
+
           ::ProtoBoeuf::Google::Protobuf::MethodOptions::IdempotencyLevel.lookup(
             @idempotency_level
           ) || @idempotency_level
         end
+
         # optional field readers
 
-        attr_reader :deprecated
+        def deprecated
+          # @@protoc_insertion_point(get_deprecated)
 
-        attr_reader :features
+          @deprecated
+        end
+
+        def features
+          # @@protoc_insertion_point(get_features)
+
+          @features
+        end
 
         def uninterpreted_option=(v)
+          # @@protoc_insertion_point(set_uninterpreted_option)
+
           @uninterpreted_option = v
         end
 
         # enum writers
         def idempotency_level=(v)
+          # @@protoc_insertion_point(set_idempotency_level)
+
           @idempotency_level =
             ::ProtoBoeuf::Google::Protobuf::MethodOptions::IdempotencyLevel.resolve(
               v
@@ -28635,11 +29627,15 @@ module ProtoBoeuf
         # BEGIN writers for optional fields
 
         def deprecated=(v)
+          # @@protoc_insertion_point(set_deprecated)
+
           @_bitmask |= 0x0000000000000001
           @deprecated = v
         end
 
         def features=(v)
+          # @@protoc_insertion_point(set_features)
+
           @_bitmask |= 0x0000000000000004
           @features = v
         end
@@ -29551,32 +30547,43 @@ module ProtoBoeuf
         end
       end
       class UninterpretedOption
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class NamePart
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
-          attr_reader :name_part
+          def name_part
+            # @@protoc_insertion_point(get_name_part)
 
-          attr_reader :is_extension
+            @name_part
+          end
+
+          def is_extension
+            # @@protoc_insertion_point(get_is_extension)
+
+            @is_extension
+          end
 
           def name_part=(v)
+            # @@protoc_insertion_point(set_name_part)
+
             @name_part = v
           end
 
           def is_extension=(v)
+            # @@protoc_insertion_point(set_is_extension)
+
             @is_extension = v
           end
 
@@ -30058,36 +31065,81 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :name
+        def name
+          # @@protoc_insertion_point(get_name)
+
+          @name
+        end
 
         # optional field readers
 
-        attr_reader :identifier_value
+        def identifier_value
+          # @@protoc_insertion_point(get_identifier_value)
 
-        attr_reader :positive_int_value
+          @identifier_value
+        end
 
-        attr_reader :negative_int_value
+        def positive_int_value
+          # @@protoc_insertion_point(get_positive_int_value)
 
-        attr_reader :double_value
+          @positive_int_value
+        end
 
-        attr_reader :string_value
+        def negative_int_value
+          # @@protoc_insertion_point(get_negative_int_value)
 
-        attr_reader :aggregate_value
+          @negative_int_value
+        end
+
+        def double_value
+          # @@protoc_insertion_point(get_double_value)
+
+          @double_value
+        end
+
+        def string_value
+          # @@protoc_insertion_point(get_string_value)
+
+          @string_value
+        end
+
+        def aggregate_value
+          # @@protoc_insertion_point(get_aggregate_value)
+
+          @aggregate_value
+        end
 
         def name=(v)
+          # @@protoc_insertion_point(set_name)
+
           @name = v
         end
 
         # BEGIN writers for optional fields
 
         def identifier_value=(v)
+          # @@protoc_insertion_point(set_identifier_value)
+
           @_bitmask |= 0x0000000000000001
           @identifier_value = v
         end
 
         def positive_int_value=(v)
+          # @@protoc_insertion_point(set_positive_int_value)
+
           unless 0 <= v && v <= 18_446_744_073_709_551_615
             raise RangeError,
                   "Value (#{v}) for field positive_int_value is out of bounds (0..18446744073709551615)"
@@ -30098,6 +31150,8 @@ module ProtoBoeuf
         end
 
         def negative_int_value=(v)
+          # @@protoc_insertion_point(set_negative_int_value)
+
           unless -9_223_372_036_854_775_808 <= v &&
                    v <= 9_223_372_036_854_775_807
             raise RangeError,
@@ -30109,16 +31163,22 @@ module ProtoBoeuf
         end
 
         def double_value=(v)
+          # @@protoc_insertion_point(set_double_value)
+
           @_bitmask |= 0x0000000000000008
           @double_value = v
         end
 
         def string_value=(v)
+          # @@protoc_insertion_point(set_string_value)
+
           @_bitmask |= 0x0000000000000010
           @string_value = v
         end
 
         def aggregate_value=(v)
+          # @@protoc_insertion_point(set_aggregate_value)
+
           @_bitmask |= 0x0000000000000020
           @aggregate_value = v
         end
@@ -31438,170 +32498,211 @@ module ProtoBoeuf
         end
       end
       class FeatureSet
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         module FieldPresence
+          # @@protoc_insertion_point(class_definitions)
+
           FIELD_PRESENCE_UNKNOWN = 0
           EXPLICIT = 1
           IMPLICIT = 2
           LEGACY_REQUIRED = 3
 
-          def self.lookup(val)
-            if val == 0
-              :FIELD_PRESENCE_UNKNOWN
-            elsif val == 1
-              :EXPLICIT
-            elsif val == 2
-              :IMPLICIT
-            elsif val == 3
-              :LEGACY_REQUIRED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :FIELD_PRESENCE_UNKNOWN
-              0
-            elsif val == :EXPLICIT
-              1
-            elsif val == :IMPLICIT
-              2
-            elsif val == :LEGACY_REQUIRED
-              3
+            def lookup(val)
+              if val == 0
+                :FIELD_PRESENCE_UNKNOWN
+              elsif val == 1
+                :EXPLICIT
+              elsif val == 2
+                :IMPLICIT
+              elsif val == 3
+                :LEGACY_REQUIRED
+              end
+            end
+
+            def resolve(val)
+              if val == :FIELD_PRESENCE_UNKNOWN
+                0
+              elsif val == :EXPLICIT
+                1
+              elsif val == :IMPLICIT
+                2
+              elsif val == :LEGACY_REQUIRED
+                3
+              end
             end
           end
         end
 
         module EnumType
+          # @@protoc_insertion_point(class_definitions)
+
           ENUM_TYPE_UNKNOWN = 0
           OPEN = 1
           CLOSED = 2
 
-          def self.lookup(val)
-            if val == 0
-              :ENUM_TYPE_UNKNOWN
-            elsif val == 1
-              :OPEN
-            elsif val == 2
-              :CLOSED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :ENUM_TYPE_UNKNOWN
-              0
-            elsif val == :OPEN
-              1
-            elsif val == :CLOSED
-              2
+            def lookup(val)
+              if val == 0
+                :ENUM_TYPE_UNKNOWN
+              elsif val == 1
+                :OPEN
+              elsif val == 2
+                :CLOSED
+              end
+            end
+
+            def resolve(val)
+              if val == :ENUM_TYPE_UNKNOWN
+                0
+              elsif val == :OPEN
+                1
+              elsif val == :CLOSED
+                2
+              end
             end
           end
         end
 
         module RepeatedFieldEncoding
+          # @@protoc_insertion_point(class_definitions)
+
           REPEATED_FIELD_ENCODING_UNKNOWN = 0
           PACKED = 1
           EXPANDED = 2
 
-          def self.lookup(val)
-            if val == 0
-              :REPEATED_FIELD_ENCODING_UNKNOWN
-            elsif val == 1
-              :PACKED
-            elsif val == 2
-              :EXPANDED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :REPEATED_FIELD_ENCODING_UNKNOWN
-              0
-            elsif val == :PACKED
-              1
-            elsif val == :EXPANDED
-              2
+            def lookup(val)
+              if val == 0
+                :REPEATED_FIELD_ENCODING_UNKNOWN
+              elsif val == 1
+                :PACKED
+              elsif val == 2
+                :EXPANDED
+              end
+            end
+
+            def resolve(val)
+              if val == :REPEATED_FIELD_ENCODING_UNKNOWN
+                0
+              elsif val == :PACKED
+                1
+              elsif val == :EXPANDED
+                2
+              end
             end
           end
         end
 
         module Utf8Validation
+          # @@protoc_insertion_point(class_definitions)
+
           UTF8_VALIDATION_UNKNOWN = 0
           VERIFY = 2
           NONE = 3
 
-          def self.lookup(val)
-            if val == 0
-              :UTF8_VALIDATION_UNKNOWN
-            elsif val == 2
-              :VERIFY
-            elsif val == 3
-              :NONE
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :UTF8_VALIDATION_UNKNOWN
-              0
-            elsif val == :VERIFY
-              2
-            elsif val == :NONE
-              3
+            def lookup(val)
+              if val == 0
+                :UTF8_VALIDATION_UNKNOWN
+              elsif val == 2
+                :VERIFY
+              elsif val == 3
+                :NONE
+              end
+            end
+
+            def resolve(val)
+              if val == :UTF8_VALIDATION_UNKNOWN
+                0
+              elsif val == :VERIFY
+                2
+              elsif val == :NONE
+                3
+              end
             end
           end
         end
 
         module MessageEncoding
+          # @@protoc_insertion_point(class_definitions)
+
           MESSAGE_ENCODING_UNKNOWN = 0
           LENGTH_PREFIXED = 1
           DELIMITED = 2
 
-          def self.lookup(val)
-            if val == 0
-              :MESSAGE_ENCODING_UNKNOWN
-            elsif val == 1
-              :LENGTH_PREFIXED
-            elsif val == 2
-              :DELIMITED
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :MESSAGE_ENCODING_UNKNOWN
-              0
-            elsif val == :LENGTH_PREFIXED
-              1
-            elsif val == :DELIMITED
-              2
+            def lookup(val)
+              if val == 0
+                :MESSAGE_ENCODING_UNKNOWN
+              elsif val == 1
+                :LENGTH_PREFIXED
+              elsif val == 2
+                :DELIMITED
+              end
+            end
+
+            def resolve(val)
+              if val == :MESSAGE_ENCODING_UNKNOWN
+                0
+              elsif val == :LENGTH_PREFIXED
+                1
+              elsif val == :DELIMITED
+                2
+              end
             end
           end
         end
 
         module JsonFormat
+          # @@protoc_insertion_point(class_definitions)
+
           JSON_FORMAT_UNKNOWN = 0
           ALLOW = 1
           LEGACY_BEST_EFFORT = 2
 
-          def self.lookup(val)
-            if val == 0
-              :JSON_FORMAT_UNKNOWN
-            elsif val == 1
-              :ALLOW
-            elsif val == 2
-              :LEGACY_BEST_EFFORT
-            end
-          end
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.resolve(val)
-            if val == :JSON_FORMAT_UNKNOWN
-              0
-            elsif val == :ALLOW
-              1
-            elsif val == :LEGACY_BEST_EFFORT
-              2
+            def lookup(val)
+              if val == 0
+                :JSON_FORMAT_UNKNOWN
+              elsif val == 1
+                :ALLOW
+              elsif val == 2
+                :LEGACY_BEST_EFFORT
+              end
+            end
+
+            def resolve(val)
+              if val == :JSON_FORMAT_UNKNOWN
+                0
+              elsif val == :ALLOW
+                1
+              elsif val == :LEGACY_BEST_EFFORT
+                2
+              end
             end
           end
         end
@@ -31609,65 +32710,100 @@ module ProtoBoeuf
 
         # enum readers
         def field_presence
+          # @@protoc_insertion_point(get_field_presence)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::FieldPresence.lookup(
             @field_presence
           ) || @field_presence
         end
+
         def enum_type
+          # @@protoc_insertion_point(get_enum_type)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::EnumType.lookup(
             @enum_type
           ) || @enum_type
         end
+
         def repeated_field_encoding
+          # @@protoc_insertion_point(get_repeated_field_encoding)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::RepeatedFieldEncoding.lookup(
             @repeated_field_encoding
           ) || @repeated_field_encoding
         end
+
         def utf8_validation
+          # @@protoc_insertion_point(get_utf8_validation)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::Utf8Validation.lookup(
             @utf8_validation
           ) || @utf8_validation
         end
+
         def message_encoding
+          # @@protoc_insertion_point(get_message_encoding)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::MessageEncoding.lookup(
             @message_encoding
           ) || @message_encoding
         end
+
         def json_format
+          # @@protoc_insertion_point(get_json_format)
+
           ::ProtoBoeuf::Google::Protobuf::FeatureSet::JsonFormat.lookup(
             @json_format
           ) || @json_format
         end
+
         # enum writers
         def field_presence=(v)
+          # @@protoc_insertion_point(set_field_presence)
+
           @field_presence =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::FieldPresence.resolve(
               v
             ) || v
         end
+
         def enum_type=(v)
+          # @@protoc_insertion_point(set_enum_type)
+
           @enum_type =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::EnumType.resolve(v) || v
         end
+
         def repeated_field_encoding=(v)
+          # @@protoc_insertion_point(set_repeated_field_encoding)
+
           @repeated_field_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::RepeatedFieldEncoding.resolve(
               v
             ) || v
         end
+
         def utf8_validation=(v)
+          # @@protoc_insertion_point(set_utf8_validation)
+
           @utf8_validation =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::Utf8Validation.resolve(
               v
             ) || v
         end
+
         def message_encoding=(v)
+          # @@protoc_insertion_point(set_message_encoding)
+
           @message_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::MessageEncoding.resolve(
               v
             ) || v
         end
+
         def json_format=(v)
+          # @@protoc_insertion_point(set_json_format)
+
           @json_format =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::JsonFormat.resolve(v) ||
               v
@@ -32898,46 +34034,62 @@ module ProtoBoeuf
         end
       end
       class FeatureSetDefaults
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class FeatureSetEditionDefault
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
           # enum readers
           def edition
+            # @@protoc_insertion_point(get_edition)
+
             ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@edition) || @edition
           end
+
           # optional field readers
 
-          attr_reader :overridable_features
+          def overridable_features
+            # @@protoc_insertion_point(get_overridable_features)
 
-          attr_reader :fixed_features
+            @overridable_features
+          end
+
+          def fixed_features
+            # @@protoc_insertion_point(get_fixed_features)
+
+            @fixed_features
+          end
 
           # enum writers
           def edition=(v)
+            # @@protoc_insertion_point(set_edition)
+
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
           end
 
           # BEGIN writers for optional fields
 
           def overridable_features=(v)
+            # @@protoc_insertion_point(set_overridable_features)
+
             @_bitmask |= 0x0000000000000002
             @overridable_features = v
           end
 
           def fixed_features=(v)
+            # @@protoc_insertion_point(set_fixed_features)
+
             @_bitmask |= 0x0000000000000004
             @fixed_features = v
           end
@@ -33748,30 +34900,57 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :defaults
+        def defaults
+          # @@protoc_insertion_point(get_defaults)
+
+          @defaults
+        end
 
         # enum readers
         def minimum_edition
+          # @@protoc_insertion_point(get_minimum_edition)
+
           ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@minimum_edition) ||
             @minimum_edition
         end
+
         def maximum_edition
+          # @@protoc_insertion_point(get_maximum_edition)
+
           ::ProtoBoeuf::Google::Protobuf::Edition.lookup(@maximum_edition) ||
             @maximum_edition
         end
 
         def defaults=(v)
+          # @@protoc_insertion_point(set_defaults)
+
           @defaults = v
         end
 
         # enum writers
         def minimum_edition=(v)
+          # @@protoc_insertion_point(set_minimum_edition)
+
           @minimum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
         end
+
         def maximum_edition=(v)
+          # @@protoc_insertion_point(set_maximum_edition)
+
           @maximum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
         end
@@ -34549,36 +35728,57 @@ module ProtoBoeuf
         end
       end
       class SourceCodeInfo
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class Location
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           # required field readers
 
-          attr_reader :path
+          def path
+            # @@protoc_insertion_point(get_path)
 
-          attr_reader :span
+            @path
+          end
 
-          attr_reader :leading_detached_comments
+          def span
+            # @@protoc_insertion_point(get_span)
+
+            @span
+          end
+
+          def leading_detached_comments
+            # @@protoc_insertion_point(get_leading_detached_comments)
+
+            @leading_detached_comments
+          end
 
           # optional field readers
 
-          attr_reader :leading_comments
+          def leading_comments
+            # @@protoc_insertion_point(get_leading_comments)
 
-          attr_reader :trailing_comments
+            @leading_comments
+          end
+
+          def trailing_comments
+            # @@protoc_insertion_point(get_trailing_comments)
+
+            @trailing_comments
+          end
 
           def path=(v)
+            # @@protoc_insertion_point(set_path)
+
             v.each do |v|
               unless -2_147_483_648 <= v && v <= 2_147_483_647
                 raise RangeError,
@@ -34590,6 +35790,8 @@ module ProtoBoeuf
           end
 
           def span=(v)
+            # @@protoc_insertion_point(set_span)
+
             v.each do |v|
               unless -2_147_483_648 <= v && v <= 2_147_483_647
                 raise RangeError,
@@ -34601,17 +35803,23 @@ module ProtoBoeuf
           end
 
           def leading_detached_comments=(v)
+            # @@protoc_insertion_point(set_leading_detached_comments)
+
             @leading_detached_comments = v
           end
 
           # BEGIN writers for optional fields
 
           def leading_comments=(v)
+            # @@protoc_insertion_point(set_leading_comments)
+
             @_bitmask |= 0x0000000000000001
             @leading_comments = v
           end
 
           def trailing_comments=(v)
+            # @@protoc_insertion_point(set_trailing_comments)
+
             @_bitmask |= 0x0000000000000002
             @trailing_comments = v
           end
@@ -35873,11 +37081,28 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :location
+        def location
+          # @@protoc_insertion_point(get_location)
+
+          @location
+        end
 
         def location=(v)
+          # @@protoc_insertion_point(set_location)
+
           @location = v
         end
 
@@ -36332,65 +37557,91 @@ module ProtoBoeuf
         end
       end
       class GeneratedCodeInfo
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
-
-        def self.encode(obj)
-          obj._encode("".b)
-        end
+        # @@protoc_insertion_point(class_definitions)
         class Annotation
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          # @@protoc_insertion_point(class_definitions)
+          class << self
+            # @@protoc_insertion_point(class_methods)
 
-          def self.encode(obj)
-            obj._encode("".b)
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
           module Semantic
+            # @@protoc_insertion_point(class_definitions)
+
             NONE = 0
             SET = 1
             ALIAS = 2
 
-            def self.lookup(val)
-              if val == 0
-                :NONE
-              elsif val == 1
-                :SET
-              elsif val == 2
-                :ALIAS
-              end
-            end
+            class << self
+              # @@protoc_insertion_point(class_methods)
 
-            def self.resolve(val)
-              if val == :NONE
-                0
-              elsif val == :SET
-                1
-              elsif val == :ALIAS
-                2
+              def lookup(val)
+                if val == 0
+                  :NONE
+                elsif val == 1
+                  :SET
+                elsif val == 2
+                  :ALIAS
+                end
+              end
+
+              def resolve(val)
+                if val == :NONE
+                  0
+                elsif val == :SET
+                  1
+                elsif val == :ALIAS
+                  2
+                end
               end
             end
           end
           # required field readers
 
-          attr_reader :path
+          def path
+            # @@protoc_insertion_point(get_path)
+
+            @path
+          end
 
           # enum readers
           def semantic
+            # @@protoc_insertion_point(get_semantic)
+
             ::ProtoBoeuf::Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic.lookup(
               @semantic
             ) || @semantic
           end
+
           # optional field readers
 
-          attr_reader :source_file
+          def source_file
+            # @@protoc_insertion_point(get_source_file)
 
-          attr_reader :begin
+            @source_file
+          end
 
-          attr_reader :end
+          def begin
+            # @@protoc_insertion_point(get_begin)
+
+            @begin
+          end
+
+          def end
+            # @@protoc_insertion_point(get_end)
+
+            @end
+          end
 
           def path=(v)
+            # @@protoc_insertion_point(set_path)
+
             v.each do |v|
               unless -2_147_483_648 <= v && v <= 2_147_483_647
                 raise RangeError,
@@ -36403,6 +37654,8 @@ module ProtoBoeuf
 
           # enum writers
           def semantic=(v)
+            # @@protoc_insertion_point(set_semantic)
+
             @semantic =
               ::ProtoBoeuf::Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
                 v
@@ -36412,11 +37665,15 @@ module ProtoBoeuf
           # BEGIN writers for optional fields
 
           def source_file=(v)
+            # @@protoc_insertion_point(set_source_file)
+
             @_bitmask |= 0x0000000000000001
             @source_file = v
           end
 
           def begin=(v)
+            # @@protoc_insertion_point(set_begin)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field begin is out of bounds (-2147483648..2147483647)"
@@ -36427,6 +37684,8 @@ module ProtoBoeuf
           end
 
           def end=(v)
+            # @@protoc_insertion_point(set_end)
+
             unless -2_147_483_648 <= v && v <= 2_147_483_647
               raise RangeError,
                     "Value (#{v}) for field end is out of bounds (-2147483648..2147483647)"
@@ -37615,11 +38874,28 @@ module ProtoBoeuf
             result
           end
         end
+        class << self
+          # @@protoc_insertion_point(class_methods)
+
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
+        end
         # required field readers
 
-        attr_reader :annotation
+        def annotation
+          # @@protoc_insertion_point(get_annotation)
+
+          @annotation
+        end
 
         def annotation=(v)
+          # @@protoc_insertion_point(set_annotation)
+
           @annotation = v
         end
 

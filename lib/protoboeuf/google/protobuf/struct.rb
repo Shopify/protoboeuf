@@ -2,34 +2,53 @@
 # rubocop:disable all
 # frozen_string_literal: true
 
+# @@protoc_insertion_point(requires)
+
 module ProtoBoeuf
   module Google
     module Protobuf
       module NullValue
+        # @@protoc_insertion_point(class_definitions)
+
         NULL_VALUE = 0
 
-        def self.lookup(val)
-          :NULL_VALUE if val == 0
-        end
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.resolve(val)
-          0 if val == :NULL_VALUE
+          def lookup(val)
+            :NULL_VALUE if val == 0
+          end
+
+          def resolve(val)
+            0 if val == :NULL_VALUE
+          end
         end
       end
 
       class Struct
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :fields
+        def fields
+          # @@protoc_insertion_point(get_fields)
+
+          @fields
+        end
 
         def fields=(v)
+          # @@protoc_insertion_point(set_fields)
+
           @fields = v
         end
 
@@ -633,12 +652,17 @@ module ProtoBoeuf
         end
       end
       class Value
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
@@ -646,45 +670,81 @@ module ProtoBoeuf
 
         attr_reader :kind
 
-        attr_reader :null_value
+        def null_value
+          # @@protoc_insertion_point(get_null_value)
 
-        attr_reader :number_value
+          @null_value
+        end
 
-        attr_reader :string_value
+        def number_value
+          # @@protoc_insertion_point(get_number_value)
 
-        attr_reader :bool_value
+          @number_value
+        end
 
-        attr_reader :struct_value
+        def string_value
+          # @@protoc_insertion_point(get_string_value)
 
-        attr_reader :list_value
+          @string_value
+        end
+
+        def bool_value
+          # @@protoc_insertion_point(get_bool_value)
+
+          @bool_value
+        end
+
+        def struct_value
+          # @@protoc_insertion_point(get_struct_value)
+
+          @struct_value
+        end
+
+        def list_value
+          # @@protoc_insertion_point(get_list_value)
+
+          @list_value
+        end
 
         # BEGIN writers for oneof fields
         def null_value=(v)
+          # @@protoc_insertion_point(set_null_value)
+
           @kind = :null_value
           @null_value = v
         end
 
         def number_value=(v)
+          # @@protoc_insertion_point(set_number_value)
+
           @kind = :number_value
           @number_value = v
         end
 
         def string_value=(v)
+          # @@protoc_insertion_point(set_string_value)
+
           @kind = :string_value
           @string_value = v
         end
 
         def bool_value=(v)
+          # @@protoc_insertion_point(set_bool_value)
+
           @kind = :bool_value
           @bool_value = v
         end
 
         def struct_value=(v)
+          # @@protoc_insertion_point(set_struct_value)
+
           @kind = :struct_value
           @struct_value = v
         end
 
         def list_value=(v)
+          # @@protoc_insertion_point(set_list_value)
+
           @kind = :list_value
           @list_value = v
         end
@@ -1789,18 +1849,29 @@ module ProtoBoeuf
         end
       end
       class ListValue
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :values
+        def values
+          # @@protoc_insertion_point(get_values)
+
+          @values
+        end
 
         def values=(v)
+          # @@protoc_insertion_point(set_values)
+
           @values = v
         end
 

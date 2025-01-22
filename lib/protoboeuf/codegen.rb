@@ -32,22 +32,37 @@ module ProtoBoeuf
       private
 
       def class_body
-        enum.value.map { |const|
-          "#{const.name} = #{const.number}"
-        }.join("\n") + "\n\n" + lookup + "\n\n" + resolve
+        CodeGen.protoc_insertion_point("class_definitions") + "\n\n" +
+          enum.value.map { |const|
+            "#{const.name} = #{const.number}"
+          }.join("\n") + "\n\n" + class_methods
+      end
+
+      def class_methods
+        <<~RUBY
+          class << self
+            #{CodeGen.protoc_insertion_point("class_methods")}
+
+            #{lookup}
+
+            #{resolve}
+          end
+        RUBY
       end
 
       def lookup
+        # This ends up being a class method
         type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) +
-          "def self.lookup(val)\n" \
+          "def lookup(val)\n" \
             "if " + enum.value.map { |const|
                       "val == #{const.number} then :#{const.name}"
                     }.join(" elsif ") + " end; end"
       end
 
       def resolve
+        # This ends up being a class method
         type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) +
-          "def self.resolve(val)\n" \
+          "def resolve(val)\n" \
             "if " + enum.value.map { |const|
                       "val == :#{const.name} then #{const.number}"
                     }.join(" elsif ") + " end; end"
@@ -121,14 +136,14 @@ module ProtoBoeuf
       end
 
       def result
-        "class #{message.name}\n" + class_body + "end\n"
+        "class #{message.name}\n" + CodeGen.protoc_insertion_point("class_definitions") + class_body + "end\n"
       end
 
       private
 
       def class_body
-        prelude +
-          constants +
+        constants +
+          class_methods +
           enums +
           readers +
           writers +
@@ -587,17 +602,21 @@ module ProtoBoeuf
         eocode
       end
 
-      def prelude
+      def class_methods
         <<~RUBY
-          #{extend_t_sig}
-          #{type_signature(params: { buff: "String" }, returns: message.name)}
-          def self.decode(buff)
-            allocate.decode_from(buff.b, 0, buff.bytesize)
-          end
+          class << self
+            #{CodeGen.protoc_insertion_point("class_methods")}
 
-          #{type_signature(params: { obj: message.name }, returns: "String")}
-          def self.encode(obj)
-            obj._encode("".b)
+            #{extend_t_sig}
+            #{type_signature(params: { buff: "String" }, returns: message.name)}
+            def decode(buff)
+              allocate.decode_from(buff.b, 0, buff.bytesize)
+            end
+
+            #{type_signature(params: { obj: message.name }, returns: "String")}
+            def encode(obj)
+              obj._encode("".b)
+            end
           end
         RUBY
       end
@@ -624,7 +643,12 @@ module ProtoBoeuf
 
         "  # enum readers\n" +
           fields.map { |field|
-            "def #{field.name}; #{enum_name(field)}.lookup(#{iv_name(field)}) || #{iv_name(field)}; end"
+            <<~RUBY
+              def #{field.name}
+                #{CodeGen.protoc_insertion_point("get_" + field.name)}
+                #{enum_name(field)}.lookup(#{iv_name(field)}) || #{iv_name(field)}
+              end
+            RUBY
           }.join("\n") + "\n"
       end
 
@@ -656,7 +680,13 @@ module ProtoBoeuf
 
         "# required field readers\n" +
           fields.map do |field|
-            "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
+            <<~RUBY
+              #{reader_type_signature(field)}
+              def #{field.name}
+                #{CodeGen.protoc_insertion_point("get_" + field.name)}
+                #{iv_name(field)}
+              end
+            RUBY
           end.join("\n") +
           "\n\n"
       end
@@ -666,7 +696,13 @@ module ProtoBoeuf
 
         "# optional field readers\n" +
           optional_fields.map do |field|
-            "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
+            <<~RUBY
+              #{reader_type_signature(field)}
+              def #{field.name}
+                #{CodeGen.protoc_insertion_point("get_" + field.name)}
+                #{iv_name(field)}
+              end
+            RUBY
           end.join("\n") +
           "\n\n"
       end
@@ -684,7 +720,13 @@ module ProtoBoeuf
               type_signature(returns: "Symbol"),
               "attr_reader :#{field.name}",
               sub_fields.map do |sub_field|
-                "#{reader_type_signature(sub_field)}\nattr_reader :#{sub_field.name}"
+                <<~RUBY
+                  #{reader_type_signature(sub_field)}
+                  def #{sub_field.name}
+                    #{CodeGen.protoc_insertion_point("get_" + sub_field.name)}
+                    #{iv_name(sub_field)}
+                  end
+                RUBY
               end,
             ].join("\n")
           end.join("\n") + "\n\n"
@@ -700,7 +742,12 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map { |field|
-            "def #{field.name}=(v); #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v; end"
+            <<~RUBY
+              def #{field.name}=(v)
+                #{CodeGen.protoc_insertion_point("set_" + field.name)}
+                #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v
+              end
+            RUBY
           }.join("\n") + "\n\n"
       end
 
@@ -713,6 +760,7 @@ module ProtoBoeuf
           <<~RUBY
             #{type_signature(params: { v: convert_field_type(field) })}
             def #{field.name}=(v)
+              #{CodeGen.protoc_insertion_point("set_" + field.name)}
               #{bounds_check(field, "v")}
               #{iv_name(field)} = v
             end
@@ -728,6 +776,7 @@ module ProtoBoeuf
             <<~RUBY
               #{type_signature(params: { v: convert_field_type(field) })}
               def #{field.name}=(v)
+                #{CodeGen.protoc_insertion_point("set_" + field.name)}
                 #{bounds_check(field, "v")}
                 #{set_bitmask(field)}
                 #{iv_name(field)} = v
@@ -745,12 +794,13 @@ module ProtoBoeuf
             next unless sub_fields
 
             oneof = message.oneof_decl[i]
-            sub_fields.map { |field|
+            sub_fields.map { |sub_field|
               <<~RUBY
-                def #{field.name}=(v)
-                  #{bounds_check(field, "v")}
-                  @#{oneof.name} = :#{field.name}
-                  #{iv_name(field)} = v
+                def #{sub_field.name}=(v)
+                  #{CodeGen.protoc_insertion_point("set_" + sub_field.name)}
+                  #{bounds_check(sub_field, "v")}
+                  @#{oneof.name} = :#{sub_field.name}
+                  #{iv_name(sub_field)} = v
                 end
               RUBY
             }.join("\n")
@@ -1714,7 +1764,9 @@ module ProtoBoeuf
           MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax, options:)
         end.join
 
-        head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
+        head += requires.reject { |r|
+          r == this_file
+        }.map { |r| "require #{r.dump}" }.join("\n") + CodeGen.protoc_insertion_point("requires") + "\n\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
 
         tail = "\n" + modules.map { "end" }.join("\n")
@@ -1795,6 +1847,12 @@ module ProtoBoeuf
             raise "Unknown wire type for field #{field.type}"
           end
         end
+      end
+
+      def protoc_insertion_point(name)
+        <<~RUBY
+          # @@protoc_insertion_point(#{name})
+        RUBY
       end
     end
   end

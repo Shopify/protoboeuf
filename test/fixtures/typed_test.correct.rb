@@ -3,99 +3,149 @@
 # typed: false
 # frozen_string_literal: true
 
+# @@protoc_insertion_point(requires)
+
 module TestEnum
+  # @@protoc_insertion_point(class_definitions)
+
   FOO = 0
   BAR = 1
   BAZ = 2
 
-  sig { params(val: Integer).returns(Symbol) }
-  def self.lookup(val)
-    if val == 0
-      :FOO
-    elsif val == 1
-      :BAR
-    elsif val == 2
-      :BAZ
-    end
-  end
+  class << self
+    # @@protoc_insertion_point(class_methods)
 
-  sig { params(val: Symbol).returns(Integer) }
-  def self.resolve(val)
-    if val == :FOO
-      0
-    elsif val == :BAR
-      1
-    elsif val == :BAZ
-      2
+    sig { params(val: Integer).returns(Symbol) }
+    def lookup(val)
+      if val == 0
+        :FOO
+      elsif val == 1
+        :BAR
+      elsif val == 2
+        :BAZ
+      end
+    end
+
+    sig { params(val: Symbol).returns(Integer) }
+    def resolve(val)
+      if val == :FOO
+        0
+      elsif val == :BAR
+        1
+      elsif val == :BAZ
+        2
+      end
     end
   end
 end
 module TestEnum2
+  # @@protoc_insertion_point(class_definitions)
+
   BAZBAZ = 0
   BARBAR = 1
   FOOFOO = 2
 
-  sig { params(val: Integer).returns(Symbol) }
-  def self.lookup(val)
-    if val == 0
-      :BAZBAZ
-    elsif val == 1
-      :BARBAR
-    elsif val == 2
-      :FOOFOO
-    end
-  end
+  class << self
+    # @@protoc_insertion_point(class_methods)
 
-  sig { params(val: Symbol).returns(Integer) }
-  def self.resolve(val)
-    if val == :BAZBAZ
-      0
-    elsif val == :BARBAR
-      1
-    elsif val == :FOOFOO
-      2
+    sig { params(val: Integer).returns(Symbol) }
+    def lookup(val)
+      if val == 0
+        :BAZBAZ
+      elsif val == 1
+        :BARBAR
+      elsif val == 2
+        :FOOFOO
+      end
+    end
+
+    sig { params(val: Symbol).returns(Integer) }
+    def resolve(val)
+      if val == :BAZBAZ
+        0
+      elsif val == :BARBAR
+        1
+      elsif val == :FOOFOO
+        2
+      end
     end
   end
 end
 
 class Test1
-  extend T::Sig
-  sig { params(buff: String).returns(Test1) }
-  def self.decode(buff)
-    allocate.decode_from(buff.b, 0, buff.bytesize)
-  end
+  # @@protoc_insertion_point(class_definitions)
+  class << self
+    # @@protoc_insertion_point(class_methods)
 
-  sig { params(obj: Test1).returns(String) }
-  def self.encode(obj)
-    obj._encode("".b)
+    extend T::Sig
+    sig { params(buff: String).returns(Test1) }
+    def decode(buff)
+      allocate.decode_from(buff.b, 0, buff.bytesize)
+    end
+
+    sig { params(obj: Test1).returns(String) }
+    def encode(obj)
+      obj._encode("".b)
+    end
   end
   # required field readers
   sig { returns(Integer) }
-  attr_reader :int_field
+  def int_field
+    # @@protoc_insertion_point(get_int_field)
+
+    @int_field
+  end
 
   sig { returns(T::Array[Integer]) }
-  attr_reader :repeated_ints
+  def repeated_ints
+    # @@protoc_insertion_point(get_repeated_ints)
+
+    @repeated_ints
+  end
 
   sig { returns(T::Hash[String, Integer]) }
-  attr_reader :map_field
+  def map_field
+    # @@protoc_insertion_point(get_map_field)
+
+    @map_field
+  end
 
   sig { returns(String) }
-  attr_reader :bytes_field
+  def bytes_field
+    # @@protoc_insertion_point(get_bytes_field)
+
+    @bytes_field
+  end
 
   # optional field readers
   sig { returns(String) }
-  attr_reader :string_field
+  def string_field
+    # @@protoc_insertion_point(get_string_field)
+
+    @string_field
+  end
 
   # oneof field readers
   sig { returns(Symbol) }
   attr_reader :oneof_field
   sig { returns(Symbol) }
-  attr_reader :enum_1
+  def enum_1
+    # @@protoc_insertion_point(get_enum_1)
+
+    @enum_1
+  end
+
   sig { returns(Symbol) }
-  attr_reader :enum_2
+  def enum_2
+    # @@protoc_insertion_point(get_enum_2)
+
+    @enum_2
+  end
 
   sig { params(v: Integer).void }
   def int_field=(v)
+    # @@protoc_insertion_point(set_int_field)
+
     unless -2_147_483_648 <= v && v <= 2_147_483_647
       raise RangeError,
             "Value (#{v}) for field int_field is out of bounds (-2147483648..2147483647)"
@@ -106,6 +156,8 @@ class Test1
 
   sig { params(v: T::Array[Integer]).void }
   def repeated_ints=(v)
+    # @@protoc_insertion_point(set_repeated_ints)
+
     v.each do |v|
       unless -2_147_483_648 <= v && v <= 2_147_483_647
         raise RangeError,
@@ -118,17 +170,23 @@ class Test1
 
   sig { params(v: T::Hash[String, Integer]).void }
   def map_field=(v)
+    # @@protoc_insertion_point(set_map_field)
+
     @map_field = v
   end
 
   sig { params(v: String).void }
   def bytes_field=(v)
+    # @@protoc_insertion_point(set_bytes_field)
+
     @bytes_field = v
   end
 
   # BEGIN writers for optional fields
   sig { params(v: String).void }
   def string_field=(v)
+    # @@protoc_insertion_point(set_string_field)
+
     @_bitmask |= 0x0000000000000001
     @string_field = v
   end
@@ -136,11 +194,15 @@ class Test1
 
   # BEGIN writers for oneof fields
   def enum_1=(v)
+    # @@protoc_insertion_point(set_enum_1)
+
     @oneof_field = :enum_1
     @enum_1 = v
   end
 
   def enum_2=(v)
+    # @@protoc_insertion_point(set_enum_2)
+
     @oneof_field = :enum_2
     @enum_2 = v
   end

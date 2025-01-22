@@ -2,24 +2,41 @@
 # rubocop:disable all
 # frozen_string_literal: true
 
+# @@protoc_insertion_point(requires)
+
 module ProtoBoeuf
   module Google
     module Protobuf
       class Timestamp
-        def self.decode(buff)
-          allocate.decode_from(buff.b, 0, buff.bytesize)
-        end
+        # @@protoc_insertion_point(class_definitions)
+        class << self
+          # @@protoc_insertion_point(class_methods)
 
-        def self.encode(obj)
-          obj._encode("".b)
+          def decode(buff)
+            allocate.decode_from(buff.b, 0, buff.bytesize)
+          end
+
+          def encode(obj)
+            obj._encode("".b)
+          end
         end
         # required field readers
 
-        attr_reader :seconds
+        def seconds
+          # @@protoc_insertion_point(get_seconds)
 
-        attr_reader :nanos
+          @seconds
+        end
+
+        def nanos
+          # @@protoc_insertion_point(get_nanos)
+
+          @nanos
+        end
 
         def seconds=(v)
+          # @@protoc_insertion_point(set_seconds)
+
           unless -9_223_372_036_854_775_808 <= v &&
                    v <= 9_223_372_036_854_775_807
             raise RangeError,
@@ -30,6 +47,8 @@ module ProtoBoeuf
         end
 
         def nanos=(v)
+          # @@protoc_insertion_point(set_nanos)
+
           unless -2_147_483_648 <= v && v <= 2_147_483_647
             raise RangeError,
                   "Value (#{v}) for field nanos is out of bounds (-2147483648..2147483647)"
