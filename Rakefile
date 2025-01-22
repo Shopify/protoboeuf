@@ -13,7 +13,7 @@ codegen_rb_files = ["lib/protoboeuf/codegen.rb", "lib/protoboeuf/autoloadergen.r
 
 # Fixture protos we want to compile with protoc
 protoc_test_fixtures = Rake::FileList[File.join(BASE_DIR, "test/fixtures/*.proto")]
-protoc_test_fixtures_rb_files = protoc_test_fixtures.pathmap("#{BASE_DIR}/test/fixtures/%n_pb.rb")
+protoc_test_fixtures_rb_files = protoc_test_fixtures.pathmap("%X_pb.rb")
 
 # Fixture protos we want to compile with protoboeuf
 protoboeuf_test_fixtures = Rake::FileList[File.join(BASE_DIR, "test/fixtures/autoloadergen/**/*.proto")]
