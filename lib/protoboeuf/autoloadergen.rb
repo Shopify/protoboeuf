@@ -41,10 +41,11 @@ module ProtoBoeuf
       # Build a map of what we want to autoload :ConstantName => protoboeuf/require/path
       @require_paths_for_child_constants = child_ruby_filenames.each_with_object({}) do |filename, require_paths|
         child_constants = constants_for_child_ruby_filename(filename)
-        # For the autoloader_full_module_name we can just pick the first child constant we come across and take the
-        # first three parts.  For example, ProtoBoeuf::Google::Api::FieldBehavior would be ProtoBoeuf::Google::Api.
-        if @autoloader_module_name.nil?
-          autoloader_full_module_name = child_constants.first.split("::")[0..2].join("::")
+        # For the autoloader_full_module_name we can just pick the first child constant we come across and take up until
+        # the first child constant of the parent_module.
+        # For example, ProtoBoeuf::Google::Api::FieldBehavior would be ProtoBoeuf::Google::Api.
+        if autoloader_full_module_name.nil?
+          autoloader_full_module_name = child_constants.first.sub(/(#{parent_module}::.+?)::.*/, "\\1")
         end
 
         # Make our absolute filename relative to the base lib directory for our autoload calls.
