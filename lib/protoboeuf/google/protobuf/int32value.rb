@@ -45,6 +45,8 @@ module ProtoBoeuf
                   "Value (#{value}) for field value is out of bounds (-2147483648..2147483647)"
           end
           @value = value
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

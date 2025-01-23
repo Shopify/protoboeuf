@@ -816,5 +816,132 @@ module ProtoBoeuf
         obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
       end
     end
+
+    class ProtocInsertionPointVisitor < SyntaxTree::Visitor
+      include SyntaxTree::WithScope
+
+      attr_reader :protoc_insertion_points
+
+      def initialize
+        super
+
+        @protoc_insertion_points = []
+      end
+
+      def visit(node)
+        unless node.nil?
+          previous_child = nil
+
+          node.child_nodes.each do |child|
+            @parents[child] = node
+            @previous_siblings[child] = previous_child
+            @next_siblings[previous_child] = child if previous_child
+            previous_child = child
+          end
+        end
+
+        super
+      end
+
+      visit_methods do
+        def visit_comment(node)
+          return unless node.value.match(/@@protoc_insertion_point/)
+
+          @protoc_insertion_points << [node]
+        end
+      end
+
+      DEFAULT_IGNORE_PARENT_NODE_TYPES = [SyntaxTree::BodyStmt, SyntaxTree::Statements, SyntaxTree::Program].freeze
+      # The literal parent may not always be useful.  SyntaxTree::BodyStmt or SyntaxTree::Statements aren't helpful if
+      # we only care about what method or class the given node is a child of.
+      def find_parent(node, ignore_types: DEFAULT_IGNORE_PARENT_NODE_TYPES)
+        parent_candidate = @parents[node]
+
+        if ignore_types.include?(parent_candidate.class)
+          find_parent(parent_candidate)
+        else
+          parent_candidate
+        end
+      end
+
+      def previous_sibling(node)
+        @previous_siblings[node]
+      end
+
+      def next_sibling(node)
+        @next_siblings[node]
+      end
+
+      # Override #inspect so we don't dump the entire SyntaxTree multiple times in the debugger (because of @parents).
+      def inspect
+        "<#{self.class.name} @insertion_points=#{@insertion_points.inspect}>"
+      end
+    end
+
+    def test_protoc_insertion_points
+      ruby = CodeGen.new(parse_proto_string(<<~PROTO)).to_ruby
+        syntax = "proto3";
+
+        import "google/protobuf/any.proto";
+
+        enum Color {
+          UKNOWN = 0;
+          RED = 1;
+          GREEN = 2;
+          BLUE = 3;
+        }
+
+        message Vehicle {
+          string make = 1;
+          Color color = 2;
+          google.protobuf.Any other = 3;
+        }
+      PROTO
+
+      parsed_ruby = SyntaxTree.parse(ruby)
+      visitor = ProtocInsertionPointVisitor.new.tap { |v| v.visit(parsed_ruby) }
+
+      insertion_points = visitor.protoc_insertion_points.sort_by { |node| node.location.start_line }
+
+      assert_equal(12, insertion_points.size)
+
+      assert_equal("# @@protoc_insertion_point(requires)", insertion_points[0].value)
+      assert_nil(visitor.find_parent(insertion_points[0]))
+      assert_equal("require", visitor.previous_sibling(insertion_points[0]).message.value)
+
+      assert_equal("# @@protoc_insertion_point(lookup)", insertion_points[1].value)
+      parent = visitor.find_parent(insertion_points[1])
+      assert_syntax_tree_node(SyntaxTree::DefNode, "lookup", parent)
+      grandparent = visitor.find_parent(parent)
+      assert_syntax_tree_node(SyntaxTree::SClass, nil, grandparent)
+      great_grandparent = visitor.find_parent(grandparent)
+      assert_syntax_tree_node(SyntaxTree::ModuleDeclaration, "Color", great_grandparent)
+
+      assert_equal("# @@protoc_insertion_point(resolve)", insertion_points[2].value)
+      parent = visitor.find_parent(insertion_points[1])
+      assert_syntax_tree_node(SyntaxTree::DefNode, "resolve", parent)
+      grandparent = visitor.find_parent(parent)
+      assert_syntax_tree_node(SyntaxTree::SClass, nil, grandparent)
+      great_grandparent = visitor.find_parent(grandparent)
+      assert_syntax_tree_node(SyntaxTree::ModuleDeclaration, "Color", great_grandparent)
+
+      assert_equal("# @@protoc_insertion_point(class_definitions)", insertion_points[3].value)
+      assert_syntax_tree_node(SyntaxTree::VoidStmt, nil, visitor.previous_sibling(insertion_points[3]))
+      parent = visitor.find_parent(insertion_points[3])
+      assert_syntax_tree_node(SyntaxTree::ClassDeclaration, "Vehicle", parent)
+    end
+
+    private
+
+    def assert_syntax_tree_node(klass, identifier, node)
+      assert_kind_of(klass, node)
+
+      case node
+      when SyntaxTree::DefNode
+        assert_equal(identifier, node.name.value)
+      when SyntaxTree::ModuleDeclaration, SyntaxTree::ClassDeclaration
+        assert_equal(identifier, node.constant.constant.value)
+      end
+    end
   end
 end

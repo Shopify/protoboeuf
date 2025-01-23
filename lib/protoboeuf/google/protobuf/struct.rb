@@ -54,6 +54,8 @@ module ProtoBoeuf
 
         def initialize(fields: {})
           @fields = fields
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -759,6 +761,7 @@ module ProtoBoeuf
           list_value: nil
         )
           @kind = nil # oneof field
+
           if null_value == nil
             @null_value = 0
           else
@@ -800,6 +803,8 @@ module ProtoBoeuf
             @kind = :list_value
             @list_value = list_value
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -1877,6 +1882,8 @@ module ProtoBoeuf
 
         def initialize(values: [])
           @values = values
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

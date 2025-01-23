@@ -70,6 +70,8 @@ module ProtoBoeuf
                   "Value (#{nanos}) for field nanos is out of bounds (-2147483648..2147483647)"
           end
           @nanos = nanos
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

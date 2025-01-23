@@ -32,40 +32,35 @@ module ProtoBoeuf
       private
 
       def class_body
-        CodeGen.protoc_insertion_point("class_definitions") + "\n\n" +
-          enum.value.map { |const|
-            "#{const.name} = #{const.number}"
-          }.join("\n") + "\n\n" + class_methods
+        enum.value.map { |const|
+          "#{const.name} = #{const.number}"
+        }.join("\n\n") + "\n\n" + CodeGen.protoc_insertion_point("constants") + "\n\n" + class_methods
       end
+
+      CLASS_METHODS = ERB.new(<<~CLASS_METHODS, trim_mode: "-")
+        class << self
+          <%= type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) %>
+          def lookup(val)
+            <%= CodeGen.protoc_insertion_point("lookup") %>
+
+            <%- enum.value.each do |const| -%>
+              return :<%= const.name.dump %> if val == <%= const.number %>
+            <%- end -%>
+          end
+
+          <%= type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) %>
+          def resolve(val)
+            <%= CodeGen.protoc_insertion_point("resolve") %>
+
+            <%- enum.value.each do |const| -%>
+              return <%= const.number %> if val == :<%= const.name.dump %>
+            <%- end -%>
+          end
+        end
+      CLASS_METHODS
 
       def class_methods
-        <<~RUBY
-          class << self
-            #{CodeGen.protoc_insertion_point("class_methods")}
-
-            #{lookup}
-
-            #{resolve}
-          end
-        RUBY
-      end
-
-      def lookup
-        # This ends up being a class method
-        type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) +
-          "def lookup(val)\n" \
-            "if " + enum.value.map { |const|
-                      "val == #{const.number} then :#{const.name}"
-                    }.join(" elsif ") + " end; end"
-      end
-
-      def resolve
-        # This ends up being a class method
-        type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) +
-          "def resolve(val)\n" \
-            "if " + enum.value.map { |const|
-                      "val == :#{const.name} then #{const.number}"
-                    }.join(" elsif ") + " end; end"
+        CLASS_METHODS.result(binding)
       end
     end
 
@@ -808,18 +803,25 @@ module ProtoBoeuf
           "# END writers for oneof fields\n\n"
       end
 
+      INITIALIZER = ERB.new(<<~INITIALIZER, trim_mode: "-")
+        <%= initialize_type_signature(fields) %>
+        def initialize(<%= initialize_signature %>)
+          <%= init_bitmask(message) %>
+          <%= initialize_oneofs %>
+          <%- fields.each do |field| -%>
+            <%- if field.has_oneof_index? && !optional_field?(field) -%>
+              <%= initialize_oneof(field, message) %>
+            <%- else -%>
+              <%= initialize_field(field) %>
+            <%- end -%>
+          <%- end -%>
+
+          <%= CodeGen.protoc_insertion_point("initialize") %>
+        end
+      INITIALIZER
+
       def initialize_code
-        initialize_type_signature(fields) +
-          "def initialize(" + initialize_signature + ")\n" +
-          init_bitmask(message) +
-          initialize_oneofs +
-          fields.map { |field|
-            if field.has_oneof_index? && !optional_field?(field)
-              initialize_oneof(field, message)
-            else
-              initialize_field(field)
-            end
-          }.join("\n") + "\nend\n\n"
+        INITIALIZER.result(binding)
       end
 
       def initialize_oneofs
@@ -1764,9 +1766,10 @@ module ProtoBoeuf
           MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax, options:)
         end.join
 
-        head += requires.reject { |r|
+        head += requires.reject do |r|
           r == this_file
-        }.map { |r| "require #{r.dump}" }.join("\n") + CodeGen.protoc_insertion_point("requires") + "\n\n\n"
+        end.map { |r| "require #{r.dump}" }.join("\n")
+        head += "\n" + CodeGen.protoc_insertion_point("requires") + "\n\n\n"
         head += modules.map { |m| "module #{m}\n" }.join
 
         tail = "\n" + modules.map { "end" }.join("\n")

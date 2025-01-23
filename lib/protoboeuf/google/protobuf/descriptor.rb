@@ -113,6 +113,8 @@ module ProtoBoeuf
 
         def initialize(file: [])
           @file = file
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -844,6 +846,8 @@ module ProtoBoeuf
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(edition) ||
                 edition
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -3603,6 +3607,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000004
               @options = options
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -4437,6 +4443,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000002
               @end = binding.local_variable_get(:end)
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -5189,6 +5197,8 @@ module ProtoBoeuf
           @reserved_range = reserved_range
 
           @reserved_name = reserved_name
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -7439,6 +7449,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000010
               @repeated = repeated
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -8435,6 +8447,8 @@ module ProtoBoeuf
                 verification
               ) || verification
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -9844,6 +9858,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000400
             @proto3_optional = proto3_optional
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -11754,6 +11770,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000002
             @options = options
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -12416,6 +12434,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000002
               @end = binding.local_variable_get(:end)
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -13093,6 +13113,8 @@ module ProtoBoeuf
           @reserved_range = reserved_range
 
           @reserved_name = reserved_name
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -14310,6 +14332,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000004
             @options = options
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -15120,6 +15144,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000002
             @options = options
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -16045,6 +16071,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000020
             @server_streaming = server_streaming
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -17576,6 +17604,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -20645,6 +20675,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -21771,6 +21803,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000002
               @value = value
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -22448,6 +22482,8 @@ module ProtoBoeuf
                   edition_removed
                 ) || edition_removed
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -23788,6 +23824,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -25984,6 +26022,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -26741,6 +26781,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -27752,6 +27794,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -28813,6 +28857,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -29674,6 +29720,8 @@ module ProtoBoeuf
           end
 
           @uninterpreted_option = uninterpreted_option
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -30591,6 +30639,8 @@ module ProtoBoeuf
             @name_part = name_part
 
             @is_extension = is_extension
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -31248,6 +31298,8 @@ module ProtoBoeuf
             @_bitmask |= 0x0000000000000020
             @aggregate_value = aggregate_value
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -32876,6 +32928,8 @@ module ProtoBoeuf
                 json_format
               ) || json_format
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -34124,6 +34178,8 @@ module ProtoBoeuf
               @_bitmask |= 0x0000000000000004
               @fixed_features = fixed_features
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -34977,6 +35033,8 @@ module ProtoBoeuf
                 maximum_edition
               ) || maximum_edition
           end
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -35865,6 +35923,8 @@ module ProtoBoeuf
             end
 
             @leading_detached_comments = leading_detached_comments
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -37108,6 +37168,8 @@ module ProtoBoeuf
 
         def initialize(location: [])
           @location = location
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
@@ -37753,6 +37815,8 @@ module ProtoBoeuf
                   semantic
                 ) || semantic
             end
+
+            # @@protoc_insertion_point(initialize)
           end
 
           def to_proto(_options = {})
@@ -38901,6 +38965,8 @@ module ProtoBoeuf
 
         def initialize(annotation: [])
           @annotation = annotation
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

@@ -219,6 +219,7 @@ class Test1
       bytes_field: String
     ).void
   end
+
   def initialize(
     int_field: 0,
     string_field: nil,
@@ -231,6 +232,7 @@ class Test1
     @_bitmask = 0
 
     @oneof_field = nil # oneof field
+
     unless -2_147_483_648 <= int_field && int_field <= 2_147_483_647
       raise RangeError,
             "Value (#{int_field}) for field int_field is out of bounds (-2147483648..2147483647)"
@@ -269,8 +271,9 @@ class Test1
     @map_field = map_field
 
     @bytes_field = bytes_field
-  end
 
+    # @@protoc_insertion_point(initialize)
+  end
   sig { params(_options: T::Hash).returns(String) }
   def to_proto(_options = {})
     self.class.encode(self)

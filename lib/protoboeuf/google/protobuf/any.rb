@@ -50,6 +50,8 @@ module ProtoBoeuf
           @type_url = type_url
 
           @value = value
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

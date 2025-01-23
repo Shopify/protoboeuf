@@ -36,6 +36,8 @@ module ProtoBoeuf
 
         def initialize(paths: [])
           @paths = paths
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})

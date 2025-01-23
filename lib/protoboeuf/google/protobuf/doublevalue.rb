@@ -36,6 +36,8 @@ module ProtoBoeuf
 
         def initialize(value: 0.0)
           @value = value
+
+          # @@protoc_insertion_point(initialize)
         end
 
         def to_proto(_options = {})
