@@ -9,25 +9,19 @@ module TestEnum
   BAZ = 2
 
   sig { params(val: Integer).returns(Symbol) }
+
   def self.lookup(val)
-    if val == 0
-      :FOO
-    elsif val == 1
-      :BAR
-    elsif val == 2
-      :BAZ
-    end
+    return :FOO if val == 0
+    return :BAR if val == 1
+    return :BAZ if val == 2
   end
 
   sig { params(val: Symbol).returns(Integer) }
+
   def self.resolve(val)
-    if val == :FOO
-      0
-    elsif val == :BAR
-      1
-    elsif val == :BAZ
-      2
-    end
+    return 0 if val == :FOO
+    return 1 if val == :BAR
+    return 2 if val == :BAZ
   end
 end
 module TestEnum2
@@ -36,25 +30,19 @@ module TestEnum2
   FOOFOO = 2
 
   sig { params(val: Integer).returns(Symbol) }
+
   def self.lookup(val)
-    if val == 0
-      :BAZBAZ
-    elsif val == 1
-      :BARBAR
-    elsif val == 2
-      :FOOFOO
-    end
+    return :BAZBAZ if val == 0
+    return :BARBAR if val == 1
+    return :FOOFOO if val == 2
   end
 
   sig { params(val: Symbol).returns(Integer) }
+
   def self.resolve(val)
-    if val == :BAZBAZ
-      0
-    elsif val == :BARBAR
-      1
-    elsif val == :FOOFOO
-      2
-    end
+    return 0 if val == :BAZBAZ
+    return 1 if val == :BARBAR
+    return 2 if val == :FOOFOO
   end
 end
 

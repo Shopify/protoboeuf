@@ -26,31 +26,53 @@ module ProtoBoeuf
       end
 
       def result
-        "module #{enum.name}\n" + class_body + "; end\n"
+        <<~RESULT
+          module #{enum.name}
+            #{values}
+
+            #{lookup}
+
+            #{resolve}
+          end
+        RESULT
       end
 
       private
 
-      def class_body
-        enum.value.map { |const|
-          "#{const.name} = #{const.number}"
-        }.join("\n") + "\n\n" + lookup + "\n\n" + resolve
+      VALUES = ERB.new(<<~VALUES, trim_mode: "-")
+        <%- enum.value.each do |const| -%>
+          <%= const.name %> = <%= const.number %>
+        <%- end -%>
+      VALUES
+
+      def values
+        VALUES.result(binding)
       end
+
+      LOOKUP = ERB.new(<<~LOOKUP, trim_mode: "-")
+        <%= type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) %>
+        def self.lookup(val)
+          <%- enum.value.each do |const| -%>
+            return :<%= const.name %> if val == <%= const.number %>
+          <%- end -%>
+        end
+      LOOKUP
 
       def lookup
-        type_signature(params: { val: "Integer" }, returns: "Symbol", newline: true) +
-          "def self.lookup(val)\n" \
-            "if " + enum.value.map { |const|
-                      "val == #{const.number} then :#{const.name}"
-                    }.join(" elsif ") + " end; end"
+        LOOKUP.result(binding)
       end
 
+      RESOLVE = ERB.new(<<~RESOLVE, trim_mode: "-")
+        <%= type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) %>
+        def self.resolve(val)
+          <%- enum.value.each do |const| -%>
+            return <%= const.number %> if val == :<%= const.name %>
+          <%- end -%>
+        end
+      RESOLVE
+
       def resolve
-        type_signature(params: { val: "Symbol" }, returns: "Integer", newline: true) +
-          "def self.resolve(val)\n" \
-            "if " + enum.value.map { |const|
-                      "val == :#{const.name} then #{const.number}"
-                    }.join(" elsif ") + " end; end"
+        RESOLVE.result(binding)
       end
     end
 
@@ -699,9 +721,9 @@ module ProtoBoeuf
         return "" if fields.empty?
 
         "# enum writers\n" +
-          fields.map { |field|
+          fields.map do |field|
             "def #{field.name}=(v); #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v; end"
-          }.join("\n") + "\n\n"
+          end.join("\n") + "\n\n"
       end
 
       def required_writers
@@ -709,7 +731,7 @@ module ProtoBoeuf
 
         return "" if fields.empty?
 
-        fields.map { |field|
+        fields.map do |field|
           <<~RUBY
             #{type_signature(params: { v: convert_field_type(field) })}
             def #{field.name}=(v)
@@ -717,7 +739,7 @@ module ProtoBoeuf
               #{iv_name(field)} = v
             end
           RUBY
-        }.join("\n") + "\n"
+        end.join("\n") + "\n"
       end
 
       def optional_writers
@@ -741,11 +763,11 @@ module ProtoBoeuf
         return "" if oneof_fields.empty?
 
         "# BEGIN writers for oneof fields\n" +
-          oneof_fields.map.with_index { |sub_fields, i|
+          oneof_fields.map.with_index do |sub_fields, i|
             next unless sub_fields
 
             oneof = message.oneof_decl[i]
-            sub_fields.map { |field|
+            sub_fields.map do |field|
               <<~RUBY
                 def #{field.name}=(v)
                   #{bounds_check(field, "v")}
@@ -753,8 +775,8 @@ module ProtoBoeuf
                   #{iv_name(field)} = v
                 end
               RUBY
-            }.join("\n")
-          }.join("\n") +
+            end.join("\n")
+          end.join("\n") +
           "# END writers for oneof fields\n\n"
       end
 
@@ -773,9 +795,9 @@ module ProtoBoeuf
       end
 
       def initialize_oneofs
-        @oneof_selection_fields.map { |field|
+        @oneof_selection_fields.map do |field|
           "#{iv_name(field)} = nil # oneof field"
-        }.join("\n") + "\n"
+        end.join("\n") + "\n"
       end
 
       def initialize_oneof(field, msg)
@@ -915,14 +937,14 @@ module ProtoBoeuf
       def optional_predicates
         return "" if optional_fields.empty?
 
-        optional_fields.map { |field|
+        optional_fields.map do |field|
           <<~RUBY
             #{type_signature(returns: "T::Boolean")}
             def has_#{field.name}?
               #{test_bitmask(field)}
             end
           RUBY
-        }.join("\n") + "\n"
+        end.join("\n") + "\n"
       end
 
       def decode

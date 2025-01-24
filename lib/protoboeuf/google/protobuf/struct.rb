@@ -9,11 +9,11 @@ module ProtoBoeuf
         NULL_VALUE = 0
 
         def self.lookup(val)
-          :NULL_VALUE if val == 0
+          return :NULL_VALUE if val == 0
         end
 
         def self.resolve(val)
-          0 if val == :NULL_VALUE
+          return 0 if val == :NULL_VALUE
         end
       end
 
