@@ -17,47 +17,27 @@ module ProtoBoeuf
         IDENTIFIER = 8
 
         def self.lookup(val)
-          if val == 0
-            :FIELD_BEHAVIOR_UNSPECIFIED
-          elsif val == 1
-            :OPTIONAL
-          elsif val == 2
-            :REQUIRED
-          elsif val == 3
-            :OUTPUT_ONLY
-          elsif val == 4
-            :INPUT_ONLY
-          elsif val == 5
-            :IMMUTABLE
-          elsif val == 6
-            :UNORDERED_LIST
-          elsif val == 7
-            :NON_EMPTY_DEFAULT
-          elsif val == 8
-            :IDENTIFIER
-          end
+          return :FIELD_BEHAVIOR_UNSPECIFIED if val == 0
+          return :OPTIONAL if val == 1
+          return :REQUIRED if val == 2
+          return :OUTPUT_ONLY if val == 3
+          return :INPUT_ONLY if val == 4
+          return :IMMUTABLE if val == 5
+          return :UNORDERED_LIST if val == 6
+          return :NON_EMPTY_DEFAULT if val == 7
+          return :IDENTIFIER if val == 8
         end
 
         def self.resolve(val)
-          if val == :FIELD_BEHAVIOR_UNSPECIFIED
-            0
-          elsif val == :OPTIONAL
-            1
-          elsif val == :REQUIRED
-            2
-          elsif val == :OUTPUT_ONLY
-            3
-          elsif val == :INPUT_ONLY
-            4
-          elsif val == :IMMUTABLE
-            5
-          elsif val == :UNORDERED_LIST
-            6
-          elsif val == :NON_EMPTY_DEFAULT
-            7
-          elsif val == :IDENTIFIER
-            8
-          end
+          return 0 if val == :FIELD_BEHAVIOR_UNSPECIFIED
+          return 1 if val == :OPTIONAL
+          return 2 if val == :REQUIRED
+          return 3 if val == :OUTPUT_ONLY
+          return 4 if val == :INPUT_ONLY
+          return 5 if val == :IMMUTABLE
+          return 6 if val == :UNORDERED_LIST
+          return 7 if val == :NON_EMPTY_DEFAULT
+          return 8 if val == :IDENTIFIER
         end
       end
     end

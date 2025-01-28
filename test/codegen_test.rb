@@ -816,5 +816,36 @@ module ProtoBoeuf
         obj.u64s = [0, 18_446_744_073_709_551_615, 18_446_744_073_709_551_616]
       end
     end
+
+    def test_big_enum
+      # Test that we don't see the following exception encountered when working with an enum with many values:
+      # 1) Error:
+      # ProtoBoeuf::CodeGenTest#test_big_enum:
+      # SyntaxTree::Parser::ParseError: nesting too deep
+      #     /Users/dave/.gem/ruby/3.3.4/gems/syntax_tree-6.2.0/lib/syntax_tree/parser.rb:2864:in `on_parse_error'
+      #     /Users/dave/.gem/ruby/3.3.4/gems/syntax_tree-6.2.0/lib/syntax_tree.rb:124:in `parse'
+      #     /Users/dave/.gem/ruby/3.3.4/gems/syntax_tree-6.2.0/lib/syntax_tree.rb:124:in `parse'
+      #     /Users/dave/.gem/ruby/3.3.4/gems/syntax_tree-6.2.0/lib/syntax_tree.rb:68:in `format'
+      #     lib/protoboeuf/codegen.rb:1723:in `block in to_ruby'
+      #     lib/protoboeuf/codegen.rb:1703:in `each'
+      #     lib/protoboeuf/codegen.rb:1703:in `to_ruby'
+      #     test/codegen_test.rb:12:in `to_ruby'
+      #     test/codegen_test.rb:834:in `test_big_enum'
+
+      unit = parse_proto_string(ERB.new(<<~EOPROTO, trim_mode: "-").result(binding))
+        syntax = "proto3";
+
+        enum BigEnum {
+          UNKNOWN = 0;
+          <%- (1..5000).each do |i| -%>
+          VALUE_<%= i %> = <%= i %>;
+          <%- end -%>
+        }
+      EOPROTO
+
+      gen = CodeGen.new(unit)
+
+      gen.to_ruby
+    end
   end
 end

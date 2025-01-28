@@ -20,59 +20,33 @@ module ProtoBoeuf
         EDITION_MAX = 2_147_483_647
 
         def self.lookup(val)
-          if val == 0
-            :EDITION_UNKNOWN
-          elsif val == 900
-            :EDITION_LEGACY
-          elsif val == 998
-            :EDITION_PROTO2
-          elsif val == 999
-            :EDITION_PROTO3
-          elsif val == 1000
-            :EDITION_2023
-          elsif val == 1001
-            :EDITION_2024
-          elsif val == 1
-            :EDITION_1_TEST_ONLY
-          elsif val == 2
-            :EDITION_2_TEST_ONLY
-          elsif val == 99_997
-            :EDITION_99997_TEST_ONLY
-          elsif val == 99_998
-            :EDITION_99998_TEST_ONLY
-          elsif val == 99_999
-            :EDITION_99999_TEST_ONLY
-          elsif val == 2_147_483_647
-            :EDITION_MAX
-          end
+          return :EDITION_UNKNOWN if val == 0
+          return :EDITION_LEGACY if val == 900
+          return :EDITION_PROTO2 if val == 998
+          return :EDITION_PROTO3 if val == 999
+          return :EDITION_2023 if val == 1000
+          return :EDITION_2024 if val == 1001
+          return :EDITION_1_TEST_ONLY if val == 1
+          return :EDITION_2_TEST_ONLY if val == 2
+          return :EDITION_99997_TEST_ONLY if val == 99_997
+          return :EDITION_99998_TEST_ONLY if val == 99_998
+          return :EDITION_99999_TEST_ONLY if val == 99_999
+          return :EDITION_MAX if val == 2_147_483_647
         end
 
         def self.resolve(val)
-          if val == :EDITION_UNKNOWN
-            0
-          elsif val == :EDITION_LEGACY
-            900
-          elsif val == :EDITION_PROTO2
-            998
-          elsif val == :EDITION_PROTO3
-            999
-          elsif val == :EDITION_2023
-            1000
-          elsif val == :EDITION_2024
-            1001
-          elsif val == :EDITION_1_TEST_ONLY
-            1
-          elsif val == :EDITION_2_TEST_ONLY
-            2
-          elsif val == :EDITION_99997_TEST_ONLY
-            99_997
-          elsif val == :EDITION_99998_TEST_ONLY
-            99_998
-          elsif val == :EDITION_99999_TEST_ONLY
-            99_999
-          elsif val == :EDITION_MAX
-            2_147_483_647
-          end
+          return 0 if val == :EDITION_UNKNOWN
+          return 900 if val == :EDITION_LEGACY
+          return 998 if val == :EDITION_PROTO2
+          return 999 if val == :EDITION_PROTO3
+          return 1000 if val == :EDITION_2023
+          return 1001 if val == :EDITION_2024
+          return 1 if val == :EDITION_1_TEST_ONLY
+          return 2 if val == :EDITION_2_TEST_ONLY
+          return 99_997 if val == :EDITION_99997_TEST_ONLY
+          return 99_998 if val == :EDITION_99998_TEST_ONLY
+          return 99_999 if val == :EDITION_99999_TEST_ONLY
+          return 2_147_483_647 if val == :EDITION_MAX
         end
       end
 
@@ -8077,19 +8051,13 @@ module ProtoBoeuf
           UNVERIFIED = 1
 
           def self.lookup(val)
-            if val == 0
-              :DECLARATION
-            elsif val == 1
-              :UNVERIFIED
-            end
+            return :DECLARATION if val == 0
+            return :UNVERIFIED if val == 1
           end
 
           def self.resolve(val)
-            if val == :DECLARATION
-              0
-            elsif val == :UNVERIFIED
-              1
-            end
+            return 0 if val == :DECLARATION
+            return 1 if val == :UNVERIFIED
           end
         end
         # required field readers
@@ -9172,83 +9140,45 @@ module ProtoBoeuf
           TYPE_SINT64 = 18
 
           def self.lookup(val)
-            if val == 1
-              :TYPE_DOUBLE
-            elsif val == 2
-              :TYPE_FLOAT
-            elsif val == 3
-              :TYPE_INT64
-            elsif val == 4
-              :TYPE_UINT64
-            elsif val == 5
-              :TYPE_INT32
-            elsif val == 6
-              :TYPE_FIXED64
-            elsif val == 7
-              :TYPE_FIXED32
-            elsif val == 8
-              :TYPE_BOOL
-            elsif val == 9
-              :TYPE_STRING
-            elsif val == 10
-              :TYPE_GROUP
-            elsif val == 11
-              :TYPE_MESSAGE
-            elsif val == 12
-              :TYPE_BYTES
-            elsif val == 13
-              :TYPE_UINT32
-            elsif val == 14
-              :TYPE_ENUM
-            elsif val == 15
-              :TYPE_SFIXED32
-            elsif val == 16
-              :TYPE_SFIXED64
-            elsif val == 17
-              :TYPE_SINT32
-            elsif val == 18
-              :TYPE_SINT64
-            end
+            return :TYPE_DOUBLE if val == 1
+            return :TYPE_FLOAT if val == 2
+            return :TYPE_INT64 if val == 3
+            return :TYPE_UINT64 if val == 4
+            return :TYPE_INT32 if val == 5
+            return :TYPE_FIXED64 if val == 6
+            return :TYPE_FIXED32 if val == 7
+            return :TYPE_BOOL if val == 8
+            return :TYPE_STRING if val == 9
+            return :TYPE_GROUP if val == 10
+            return :TYPE_MESSAGE if val == 11
+            return :TYPE_BYTES if val == 12
+            return :TYPE_UINT32 if val == 13
+            return :TYPE_ENUM if val == 14
+            return :TYPE_SFIXED32 if val == 15
+            return :TYPE_SFIXED64 if val == 16
+            return :TYPE_SINT32 if val == 17
+            return :TYPE_SINT64 if val == 18
           end
 
           def self.resolve(val)
-            if val == :TYPE_DOUBLE
-              1
-            elsif val == :TYPE_FLOAT
-              2
-            elsif val == :TYPE_INT64
-              3
-            elsif val == :TYPE_UINT64
-              4
-            elsif val == :TYPE_INT32
-              5
-            elsif val == :TYPE_FIXED64
-              6
-            elsif val == :TYPE_FIXED32
-              7
-            elsif val == :TYPE_BOOL
-              8
-            elsif val == :TYPE_STRING
-              9
-            elsif val == :TYPE_GROUP
-              10
-            elsif val == :TYPE_MESSAGE
-              11
-            elsif val == :TYPE_BYTES
-              12
-            elsif val == :TYPE_UINT32
-              13
-            elsif val == :TYPE_ENUM
-              14
-            elsif val == :TYPE_SFIXED32
-              15
-            elsif val == :TYPE_SFIXED64
-              16
-            elsif val == :TYPE_SINT32
-              17
-            elsif val == :TYPE_SINT64
-              18
-            end
+            return 1 if val == :TYPE_DOUBLE
+            return 2 if val == :TYPE_FLOAT
+            return 3 if val == :TYPE_INT64
+            return 4 if val == :TYPE_UINT64
+            return 5 if val == :TYPE_INT32
+            return 6 if val == :TYPE_FIXED64
+            return 7 if val == :TYPE_FIXED32
+            return 8 if val == :TYPE_BOOL
+            return 9 if val == :TYPE_STRING
+            return 10 if val == :TYPE_GROUP
+            return 11 if val == :TYPE_MESSAGE
+            return 12 if val == :TYPE_BYTES
+            return 13 if val == :TYPE_UINT32
+            return 14 if val == :TYPE_ENUM
+            return 15 if val == :TYPE_SFIXED32
+            return 16 if val == :TYPE_SFIXED64
+            return 17 if val == :TYPE_SINT32
+            return 18 if val == :TYPE_SINT64
           end
         end
 
@@ -9258,23 +9188,15 @@ module ProtoBoeuf
           LABEL_REQUIRED = 2
 
           def self.lookup(val)
-            if val == 1
-              :LABEL_OPTIONAL
-            elsif val == 3
-              :LABEL_REPEATED
-            elsif val == 2
-              :LABEL_REQUIRED
-            end
+            return :LABEL_OPTIONAL if val == 1
+            return :LABEL_REPEATED if val == 3
+            return :LABEL_REQUIRED if val == 2
           end
 
           def self.resolve(val)
-            if val == :LABEL_OPTIONAL
-              1
-            elsif val == :LABEL_REPEATED
-              3
-            elsif val == :LABEL_REQUIRED
-              2
-            end
+            return 1 if val == :LABEL_OPTIONAL
+            return 3 if val == :LABEL_REPEATED
+            return 2 if val == :LABEL_REQUIRED
           end
         end
         # required field readers
@@ -16579,23 +16501,15 @@ module ProtoBoeuf
           LITE_RUNTIME = 3
 
           def self.lookup(val)
-            if val == 1
-              :SPEED
-            elsif val == 2
-              :CODE_SIZE
-            elsif val == 3
-              :LITE_RUNTIME
-            end
+            return :SPEED if val == 1
+            return :CODE_SIZE if val == 2
+            return :LITE_RUNTIME if val == 3
           end
 
           def self.resolve(val)
-            if val == :SPEED
-              1
-            elsif val == :CODE_SIZE
-              2
-            elsif val == :LITE_RUNTIME
-              3
-            end
+            return 1 if val == :SPEED
+            return 2 if val == :CODE_SIZE
+            return 3 if val == :LITE_RUNTIME
           end
         end
         # required field readers
@@ -22575,23 +22489,15 @@ module ProtoBoeuf
           STRING_PIECE = 2
 
           def self.lookup(val)
-            if val == 0
-              :STRING
-            elsif val == 1
-              :CORD
-            elsif val == 2
-              :STRING_PIECE
-            end
+            return :STRING if val == 0
+            return :CORD if val == 1
+            return :STRING_PIECE if val == 2
           end
 
           def self.resolve(val)
-            if val == :STRING
-              0
-            elsif val == :CORD
-              1
-            elsif val == :STRING_PIECE
-              2
-            end
+            return 0 if val == :STRING
+            return 1 if val == :CORD
+            return 2 if val == :STRING_PIECE
           end
         end
 
@@ -22601,23 +22507,15 @@ module ProtoBoeuf
           JS_NUMBER = 2
 
           def self.lookup(val)
-            if val == 0
-              :JS_NORMAL
-            elsif val == 1
-              :JS_STRING
-            elsif val == 2
-              :JS_NUMBER
-            end
+            return :JS_NORMAL if val == 0
+            return :JS_STRING if val == 1
+            return :JS_NUMBER if val == 2
           end
 
           def self.resolve(val)
-            if val == :JS_NORMAL
-              0
-            elsif val == :JS_STRING
-              1
-            elsif val == :JS_NUMBER
-              2
-            end
+            return 0 if val == :JS_NORMAL
+            return 1 if val == :JS_STRING
+            return 2 if val == :JS_NUMBER
           end
         end
 
@@ -22627,23 +22525,15 @@ module ProtoBoeuf
           RETENTION_SOURCE = 2
 
           def self.lookup(val)
-            if val == 0
-              :RETENTION_UNKNOWN
-            elsif val == 1
-              :RETENTION_RUNTIME
-            elsif val == 2
-              :RETENTION_SOURCE
-            end
+            return :RETENTION_UNKNOWN if val == 0
+            return :RETENTION_RUNTIME if val == 1
+            return :RETENTION_SOURCE if val == 2
           end
 
           def self.resolve(val)
-            if val == :RETENTION_UNKNOWN
-              0
-            elsif val == :RETENTION_RUNTIME
-              1
-            elsif val == :RETENTION_SOURCE
-              2
-            end
+            return 0 if val == :RETENTION_UNKNOWN
+            return 1 if val == :RETENTION_RUNTIME
+            return 2 if val == :RETENTION_SOURCE
           end
         end
 
@@ -22660,51 +22550,29 @@ module ProtoBoeuf
           TARGET_TYPE_METHOD = 9
 
           def self.lookup(val)
-            if val == 0
-              :TARGET_TYPE_UNKNOWN
-            elsif val == 1
-              :TARGET_TYPE_FILE
-            elsif val == 2
-              :TARGET_TYPE_EXTENSION_RANGE
-            elsif val == 3
-              :TARGET_TYPE_MESSAGE
-            elsif val == 4
-              :TARGET_TYPE_FIELD
-            elsif val == 5
-              :TARGET_TYPE_ONEOF
-            elsif val == 6
-              :TARGET_TYPE_ENUM
-            elsif val == 7
-              :TARGET_TYPE_ENUM_ENTRY
-            elsif val == 8
-              :TARGET_TYPE_SERVICE
-            elsif val == 9
-              :TARGET_TYPE_METHOD
-            end
+            return :TARGET_TYPE_UNKNOWN if val == 0
+            return :TARGET_TYPE_FILE if val == 1
+            return :TARGET_TYPE_EXTENSION_RANGE if val == 2
+            return :TARGET_TYPE_MESSAGE if val == 3
+            return :TARGET_TYPE_FIELD if val == 4
+            return :TARGET_TYPE_ONEOF if val == 5
+            return :TARGET_TYPE_ENUM if val == 6
+            return :TARGET_TYPE_ENUM_ENTRY if val == 7
+            return :TARGET_TYPE_SERVICE if val == 8
+            return :TARGET_TYPE_METHOD if val == 9
           end
 
           def self.resolve(val)
-            if val == :TARGET_TYPE_UNKNOWN
-              0
-            elsif val == :TARGET_TYPE_FILE
-              1
-            elsif val == :TARGET_TYPE_EXTENSION_RANGE
-              2
-            elsif val == :TARGET_TYPE_MESSAGE
-              3
-            elsif val == :TARGET_TYPE_FIELD
-              4
-            elsif val == :TARGET_TYPE_ONEOF
-              5
-            elsif val == :TARGET_TYPE_ENUM
-              6
-            elsif val == :TARGET_TYPE_ENUM_ENTRY
-              7
-            elsif val == :TARGET_TYPE_SERVICE
-              8
-            elsif val == :TARGET_TYPE_METHOD
-              9
-            end
+            return 0 if val == :TARGET_TYPE_UNKNOWN
+            return 1 if val == :TARGET_TYPE_FILE
+            return 2 if val == :TARGET_TYPE_EXTENSION_RANGE
+            return 3 if val == :TARGET_TYPE_MESSAGE
+            return 4 if val == :TARGET_TYPE_FIELD
+            return 5 if val == :TARGET_TYPE_ONEOF
+            return 6 if val == :TARGET_TYPE_ENUM
+            return 7 if val == :TARGET_TYPE_ENUM_ENTRY
+            return 8 if val == :TARGET_TYPE_SERVICE
+            return 9 if val == :TARGET_TYPE_METHOD
           end
         end
         # required field readers
@@ -28585,23 +28453,15 @@ module ProtoBoeuf
           IDEMPOTENT = 2
 
           def self.lookup(val)
-            if val == 0
-              :IDEMPOTENCY_UNKNOWN
-            elsif val == 1
-              :NO_SIDE_EFFECTS
-            elsif val == 2
-              :IDEMPOTENT
-            end
+            return :IDEMPOTENCY_UNKNOWN if val == 0
+            return :NO_SIDE_EFFECTS if val == 1
+            return :IDEMPOTENT if val == 2
           end
 
           def self.resolve(val)
-            if val == :IDEMPOTENCY_UNKNOWN
-              0
-            elsif val == :NO_SIDE_EFFECTS
-              1
-            elsif val == :IDEMPOTENT
-              2
-            end
+            return 0 if val == :IDEMPOTENCY_UNKNOWN
+            return 1 if val == :NO_SIDE_EFFECTS
+            return 2 if val == :IDEMPOTENT
           end
         end
         # required field readers
@@ -31452,27 +31312,17 @@ module ProtoBoeuf
           LEGACY_REQUIRED = 3
 
           def self.lookup(val)
-            if val == 0
-              :FIELD_PRESENCE_UNKNOWN
-            elsif val == 1
-              :EXPLICIT
-            elsif val == 2
-              :IMPLICIT
-            elsif val == 3
-              :LEGACY_REQUIRED
-            end
+            return :FIELD_PRESENCE_UNKNOWN if val == 0
+            return :EXPLICIT if val == 1
+            return :IMPLICIT if val == 2
+            return :LEGACY_REQUIRED if val == 3
           end
 
           def self.resolve(val)
-            if val == :FIELD_PRESENCE_UNKNOWN
-              0
-            elsif val == :EXPLICIT
-              1
-            elsif val == :IMPLICIT
-              2
-            elsif val == :LEGACY_REQUIRED
-              3
-            end
+            return 0 if val == :FIELD_PRESENCE_UNKNOWN
+            return 1 if val == :EXPLICIT
+            return 2 if val == :IMPLICIT
+            return 3 if val == :LEGACY_REQUIRED
           end
         end
 
@@ -31482,23 +31332,15 @@ module ProtoBoeuf
           CLOSED = 2
 
           def self.lookup(val)
-            if val == 0
-              :ENUM_TYPE_UNKNOWN
-            elsif val == 1
-              :OPEN
-            elsif val == 2
-              :CLOSED
-            end
+            return :ENUM_TYPE_UNKNOWN if val == 0
+            return :OPEN if val == 1
+            return :CLOSED if val == 2
           end
 
           def self.resolve(val)
-            if val == :ENUM_TYPE_UNKNOWN
-              0
-            elsif val == :OPEN
-              1
-            elsif val == :CLOSED
-              2
-            end
+            return 0 if val == :ENUM_TYPE_UNKNOWN
+            return 1 if val == :OPEN
+            return 2 if val == :CLOSED
           end
         end
 
@@ -31508,23 +31350,15 @@ module ProtoBoeuf
           EXPANDED = 2
 
           def self.lookup(val)
-            if val == 0
-              :REPEATED_FIELD_ENCODING_UNKNOWN
-            elsif val == 1
-              :PACKED
-            elsif val == 2
-              :EXPANDED
-            end
+            return :REPEATED_FIELD_ENCODING_UNKNOWN if val == 0
+            return :PACKED if val == 1
+            return :EXPANDED if val == 2
           end
 
           def self.resolve(val)
-            if val == :REPEATED_FIELD_ENCODING_UNKNOWN
-              0
-            elsif val == :PACKED
-              1
-            elsif val == :EXPANDED
-              2
-            end
+            return 0 if val == :REPEATED_FIELD_ENCODING_UNKNOWN
+            return 1 if val == :PACKED
+            return 2 if val == :EXPANDED
           end
         end
 
@@ -31534,23 +31368,15 @@ module ProtoBoeuf
           NONE = 3
 
           def self.lookup(val)
-            if val == 0
-              :UTF8_VALIDATION_UNKNOWN
-            elsif val == 2
-              :VERIFY
-            elsif val == 3
-              :NONE
-            end
+            return :UTF8_VALIDATION_UNKNOWN if val == 0
+            return :VERIFY if val == 2
+            return :NONE if val == 3
           end
 
           def self.resolve(val)
-            if val == :UTF8_VALIDATION_UNKNOWN
-              0
-            elsif val == :VERIFY
-              2
-            elsif val == :NONE
-              3
-            end
+            return 0 if val == :UTF8_VALIDATION_UNKNOWN
+            return 2 if val == :VERIFY
+            return 3 if val == :NONE
           end
         end
 
@@ -31560,23 +31386,15 @@ module ProtoBoeuf
           DELIMITED = 2
 
           def self.lookup(val)
-            if val == 0
-              :MESSAGE_ENCODING_UNKNOWN
-            elsif val == 1
-              :LENGTH_PREFIXED
-            elsif val == 2
-              :DELIMITED
-            end
+            return :MESSAGE_ENCODING_UNKNOWN if val == 0
+            return :LENGTH_PREFIXED if val == 1
+            return :DELIMITED if val == 2
           end
 
           def self.resolve(val)
-            if val == :MESSAGE_ENCODING_UNKNOWN
-              0
-            elsif val == :LENGTH_PREFIXED
-              1
-            elsif val == :DELIMITED
-              2
-            end
+            return 0 if val == :MESSAGE_ENCODING_UNKNOWN
+            return 1 if val == :LENGTH_PREFIXED
+            return 2 if val == :DELIMITED
           end
         end
 
@@ -31586,23 +31404,15 @@ module ProtoBoeuf
           LEGACY_BEST_EFFORT = 2
 
           def self.lookup(val)
-            if val == 0
-              :JSON_FORMAT_UNKNOWN
-            elsif val == 1
-              :ALLOW
-            elsif val == 2
-              :LEGACY_BEST_EFFORT
-            end
+            return :JSON_FORMAT_UNKNOWN if val == 0
+            return :ALLOW if val == 1
+            return :LEGACY_BEST_EFFORT if val == 2
           end
 
           def self.resolve(val)
-            if val == :JSON_FORMAT_UNKNOWN
-              0
-            elsif val == :ALLOW
-              1
-            elsif val == :LEGACY_BEST_EFFORT
-              2
-            end
+            return 0 if val == :JSON_FORMAT_UNKNOWN
+            return 1 if val == :ALLOW
+            return 2 if val == :LEGACY_BEST_EFFORT
           end
         end
         # required field readers
@@ -36353,23 +36163,15 @@ module ProtoBoeuf
             ALIAS = 2
 
             def self.lookup(val)
-              if val == 0
-                :NONE
-              elsif val == 1
-                :SET
-              elsif val == 2
-                :ALIAS
-              end
+              return :NONE if val == 0
+              return :SET if val == 1
+              return :ALIAS if val == 2
             end
 
             def self.resolve(val)
-              if val == :NONE
-                0
-              elsif val == :SET
-                1
-              elsif val == :ALIAS
-                2
-              end
+              return 0 if val == :NONE
+              return 1 if val == :SET
+              return 2 if val == :ALIAS
             end
           end
           # required field readers
