@@ -1765,7 +1765,7 @@ module ProtoBoeuf
 
     def to_ruby(this_file = nil, options = {})
       requires = Set.new
-      @ast.file.each do |file|
+      each_file do |file|
         modules = resolve_modules(file)
         head = "# encoding: ascii-8bit\n"
         head += "# rubocop:disable all\n"
@@ -1860,6 +1860,16 @@ module ProtoBoeuf
             raise "Unknown wire type for field #{field.type}"
           end
         end
+      end
+    end
+
+    private
+
+    def each_file(&block)
+      if @ast.respond_to?(:file)
+        @ast.file.each(&block)
+      else
+        @ast.each(&block)
       end
     end
   end
