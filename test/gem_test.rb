@@ -40,7 +40,7 @@ class GemTest < ProtoBoeuf::Test
       exit 0
     RUBY
 
-    refute(stderr.match(/warning: loading in progress, circular require considered harmful/))
+    refute_match(/warning: loading in progress, circular require considered harmful/, stderr)
   end
 
   private
