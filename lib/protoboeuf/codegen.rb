@@ -117,7 +117,8 @@ module ProtoBoeuf
             result
           end
 
-          def to_json(options = {})
+          #{type_signature(params: { as_json_options: "T::Hash[T.untyped, T.untyped]" }, returns: "String")}
+          def to_json(as_json_options = {})
             require 'json'
             JSON.dump(as_json(options))
           end
