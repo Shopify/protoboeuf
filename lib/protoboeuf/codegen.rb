@@ -2,7 +2,7 @@
 
 require "erb"
 require "syntax_tree"
-require_relative "codegen_type_helper"
+require_relative "type_helper"
 
 module ProtoBoeuf
   class CodeGen
