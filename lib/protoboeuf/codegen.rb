@@ -2,11 +2,12 @@
 
 require "erb"
 require "syntax_tree"
-require_relative "codegen_type_helper"
-require_relative "decorated_field"
 
 module ProtoBoeuf
   class CodeGen
+    require "protoboeuf/codegen/type_helper"
+    require "protoboeuf/codegen/field"
+
     class EnumCompiler
       attr_reader :generate_types
 
@@ -95,7 +96,7 @@ module ProtoBoeuf
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field.map do |field|
-          DecoratedField.new(field:, message:, syntax:)
+          CodeGen::Field.new(field:, message:, syntax:)
         end
         @enum_field_types = toplevel_enums.merge(message.enum_type.group_by(&:name))
         @requires = requires
@@ -136,7 +137,7 @@ module ProtoBoeuf
         # list only contains non-proto3_optional fields, so we're using that
         # to only iterate over actual "oneof" fields.
         @oneof_selection_fields = @oneof_fields.each_with_index.map do |item, i|
-          item && DecoratedField.new(message:, field: message.oneof_decl[i], syntax:)
+          item && CodeGen::Field.new(message:, field: message.oneof_decl[i], syntax:)
         end
       end
 
@@ -799,7 +800,7 @@ module ProtoBoeuf
       end
 
       def initialize_oneof(field, msg)
-        oneof = DecoratedField.new(message: msg, field: msg.oneof_decl[field.oneof_index], syntax:)
+        oneof = CodeGen::Field.new(message: msg, field: msg.oneof_decl[field.oneof_index], syntax:)
 
         <<~RUBY
           if #{lvar_read(field)} == nil
