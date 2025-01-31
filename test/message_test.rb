@@ -7,8 +7,6 @@ class MessageTest < ProtoBoeuf::Test
   unit = parse_proto_file(FIXTURE_FILE)
   gen = ProtoBoeuf::CodeGen.new(unit)
 
-  File.open("fahk.rb", "w") { |f| f.puts(gen.to_ruby) }
-
   class_eval gen.to_ruby
 
   def test_sint64
