@@ -11,14 +11,19 @@ class GemTest < ProtoBoeuf::Test
         gem "protoboeuf", path: "#{__dir__}/..", require: true
       end
 
-      ::ProtoBoeuf
+      def assert_autoload(mod, name)
+        # We need to escape the string interpolation so it doesn't evaluate before we actually write this code to disk.
+        raise "\#{mod}::\#{name} not configured to autoload" unless mod.autoload?(name)
+      end
 
-      # The following should autoloaded
-      ::ProtoBoeuf::CodeGen
-      ::ProtoBoeuf::Google::Api::FieldBehavior
-      ::ProtoBoeuf::Google::Protobuf::Any
-      ::ProtoBoeuf::Google::Protobuf::FileDescriptorProto
-      ::ProtoBoeuf::Google::Protobuf::FileDescriptorSet
+      assert_autoload(::ProtoBoeuf, :CodeGen)
+      assert_autoload(::ProtoBoeuf, :Google)
+      assert_autoload(::ProtoBoeuf::Google, :Api)
+      assert_autoload(::ProtoBoeuf::Google::Api, :FieldBehavior)
+      assert_autoload(::ProtoBoeuf::Google, :Protobuf)
+      assert_autoload(::ProtoBoeuf::Google::Protobuf, :Any)
+      assert_autoload(::ProtoBoeuf::Google::Protobuf, :FileDescriptorProto)
+      assert_autoload(::ProtoBoeuf::Google::Protobuf, :FileDescriptorSet)
 
       exit 0
     RUBY
