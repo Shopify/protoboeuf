@@ -74,7 +74,7 @@ rule ".rb" => ["%X.proto"] + codegen_rb_files do |t|
   File.binwrite(t.name, ProtoBoeuf::CodeGen.new(unit).to_ruby(dest, options))
 end
 
-rule ".rb" => "%X" do |t|
+rule %r{lib/protoboeuf/google/.+\.rb} => "%X" do |t|
   # Given lib/protoboeuf/google/protobuf/foo.rb and lib/protoboeuf/google/protobuf/bar.rb, generate
   # lib/protoboeuf/google/protobuf.rb that looks like:
   #
