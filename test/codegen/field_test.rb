@@ -34,8 +34,8 @@ module ProtoBoeuf
           }
         PROTO
 
-        assert(fields["field1"].optional?, "field1 should be optional")
-        refute(fields["field2"].optional?, "field2 should not be optional")
+        assert_predicate(fields["field1"], :optional?, "field1 should be optional")
+        refute_predicate(fields["field2"], :optional?, "field2 should not be optional")
       end
 
       def test_proto3_optional
@@ -48,8 +48,8 @@ module ProtoBoeuf
           }
         PROTO
 
-        assert(fields["field1"].optional?, "field1 should be optional")
-        refute(fields["field2"].optional?, "field2 should not be optional")
+        assert_predicate(fields["field1"], :optional?, "field1 should be optional")
+        refute_predicate(fields["field2"], :optional?, "field2 should not be optional")
       end
 
       def test_repeated
@@ -62,8 +62,8 @@ module ProtoBoeuf
           }
         PROTO
 
-        assert(fields["field1"].repeated?, "field1 should be repeated")
-        refute(fields["field2"].repeated?, "field2 should not be repeated")
+        assert_predicate(fields["field1"], :repeated?, "field1 should be repeated")
+        refute_predicate(fields["field2"], :repeated?, "field2 should not be repeated")
       end
 
       def test_map_field?
@@ -76,8 +76,8 @@ module ProtoBoeuf
           }
         PROTO
 
-        assert(fields["field1"].map_field?, "field1 should be a map field")
-        refute(fields["field2"].map_field?, "field2 should not be a map field")
+        assert_predicate(fields["field1"], :map_field?, "field1 should be a map field")
+        refute_predicate(fields["field2"], :map_field?, "field2 should not be a map field")
       end
 
       def test_map_type
@@ -99,7 +99,7 @@ module ProtoBoeuf
         assert_kind_of(CodeGen::Field, map_type.value)
         assert_equal(:TYPE_INT32, map_type.value.type)
 
-        refute(fields["field2"].map_type, "field2 should not have a map_type")
+        refute_predicate(fields["field2"], :map_type, "field2 should not have a map_type")
       end
 
       def test_proto3?
@@ -109,7 +109,7 @@ module ProtoBoeuf
           }
         PROTO
 
-        refute(proto_2_fields["field1"].proto3?, "CodeGen::Field#proto3? should return false for proto2")
+        refute_predicate(proto_2_fields["field1"], :proto3?, "CodeGen::Field#proto3? should return false for proto2")
 
         proto_3_fields = fields_for_proto_message(<<~PROTO)
           syntax = "proto3";
@@ -119,7 +119,7 @@ module ProtoBoeuf
           }
         PROTO
 
-        assert(proto_3_fields["field1"].proto3?, "CodeGen::Field#proto3? should return true for proto3")
+        assert_predicate(proto_3_fields["field1"], :proto3?, "CodeGen::Field#proto3? should return true for proto3")
       end
 
       private
