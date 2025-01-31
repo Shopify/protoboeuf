@@ -11,14 +11,14 @@ module ProtoBoeuf
       extend Forwardable
 
       def_delegators :@original_field,
-        :name,
+        :has_oneof_index?,
         :label,
-        :type_name,
-        :type,
+        :name,
         :number,
-        :options,
         :oneof_index,
-        :has_oneof_index?
+        :options,
+        :type,
+        :type_name
 
       def initialize(field:, message:, syntax:)
         @original_field = field
