@@ -99,7 +99,7 @@ module ProtoBoeuf
         assert_kind_of(CodeGen::Field, map_type.value)
         assert_equal(:TYPE_INT32, map_type.value.type)
 
-        refute(fields["field2"].map_field?, "field2 should not have a map_type")
+        refute(fields["field2"].map_type, "field2 should not have a map_type")
       end
 
       def test_proto3?
