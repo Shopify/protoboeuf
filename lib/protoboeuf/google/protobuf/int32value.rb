@@ -443,9 +443,9 @@ module ProtoBoeuf
           result
         end
 
-        def to_json(options = {})
+        def to_json(as_json_options = {})
           require "json"
-          JSON.dump(as_json(options))
+          JSON.dump(as_json(as_json_options))
         end
       end
     end

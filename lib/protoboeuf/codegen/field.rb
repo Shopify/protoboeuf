@@ -66,6 +66,79 @@ module ProtoBoeuf
       def iv_name
         "@#{name}"
       end
+
+      RUBY_KEYWORDS = [
+        "__ENCODING__",
+        "__LINE__",
+        "__FILE__",
+        "BEGIN",
+        "END",
+        "alias",
+        "and",
+        "begin",
+        "break",
+        "case",
+        "class",
+        "def",
+        "defined?",
+        "do",
+        "else",
+        "elsif",
+        "end",
+        "ensure",
+        "false",
+        "for",
+        "if",
+        "in",
+        "module",
+        "next",
+        "nil",
+        "not",
+        "or",
+        "redo",
+        "rescue",
+        "retry",
+        "return",
+        "self",
+        "super",
+        "then",
+        "true",
+        "undef",
+        "unless",
+        "until",
+        "when",
+        "while",
+        "yield",
+      ].to_set
+
+      # Return code for reading the local variable returned by `lvar_name`
+      def lvar_read
+        if RUBY_KEYWORDS.include?(name)
+          "binding.local_variable_get(:#{name})"
+        elsif name =~ /^[A-Z_]/
+          "_#{name}"
+        else
+          name
+        end
+      end
+
+      def lvar_name
+        if RUBY_KEYWORDS.include?(name)
+          name
+        elsif name =~ /^[A-Z_]/
+          "_#{name}"
+        else
+          name
+        end
+      end
+
+      def predicate_method_name
+        "has_#{name}?"
+      end
+
+      def oneof_selection_field?
+        message.oneof_decl.include?(original_field)
+      end
     end
   end
 end

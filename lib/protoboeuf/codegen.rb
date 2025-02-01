@@ -103,6 +103,8 @@ module ProtoBoeuf
           def to_h
             result = {}
 
+            #{declare_resolved_oneof_selection_lvars_rb}
+
             #{fields.map { |f| to_h_assign_statement_rb(f) }.join("\n")}
 
             result
@@ -112,6 +114,8 @@ module ProtoBoeuf
           def as_json(options = {})
             result = {}
 
+            #{declare_resolved_oneof_selection_lvars_rb}
+
             #{fields.map { |f| as_json_assign_statement_rb(f) }.join("\n")}
 
             result
@@ -120,22 +124,37 @@ module ProtoBoeuf
           #{type_signature(params: { as_json_options: "T::Hash[T.untyped, T.untyped]" }, returns: "String")}
           def to_json(as_json_options = {})
             require 'json'
-            JSON.dump(as_json(options))
+            JSON.dump(as_json(as_json_options))
           end
         RUBY
       end
 
       private
 
+      def resolved_oneof_selection_lvar(field)
+        if field.oneof_selection_field?
+          "resolved_#{field.lvar_name}"
+        else
+          resolved_oneof_selection_lvar(oneof_selection_fields[field.oneof_index])
+        end
+      end
+
+      def declare_resolved_oneof_selection_lvars_rb
+        return "" if oneof_selection_fields.none?
+
+        oneof_selection_fields.map do |oneof_selection_field|
+          "#{resolved_oneof_selection_lvar(oneof_selection_field)} = self.#{oneof_selection_field.name}"
+        end.join("\n")
+      end
+
       def to_h_assign_statement_rb(field)
         key = to_h_hash_key_rb(field)
         value = to_h_hash_value_rb(field)
 
         if field.has_oneof_index? && !field.optional?
-          oneof_selection_field_name = oneof_selection_fields[field.oneof_index].name.dump
           field_name = field.name.dump
 
-          "result[#{key}] = #{value} if send(:#{oneof_selection_field_name}) == :#{field_name}"
+          "result[#{key}] = #{value} if #{resolved_oneof_selection_lvar(field)} == :#{field_name}"
         else
           "result[#{key}] = #{value}"
         end
@@ -172,14 +191,19 @@ module ProtoBoeuf
         value = as_json_hash_value_rb(field)
 
         if field.has_oneof_index? && !field.optional?
-          oneof_selection_field_name = oneof_selection_fields[field.oneof_index].name.dump
           field_name = field.name.dump
 
-          "result[#{key}] = #{value} if send(:#{oneof_selection_field_name}) == :#{field_name}"
+          "result[#{key}] = #{value} if #{resolved_oneof_selection_lvar(field)} == :#{field_name}"
         elsif field.repeated?
-          "#{value}.tap { |v| result[#{key}] = v if !options[:compact] || v.any? }"
+          value_var_name = "tmp_#{field.lvar_name}"
+
+          <<~RUBY
+            #{value_var_name} = #{value}
+
+            result[#{key}] = #{value_var_name} if !options[:compact] || #{value_var_name}.any?
+          RUBY
         elsif field.optional?
-          "result[#{key}] = #{value} if !options[:compact] || has_#{field.name}?"
+          "result[#{key}] = #{value} if !options[:compact] || #{field.predicate_method_name}"
         else
           "result[#{key}] = #{value}"
         end
@@ -917,12 +941,12 @@ module ProtoBoeuf
         oneof = CodeGen::Field.new(message: msg, field: msg.oneof_decl[field.oneof_index], syntax:)
 
         <<~RUBY
-          if #{lvar_read(field)} == nil
+          if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
-            #{bounds_check(field, lvar_read(field))}
+            #{bounds_check(field, field.lvar_read)}
             #{oneof.iv_name} = :#{field.name}
-            #{field.iv_name} = #{lvar_read(field)}
+            #{field.iv_name} = #{field.lvar_read}
           end
         RUBY
       end
@@ -941,94 +965,29 @@ module ProtoBoeuf
         set_field_to_var = if field.type == :TYPE_ENUM
           initialize_enum_field(field)
         else
-          "#{field.iv_name} = #{lvar_read(field)}"
+          "#{field.iv_name} = #{field.lvar_read}"
         end
 
         <<~RUBY
-          if #{lvar_read(field)} == nil
+          if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
-            #{bounds_check(field, lvar_read(field)).chomp}
+            #{bounds_check(field, field.lvar_read).chomp}
             #{set_bitmask(field)}
             #{set_field_to_var}
           end
         RUBY
       end
 
-      RUBY_KEYWORDS = [
-        "__ENCODING__",
-        "__LINE__",
-        "__FILE__",
-        "BEGIN",
-        "END",
-        "alias",
-        "and",
-        "begin",
-        "break",
-        "case",
-        "class",
-        "def",
-        "defined?",
-        "do",
-        "else",
-        "elsif",
-        "end",
-        "ensure",
-        "false",
-        "for",
-        "if",
-        "in",
-        "module",
-        "next",
-        "nil",
-        "not",
-        "or",
-        "redo",
-        "rescue",
-        "retry",
-        "return",
-        "self",
-        "super",
-        "then",
-        "true",
-        "undef",
-        "unless",
-        "until",
-        "when",
-        "while",
-        "yield",
-      ].to_set
-
-      # Return code for reading the local variable returned by `lvar_name`
-      def lvar_read(field)
-        if RUBY_KEYWORDS.include?(field.name)
-          "binding.local_variable_get(:#{field.name})"
-        elsif field.name =~ /^[A-Z_]/
-          "_#{field.name}"
-        else
-          field.name
-        end
-      end
-
-      def lvar_name(field)
-        if RUBY_KEYWORDS.include?(field.name)
-          field.name
-        elsif field.name =~ /^[A-Z_]/
-          "_#{field.name}"
-        else
-          field.name
-        end
-      end
-
       def initialize_required_field(field)
         <<~RUBY
-          #{bounds_check(field, lvar_read(field)).chomp}
-          #{field.iv_name} = #{lvar_read(field)}
+          #{bounds_check(field, field.lvar_read).chomp}
+          #{field.iv_name} = #{field.lvar_read}
         RUBY
       end
 
       def initialize_enum_field(field)
-        "#{field.iv_name} = #{enum_name(field)}.resolve(#{field.name}) || #{lvar_read(field)}"
+        "#{field.iv_name} = #{enum_name(field)}.resolve(#{field.name}) || #{field.lvar_read}"
       end
 
       def extra_api
@@ -1048,7 +1007,7 @@ module ProtoBoeuf
         optional_fields.map do |field|
           <<~RUBY
             #{type_signature(returns: "T::Boolean")}
-            def has_#{field.name}?
+            def #{field.predicate_method_name}
               #{test_bitmask(field)}
             end
           RUBY
@@ -1358,9 +1317,9 @@ module ProtoBoeuf
       def initialize_signature
         fields.flat_map do |f|
           if f.has_oneof_index? || f.optional?
-            "#{lvar_name(f)}: nil"
+            "#{f.lvar_name}: nil"
           else
-            "#{lvar_name(f)}: #{default_for(f)}"
+            "#{f.lvar_name}: #{default_for(f)}"
           end
         end.join(", ")
       end

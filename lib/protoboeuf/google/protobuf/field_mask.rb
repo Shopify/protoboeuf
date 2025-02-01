@@ -432,14 +432,16 @@ module ProtoBoeuf
         def as_json(options = {})
           result = {}
 
-          @paths.tap { |v| result["paths"] = v if !options[:compact] || v.any? }
+          tmp_paths = @paths
+
+          result["paths"] = tmp_paths if !options[:compact] || tmp_paths.any?
 
           result
         end
 
-        def to_json(options = {})
+        def to_json(as_json_options = {})
           require "json"
-          JSON.dump(as_json(options))
+          JSON.dump(as_json(as_json_options))
         end
       end
     end

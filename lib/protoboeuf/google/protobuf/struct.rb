@@ -637,16 +637,17 @@ module ProtoBoeuf
         def as_json(options = {})
           result = {}
 
-          @fields
-            .transform_values { |value| value.as_json(options) }
-            .tap { |v| result["fields"] = v if !options[:compact] || v.any? }
+          tmp_fields =
+            @fields.transform_values { |value| value.as_json(options) }
+
+          result["fields"] = tmp_fields if !options[:compact] || tmp_fields.any?
 
           result
         end
 
-        def to_json(options = {})
+        def to_json(as_json_options = {})
           require "json"
-          JSON.dump(as_json(options))
+          JSON.dump(as_json(as_json_options))
         end
       end
       class Value
@@ -1802,15 +1803,17 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"null_value"] = @null_value if send(:"kind") == :"null_value"
-          result[:"number_value"] = @number_value if send(:"kind") ==
+          resolved_kind = self.kind
+
+          result[:"null_value"] = @null_value if resolved_kind == :"null_value"
+          result[:"number_value"] = @number_value if resolved_kind ==
             :"number_value"
-          result[:"string_value"] = @string_value if send(:"kind") ==
+          result[:"string_value"] = @string_value if resolved_kind ==
             :"string_value"
-          result[:"bool_value"] = @bool_value if send(:"kind") == :"bool_value"
-          result[:"struct_value"] = @struct_value.to_h if send(:"kind") ==
+          result[:"bool_value"] = @bool_value if resolved_kind == :"bool_value"
+          result[:"struct_value"] = @struct_value.to_h if resolved_kind ==
             :"struct_value"
-          result[:"list_value"] = @list_value.to_h if send(:"kind") ==
+          result[:"list_value"] = @list_value.to_h if resolved_kind ==
             :"list_value"
 
           result
@@ -1819,33 +1822,35 @@ module ProtoBoeuf
         def as_json(options = {})
           result = {}
 
-          result["nullValue"] = @null_value if send(:"kind") == :"null_value"
-          result["numberValue"] = @number_value if send(:"kind") ==
+          resolved_kind = self.kind
+
+          result["nullValue"] = @null_value if resolved_kind == :"null_value"
+          result["numberValue"] = @number_value if resolved_kind ==
             :"number_value"
-          result["stringValue"] = @string_value if send(:"kind") ==
+          result["stringValue"] = @string_value if resolved_kind ==
             :"string_value"
-          result["boolValue"] = @bool_value if send(:"kind") == :"bool_value"
+          result["boolValue"] = @bool_value if resolved_kind == :"bool_value"
           result["structValue"] = (
             if @struct_value.nil?
               {}
             else
               @struct_value.as_json(options)
             end
-          ) if send(:"kind") == :"struct_value"
+          ) if resolved_kind == :"struct_value"
           result["listValue"] = (
             if @list_value.nil?
               {}
             else
               @list_value.as_json(options)
             end
-          ) if send(:"kind") == :"list_value"
+          ) if resolved_kind == :"list_value"
 
           result
         end
 
-        def to_json(options = {})
+        def to_json(as_json_options = {})
           require "json"
-          JSON.dump(as_json(options))
+          JSON.dump(as_json(as_json_options))
         end
       end
       class ListValue
@@ -2319,16 +2324,16 @@ module ProtoBoeuf
         def as_json(options = {})
           result = {}
 
-          @values
-            .map { |v| v.as_json(options) }
-            .tap { |v| result["values"] = v if !options[:compact] || v.any? }
+          tmp_values = @values.map { |v| v.as_json(options) }
+
+          result["values"] = tmp_values if !options[:compact] || tmp_values.any?
 
           result
         end
 
-        def to_json(options = {})
+        def to_json(as_json_options = {})
           require "json"
-          JSON.dump(as_json(options))
+          JSON.dump(as_json(as_json_options))
         end
       end
     end
