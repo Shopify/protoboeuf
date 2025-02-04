@@ -139,7 +139,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -150,6 +150,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -224,7 +225,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -235,6 +236,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -618,6 +620,7 @@ module ProtoBoeuf
         # enum writers
         def edition=(v)
           @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000020
         end
 
         # BEGIN writers for optional fields
@@ -760,6 +763,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000010) == 0x0000000000000010
         end
 
+        def has_edition?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def decode_from(buff, index, len)
           @_bitmask = 0
 
@@ -839,7 +846,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -850,6 +857,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -924,7 +932,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -935,6 +943,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -2835,26 +2844,28 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_package?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -2864,13 +2875,14 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x1a
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -2892,7 +2904,7 @@ module ProtoBoeuf
             list.each do |item|
               val = item
               if val != 0
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -2903,6 +2915,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -2956,7 +2969,7 @@ module ProtoBoeuf
             list.each do |item|
               val = item
               if val != 0
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -2967,6 +2980,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -3339,23 +3353,24 @@ module ProtoBoeuf
           end
 
           val = @syntax
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_syntax?
             buff << 0x62
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @edition
-          if val != 0
+          if has_edition?
             buff << 0x70
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -3366,6 +3381,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -3638,7 +3654,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -3649,6 +3665,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -3723,7 +3740,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -3734,6 +3751,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -4203,10 +4221,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4217,14 +4235,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4235,6 +4254,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -4473,7 +4493,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -4484,6 +4504,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -4558,7 +4579,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -4569,6 +4590,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -4909,10 +4931,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4923,14 +4945,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4941,6 +4964,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -5172,7 +5196,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -5183,6 +5207,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -5257,7 +5282,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -5268,6 +5293,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -6684,13 +6710,14 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -7161,13 +7188,14 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x52
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -7467,7 +7495,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -7478,6 +7506,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -7552,7 +7581,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -7563,6 +7592,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -8154,10 +8184,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @number
-            if val != 0
+            if has_number?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -8168,55 +8198,58 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @full_name
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_full_name?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
             end
 
             val = @type
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_type?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
             end
 
-            val = @reserved
-            if val == true
+            if has_reserved?
+              val = @reserved
               buff << 0x28
 
-              buff << 1
-            elsif val == false
-              # Default value, encode nothing
-            else
-              raise "bool values should be true or false"
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
             end
 
-            val = @repeated
-            if val == true
+            if has_repeated?
+              val = @repeated
               buff << 0x30
 
-              buff << 1
-            elsif val == false
-              # Default value, encode nothing
-            else
-              raise "bool values should be true or false"
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
             end
             buff << @_unknown_fields if @_unknown_fields
             buff
@@ -8298,6 +8331,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         # BEGIN writers for optional fields
@@ -8344,6 +8378,10 @@ module ProtoBoeuf
 
         def has_features?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_verification?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
         end
 
         def decode_from(buff, index, len)
@@ -8416,7 +8454,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -8427,6 +8465,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -8501,7 +8540,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -8512,6 +8551,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -9290,10 +9330,10 @@ module ProtoBoeuf
           end
 
           val = @verification
-          if val != 0
+          if has_verification?
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -9304,6 +9344,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -9480,12 +9521,14 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Label.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000004
         end
         def type=(v)
           @type =
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Type.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000008
         end
 
         # BEGIN writers for optional fields
@@ -9665,6 +9708,14 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
         end
 
+        def has_label?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+        end
+
+        def has_type?
+          (@_bitmask & 0x0000000000000008) == 0x0000000000000008
+        end
+
         def has_type_name?
           (@_bitmask & 0x0000000000000010) == 0x0000000000000010
         end
@@ -9770,7 +9821,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -9781,6 +9832,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -9855,7 +9907,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -9866,6 +9918,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -11284,23 +11337,24 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @number
-          if val != 0
+          if has_number?
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11311,14 +11365,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @label
-          if val != 0
+          if has_label?
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11329,14 +11384,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @type
-          if val != 0
+          if has_type?
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11347,53 +11403,57 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @type_name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_type_name?
             buff << 0x32
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @extendee
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_extendee?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @default_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_default_value?
             buff << 0x3a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @oneof_index
-          if val != 0
+          if has_oneof_index?
             buff << 0x48
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11404,17 +11464,19 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @json_name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_json_name?
             buff << 0x52
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11468,16 +11530,16 @@ module ProtoBoeuf
             buff
           end
 
-          val = @proto3_optional
-          if val == true
+          if has_proto3_optional?
+            val = @proto3_optional
             buff << 0x88
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
           buff << @_unknown_fields if @_unknown_fields
           buff
@@ -11662,7 +11724,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -11673,6 +11735,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -11747,7 +11810,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -11758,6 +11821,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -12089,13 +12153,14 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -12341,7 +12406,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -12352,6 +12417,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -12426,7 +12492,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -12437,6 +12503,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -12777,10 +12844,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -12791,14 +12858,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -12809,6 +12877,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -12990,7 +13059,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -13001,6 +13070,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -13075,7 +13145,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -13086,6 +13156,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -13822,13 +13893,14 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -14004,13 +14076,14 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x2a
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -14221,7 +14294,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -14232,6 +14305,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -14306,7 +14380,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -14317,6 +14391,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -14779,23 +14854,24 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @number
-          if val != 0
+          if has_number?
             buff << 0x10
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -14806,6 +14882,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -15027,7 +15104,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -15038,6 +15115,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -15112,7 +15190,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -15123,6 +15201,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -15590,13 +15669,14 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -15956,7 +16036,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -15967,6 +16047,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -16041,7 +16122,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -16052,6 +16133,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -16765,39 +16847,42 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @input_type
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_input_type?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @output_type
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_output_type?
             buff << 0x1a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -16851,26 +16936,26 @@ module ProtoBoeuf
             buff
           end
 
-          val = @client_streaming
-          if val == true
+          if has_client_streaming?
+            val = @client_streaming
             buff << 0x28
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @server_streaming
-          if val == true
+          if has_server_streaming?
+            val = @server_streaming
             buff << 0x30
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
           buff << @_unknown_fields if @_unknown_fields
           buff
@@ -17002,6 +17087,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FileOptions::OptimizeMode.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000020
         end
 
         # BEGIN writers for optional fields
@@ -17297,6 +17383,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000010) == 0x0000000000000010
         end
 
+        def has_optimize_for?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def has_go_package?
           (@_bitmask & 0x0000000000000040) == 0x0000000000000040
         end
@@ -17440,7 +17530,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -17451,6 +17541,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -17525,7 +17616,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -17536,6 +17627,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -19786,71 +19878,73 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @java_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_java_package?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @java_outer_classname
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_java_outer_classname?
             buff << 0x42
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
-          val = @java_multiple_files
-          if val == true
+          if has_java_multiple_files?
+            val = @java_multiple_files
             buff << 0x50
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_generate_equals_and_hash
-          if val == true
+          if has_java_generate_equals_and_hash?
+            val = @java_generate_equals_and_hash
             buff << 0xa0
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_string_check_utf8
-          if val == true
+          if has_java_string_check_utf8?
+            val = @java_string_check_utf8
             buff << 0xd8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @optimize_for
-          if val != 0
+          if has_optimize_for?
             buff << 0x48
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -19861,175 +19955,184 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @go_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_go_package?
             buff << 0x5a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
-          val = @cc_generic_services
-          if val == true
+          if has_cc_generic_services?
+            val = @cc_generic_services
             buff << 0x80
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_generic_services
-          if val == true
+          if has_java_generic_services?
+            val = @java_generic_services
             buff << 0x88
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @py_generic_services
-          if val == true
+          if has_py_generic_services?
+            val = @py_generic_services
             buff << 0x90
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0xb8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @cc_enable_arenas
-          if val == true
+          if has_cc_enable_arenas?
+            val = @cc_enable_arenas
             buff << 0xf8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @objc_class_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_objc_class_prefix?
             buff << 0xa2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @csharp_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_csharp_namespace?
             buff << 0xaa
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @swift_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_swift_prefix?
             buff << 0xba
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @php_class_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_class_prefix?
             buff << 0xc2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @php_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_namespace?
             buff << 0xca
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @php_metadata_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_metadata_namespace?
             buff << 0xe2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @ruby_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_ruby_package?
             buff << 0xea
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -20471,7 +20574,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -20482,6 +20585,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -20556,7 +20660,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -20567,6 +20671,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -21245,59 +21350,59 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @message_set_wire_format
-          if val == true
+          if has_message_set_wire_format?
+            val = @message_set_wire_format
             buff << 0x08
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @no_standard_descriptor_accessor
-          if val == true
+          if has_no_standard_descriptor_accessor?
+            val = @no_standard_descriptor_accessor
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @map_entry
-          if val == true
+          if has_map_entry?
+            val = @map_entry
             buff << 0x38
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated_legacy_json_field_conflicts
-          if val == true
+          if has_deprecated_legacy_json_field_conflicts?
+            val = @deprecated_legacy_json_field_conflicts
             buff << 0x58
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -21498,6 +21603,7 @@ module ProtoBoeuf
           # enum writers
           def edition=(v)
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
 
           # BEGIN writers for optional fields
@@ -21530,6 +21636,10 @@ module ProtoBoeuf
 
           def to_proto(_options = {})
             self.class.encode(self)
+          end
+
+          def has_edition?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
           end
 
           def has_value?
@@ -21610,7 +21720,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -21621,6 +21731,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -21695,7 +21806,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -21706,6 +21817,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -22039,10 +22151,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition
-            if val != 0
+            if has_edition?
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22053,17 +22165,19 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @value
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_value?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -22129,14 +22243,17 @@ module ProtoBoeuf
           def edition_introduced=(v)
             @edition_introduced =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
           def edition_deprecated=(v)
             @edition_deprecated =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000002
           end
           def edition_removed=(v)
             @edition_removed =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000008
           end
 
           # BEGIN writers for optional fields
@@ -22197,8 +22314,20 @@ module ProtoBoeuf
             self.class.encode(self)
           end
 
+          def has_edition_introduced?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+          end
+
+          def has_edition_deprecated?
+            (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+          end
+
           def has_deprecation_warning?
             (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+          end
+
+          def has_edition_removed?
+            (@_bitmask & 0x0000000000000008) == 0x0000000000000008
           end
 
           def decode_from(buff, index, len)
@@ -22277,7 +22406,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -22288,6 +22417,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -22362,7 +22492,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -22373,6 +22503,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -22968,10 +23099,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition_introduced
-            if val != 0
+            if has_edition_introduced?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22982,14 +23113,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @edition_deprecated
-            if val != 0
+            if has_edition_deprecated?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -23000,27 +23132,29 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @deprecation_warning
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_deprecation_warning?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
             end
 
             val = @edition_removed
-            if val != 0
+            if has_edition_removed?
               buff << 0x20
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -23031,6 +23165,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -23219,16 +23354,19 @@ module ProtoBoeuf
         def ctype=(v)
           @ctype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::CType.resolve(v) || v
+          @_bitmask |= 0x0000000000000001
         end
         def jstype=(v)
           @jstype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::JSType.resolve(v) || v
+          @_bitmask |= 0x0000000000000004
         end
         def retention=(v)
           @retention =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionRetention.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000100
         end
         def targets=(v)
           @targets =
@@ -23398,8 +23536,16 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_ctype?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
         def has_packed?
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
+        def has_jstype?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
         end
 
         def has_lazy?
@@ -23420,6 +23566,10 @@ module ProtoBoeuf
 
         def has_debug_redact?
           (@_bitmask & 0x0000000000000080) == 0x0000000000000080
+        end
+
+        def has_retention?
+          (@_bitmask & 0x0000000000000100) == 0x0000000000000100
         end
 
         def has_features?
@@ -23510,7 +23660,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -23521,6 +23671,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -23595,7 +23746,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -23606,6 +23757,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -25147,10 +25299,10 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @ctype
-          if val != 0
+          if has_ctype?
             buff << 0x08
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -25161,25 +25313,26 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
-          val = @packed
-          if val == true
+          if has_packed?
+            val = @packed
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @jstype
-          if val != 0
+          if has_jstype?
             buff << 0x30
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -25190,71 +25343,72 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
-          val = @lazy
-          if val == true
+          if has_lazy?
+            val = @lazy
             buff << 0x28
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @unverified_lazy
-          if val == true
+          if has_unverified_lazy?
+            val = @unverified_lazy
             buff << 0x78
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @weak
-          if val == true
+          if has_weak?
+            val = @weak
             buff << 0x50
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @debug_redact
-          if val == true
+          if has_debug_redact?
+            val = @debug_redact
             buff << 0x80
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @retention
-          if val != 0
+          if has_retention?
             buff << 0x88
             buff << 0x01
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -25265,6 +25419,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -25276,7 +25431,7 @@ module ProtoBoeuf
                 buff << 0x98
                 buff << 0x01
 
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -25287,6 +25442,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -25708,7 +25864,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -25719,6 +25875,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -25793,7 +25950,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -25804,6 +25961,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -26472,7 +26630,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -26483,6 +26641,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -26557,7 +26716,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -26568,6 +26727,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -27112,37 +27272,37 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @allow_alias
-          if val == true
+          if has_allow_alias?
+            val = @allow_alias
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated_legacy_json_field_conflicts
-          if val == true
+          if has_deprecated_legacy_json_field_conflicts?
+            val = @deprecated_legacy_json_field_conflicts
             buff << 0x30
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -27483,7 +27643,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -27494,6 +27654,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -27568,7 +27729,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -27579,6 +27740,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -28184,15 +28346,15 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x08
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -28243,15 +28405,15 @@ module ProtoBoeuf
             buff
           end
 
-          val = @debug_redact
-          if val == true
+          if has_debug_redact?
+            val = @debug_redact
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @feature_support
@@ -28549,7 +28711,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -28560,6 +28722,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -28634,7 +28797,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -28645,6 +28808,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -29103,16 +29267,16 @@ module ProtoBoeuf
             buff
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x88
             buff << 0x02
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           list = @uninterpreted_option
@@ -29266,6 +29430,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::MethodOptions::IdempotencyLevel.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         # BEGIN writers for optional fields
@@ -29322,6 +29487,10 @@ module ProtoBoeuf
 
         def has_deprecated?
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_idempotency_level?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
         end
 
         def has_features?
@@ -29398,7 +29567,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -29409,6 +29578,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -29483,7 +29653,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -29494,6 +29664,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -30034,24 +30205,24 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x88
             buff << 0x02
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @idempotency_level
-          if val != 0
+          if has_idempotency_level?
             buff << 0x90
             buff << 0x02
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -30062,6 +30233,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -30330,7 +30502,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -30341,6 +30513,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -30415,7 +30588,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -30426,6 +30599,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -30693,13 +30867,14 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @name_part
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0
               buff << 0x0a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -30975,7 +31150,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -30986,6 +31161,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -31060,7 +31236,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -31071,6 +31247,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -32030,35 +32207,37 @@ module ProtoBoeuf
           end
 
           val = @identifier_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_identifier_value?
             buff << 0x1a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
           end
 
           val = @positive_int_value
-          if val != 0
+          if has_positive_int_value?
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
               val >>= 7
               byte |= 0x80 if val > 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @negative_int_value
-          if val != 0
+          if has_negative_int_value?
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32069,11 +32248,12 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @double_value
-          if val != 0
+          if has_double_value?
             buff << 0x31
 
             [val].pack("E", buffer: buff)
@@ -32083,24 +32263,26 @@ module ProtoBoeuf
           if ((bs = val.bytesize) > 0)
             buff << 0x3a
             len = bs
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff.concat(val.b)
           end
 
           val = @aggregate_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_aggregate_value?
             buff << 0x42
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -32310,33 +32492,39 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::FieldPresence.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000001
         end
         def enum_type=(v)
           @enum_type =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::EnumType.resolve(v) || v
+          @_bitmask |= 0x0000000000000002
         end
         def repeated_field_encoding=(v)
           @repeated_field_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::RepeatedFieldEncoding.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000004
         end
         def utf8_validation=(v)
           @utf8_validation =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::Utf8Validation.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000008
         end
         def message_encoding=(v)
           @message_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::MessageEncoding.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000010
         end
         def json_format=(v)
           @json_format =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::JsonFormat.resolve(v) ||
               v
+          @_bitmask |= 0x0000000000000020
         end
 
         def initialize(
@@ -32347,6 +32535,8 @@ module ProtoBoeuf
           message_encoding: nil,
           json_format: nil
         )
+          @_bitmask = 0
+
           if field_presence == nil
             @field_presence = 0
           else
@@ -32412,7 +32602,33 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_field_presence?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_enum_type?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
+        def has_repeated_field_encoding?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+        end
+
+        def has_utf8_validation?
+          (@_bitmask & 0x0000000000000008) == 0x0000000000000008
+        end
+
+        def has_message_encoding?
+          (@_bitmask & 0x0000000000000010) == 0x0000000000000010
+        end
+
+        def has_json_format?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def decode_from(buff, index, len)
+          @_bitmask = 0
+
           @field_presence = 0
           @enum_type = 0
           @repeated_field_encoding = 0
@@ -32482,7 +32698,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -32493,6 +32709,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -32567,7 +32784,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -32578,6 +32795,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -33442,10 +33660,10 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @field_presence
-          if val != 0
+          if has_field_presence?
             buff << 0x08
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33456,14 +33674,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @enum_type
-          if val != 0
+          if has_enum_type?
             buff << 0x10
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33474,14 +33693,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @repeated_field_encoding
-          if val != 0
+          if has_repeated_field_encoding?
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33492,14 +33712,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @utf8_validation
-          if val != 0
+          if has_utf8_validation?
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33510,14 +33731,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @message_encoding
-          if val != 0
+          if has_message_encoding?
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33528,14 +33750,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @json_format
-          if val != 0
+          if has_json_format?
             buff << 0x30
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -33546,6 +33769,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -33622,6 +33846,7 @@ module ProtoBoeuf
           # enum writers
           def edition=(v)
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
 
           # BEGIN writers for optional fields
@@ -33670,6 +33895,10 @@ module ProtoBoeuf
 
           def to_proto(_options = {})
             self.class.encode(self)
+          end
+
+          def has_edition?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
           end
 
           def has_overridable_features?
@@ -33755,7 +33984,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -33766,6 +33995,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -33840,7 +34070,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -33851,6 +34081,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -34318,10 +34549,10 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition
-            if val != 0
+            if has_edition?
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -34332,6 +34563,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -34493,13 +34725,17 @@ module ProtoBoeuf
         def minimum_edition=(v)
           @minimum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000001
         end
         def maximum_edition=(v)
           @maximum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         def initialize(defaults: [], minimum_edition: nil, maximum_edition: nil)
+          @_bitmask = 0
+
           @defaults = defaults
 
           if minimum_edition == nil
@@ -34527,7 +34763,17 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_minimum_edition?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_maximum_edition?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
         def decode_from(buff, index, len)
+          @_bitmask = 0
+
           @defaults = []
           @minimum_edition = 0
           @maximum_edition = 0
@@ -34594,7 +34840,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -34605,6 +34851,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -34679,7 +34926,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -34690,6 +34937,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -35225,10 +35473,10 @@ module ProtoBoeuf
           end
 
           val = @minimum_edition
-          if val != 0
+          if has_minimum_edition?
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -35239,14 +35487,15 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @maximum_edition
-          if val != 0
+          if has_maximum_edition?
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -35257,6 +35506,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -35494,7 +35744,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -35505,6 +35755,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -35579,7 +35830,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -35590,6 +35841,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -36446,7 +36698,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -36457,6 +36709,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -36510,7 +36763,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -36521,6 +36774,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -36561,26 +36815,28 @@ module ProtoBoeuf
             end
 
             val = @leading_comments
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_leading_comments?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
             end
 
             val = @trailing_comments
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_trailing_comments?
               buff << 0x22
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -36590,13 +36846,14 @@ module ProtoBoeuf
             if list.size > 0
               list.each do |item|
                 val = item
-                if ((len = val.bytesize) > 0)
+                if (len = val.bytesize) > 0
                   buff << 0x32
-                  while len != 0
+                  loop do
                     byte = len & 0x7F
                     len >>= 7
                     byte |= 0x80 if len > 0
                     buff << byte
+                    break if len == 0
                   end
 
                   buff << (val.ascii_only? ? val : val.b)
@@ -36732,7 +36989,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -36743,6 +37000,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -36817,7 +37075,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -36828,6 +37086,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -37195,6 +37454,7 @@ module ProtoBoeuf
               ::ProtoBoeuf::Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
                 v
               ) || v
+            @_bitmask |= 0x0000000000000008
           end
 
           # BEGIN writers for optional fields
@@ -37300,6 +37560,10 @@ module ProtoBoeuf
             (@_bitmask & 0x0000000000000004) == 0x0000000000000004
           end
 
+          def has_semantic?
+            (@_bitmask & 0x0000000000000008) == 0x0000000000000008
+          end
+
           def decode_from(buff, index, len)
             @_bitmask = 0
 
@@ -37377,7 +37641,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -37388,6 +37652,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -37462,7 +37727,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -37473,6 +37738,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -38273,7 +38539,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -38284,6 +38550,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -38324,23 +38591,24 @@ module ProtoBoeuf
             end
 
             val = @source_file
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_source_file?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
             end
 
             val = @begin
-            if val != 0
+            if has_begin?
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -38351,14 +38619,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x20
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -38369,14 +38638,15 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @semantic
-            if val != 0
+            if has_semantic?
               buff << 0x28
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -38387,6 +38657,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -38508,7 +38779,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -38519,6 +38790,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -38593,7 +38865,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -38604,6 +38876,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)

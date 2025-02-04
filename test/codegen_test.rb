@@ -247,8 +247,9 @@ module ProtoBoeuf
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
 
-      msg = klass::TestManyOptionalFields.new(a59: 0, a60: 1, a99: 1)
+      msg = klass::TestManyOptionalFields.new(a59: nil, a60: 1, a99: 1)
       msg = klass::TestManyOptionalFields.decode(klass::TestManyOptionalFields.encode(msg))
+      refute_predicate(msg, :has_a1?)
       refute_predicate(msg, :has_a59?)
       assert_predicate(msg, :has_a60?)
       assert_predicate(msg, :has_a99?)
