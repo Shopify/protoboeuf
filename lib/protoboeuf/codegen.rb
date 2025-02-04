@@ -172,7 +172,7 @@ module ProtoBoeuf
 
         if field.repeated?
           # repeated maps aren't possible so we don't have to worry about to_h arity or as_json not being defined
-          "#{field.iv_name}.map { |v| v.to_h }"
+          "#{field.iv_name}.map(&:to_h)"
         else
           "#{field.iv_name}.to_h"
         end
@@ -180,7 +180,7 @@ module ProtoBoeuf
 
       def to_h_hash_value_for_map_rb(field)
         if field.map_type.value.type == :TYPE_MESSAGE
-          "#{field.iv_name}.transform_values { |value| value.to_h }"
+          "#{field.iv_name}.transform_values(&:to_h)"
         else
           field.iv_name
         end
