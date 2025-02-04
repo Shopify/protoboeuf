@@ -513,7 +513,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"file"] = @file.map { |v| v.to_h }
+          result[:"file"] = @file.map(&:to_h)
 
           result
         end
@@ -3378,10 +3378,10 @@ module ProtoBoeuf
           result[:"name"] = @name
           result[:"package"] = @package
           result[:"dependency"] = @dependency
-          result[:"message_type"] = @message_type.map { |v| v.to_h }
-          result[:"enum_type"] = @enum_type.map { |v| v.to_h }
-          result[:"service"] = @service.map { |v| v.to_h }
-          result[:"extension"] = @extension.map { |v| v.to_h }
+          result[:"message_type"] = @message_type.map(&:to_h)
+          result[:"enum_type"] = @enum_type.map(&:to_h)
+          result[:"service"] = @service.map(&:to_h)
+          result[:"extension"] = @extension.map(&:to_h)
           result[:"options"] = @options.to_h
           result[:"source_code_info"] = @source_code_info.to_h
           result[:"public_dependency"] = @public_dependency
@@ -7182,14 +7182,14 @@ module ProtoBoeuf
           result = {}
 
           result[:"name"] = @name
-          result[:"field"] = @field.map { |v| v.to_h }
-          result[:"nested_type"] = @nested_type.map { |v| v.to_h }
-          result[:"enum_type"] = @enum_type.map { |v| v.to_h }
-          result[:"extension_range"] = @extension_range.map { |v| v.to_h }
-          result[:"extension"] = @extension.map { |v| v.to_h }
+          result[:"field"] = @field.map(&:to_h)
+          result[:"nested_type"] = @nested_type.map(&:to_h)
+          result[:"enum_type"] = @enum_type.map(&:to_h)
+          result[:"extension_range"] = @extension_range.map(&:to_h)
+          result[:"extension"] = @extension.map(&:to_h)
           result[:"options"] = @options.to_h
-          result[:"oneof_decl"] = @oneof_decl.map { |v| v.to_h }
-          result[:"reserved_range"] = @reserved_range.map { |v| v.to_h }
+          result[:"oneof_decl"] = @oneof_decl.map(&:to_h)
+          result[:"reserved_range"] = @reserved_range.map(&:to_h)
           result[:"reserved_name"] = @reserved_name
 
           result
@@ -9313,12 +9313,10 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"declaration"] = @declaration.map { |v| v.to_h }
+          result[:"declaration"] = @declaration.map(&:to_h)
           result[:"verification"] = @verification
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -14027,9 +14025,9 @@ module ProtoBoeuf
           result = {}
 
           result[:"name"] = @name
-          result[:"value"] = @value.map { |v| v.to_h }
+          result[:"value"] = @value.map(&:to_h)
           result[:"options"] = @options.to_h
-          result[:"reserved_range"] = @reserved_range.map { |v| v.to_h }
+          result[:"reserved_range"] = @reserved_range.map(&:to_h)
           result[:"reserved_name"] = @reserved_name
 
           result
@@ -15718,7 +15716,7 @@ module ProtoBoeuf
           result = {}
 
           result[:"name"] = @name
-          result[:"method"] = @method.map { |v| v.to_h }
+          result[:"method"] = @method.map(&:to_h)
           result[:"options"] = @options.to_h
 
           result
@@ -20174,9 +20172,7 @@ module ProtoBoeuf
           result[:"php_metadata_namespace"] = @php_metadata_namespace
           result[:"ruby_package"] = @ruby_package
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -21428,9 +21424,7 @@ module ProtoBoeuf
             :"deprecated_legacy_json_field_conflicts"
           ] = @deprecated_legacy_json_field_conflicts
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -25532,12 +25526,10 @@ module ProtoBoeuf
           result[:"debug_redact"] = @debug_redact
           result[:"retention"] = @retention
           result[:"targets"] = @targets
-          result[:"edition_defaults"] = @edition_defaults.map { |v| v.to_h }
+          result[:"edition_defaults"] = @edition_defaults.map(&:to_h)
           result[:"features"] = @features.to_h
           result[:"feature_support"] = @feature_support.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -26269,9 +26261,7 @@ module ProtoBoeuf
           result = {}
 
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -27275,9 +27265,7 @@ module ProtoBoeuf
             :"deprecated_legacy_json_field_conflicts"
           ] = @deprecated_legacy_json_field_conflicts
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -28384,9 +28372,7 @@ module ProtoBoeuf
           result[:"features"] = @features.to_h
           result[:"debug_redact"] = @debug_redact
           result[:"feature_support"] = @feature_support.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -29197,9 +29183,7 @@ module ProtoBoeuf
 
           result[:"deprecated"] = @deprecated
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -30199,9 +30183,7 @@ module ProtoBoeuf
           result[:"deprecated"] = @deprecated
           result[:"idempotency_level"] = @idempotency_level
           result[:"features"] = @features.to_h
-          result[:"uninterpreted_option"] = @uninterpreted_option.map do |v|
-            v.to_h
-          end
+          result[:"uninterpreted_option"] = @uninterpreted_option.map(&:to_h)
 
           result
         end
@@ -32130,7 +32112,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"name"] = @name.map { |v| v.to_h }
+          result[:"name"] = @name.map(&:to_h)
           result[:"identifier_value"] = @identifier_value
           result[:"positive_int_value"] = @positive_int_value
           result[:"negative_int_value"] = @negative_int_value
@@ -35284,7 +35266,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"defaults"] = @defaults.map { |v| v.to_h }
+          result[:"defaults"] = @defaults.map(&:to_h)
           result[:"minimum_edition"] = @minimum_edition
           result[:"maximum_edition"] = @maximum_edition
 
@@ -37124,7 +37106,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"location"] = @location.map { |v| v.to_h }
+          result[:"location"] = @location.map(&:to_h)
 
           result
         end
@@ -38900,7 +38882,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"annotation"] = @annotation.map { |v| v.to_h }
+          result[:"annotation"] = @annotation.map(&:to_h)
 
           result
         end

@@ -629,7 +629,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"fields"] = @fields.transform_values { |value| value.to_h }
+          result[:"fields"] = @fields.transform_values(&:to_h)
 
           result
         end
@@ -2316,7 +2316,7 @@ module ProtoBoeuf
         def to_h
           result = {}
 
-          result[:"values"] = @values.map { |v| v.to_h }
+          result[:"values"] = @values.map(&:to_h)
 
           result
         end
