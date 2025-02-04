@@ -122,6 +122,87 @@ module ProtoBoeuf
         assert_predicate(proto_3_fields["field1"], :proto3?, "CodeGen::Field#proto3? should return true for proto3")
       end
 
+      def test_iv_name
+        fields = fields_for_proto_message(<<~PROTO)
+          syntax = "proto3";
+
+          message MyMessage {
+            int32 field1 = 1;
+            string field_2 = 2;
+          }
+        PROTO
+
+        assert_equal("@field1", fields["field1"].iv_name)
+        assert_equal("@field_2", fields["field_2"].iv_name)
+      end
+
+      def test_lvar_name
+        fields = fields_for_proto_message(<<~PROTO)
+          syntax = "proto3";
+
+          message MyMessage {
+            int32 field1 = 1;
+            int32 Field2 = 2;
+            int32 _field3 = 3;
+            int32 unless = 4; // Matches a Ruby reserved word
+          }
+        PROTO
+
+        assert_equal("field1", fields["field1"].lvar_name)
+        assert_equal("_Field2", fields["Field2"].lvar_name)
+        assert_equal("__field3", fields["_field3"].lvar_name)
+        assert_equal("unless", fields["unless"].lvar_name)
+      end
+
+      def test_lvar_read
+        fields = fields_for_proto_message(<<~PROTO)
+          syntax = "proto3";
+
+          message MyMessage {
+            int32 field1 = 1;
+            int32 Field2 = 2;
+            int32 _field3 = 3;
+            int32 unless = 4; // Matches a Ruby reserved word
+          }
+        PROTO
+
+        assert_equal("field1", fields["field1"].lvar_read)
+        assert_equal("_Field2", fields["Field2"].lvar_read)
+        assert_equal("__field3", fields["_field3"].lvar_read)
+        assert_equal("binding.local_variable_get(:unless)", fields["unless"].lvar_read)
+      end
+
+      def test_predicate_method_name
+        fields = fields_for_proto_message(<<~PROTO)
+          syntax = "proto3";
+
+          message MyMessage {
+            optional int32 field1 = 1;
+          }
+        PROTO
+
+        assert_equal("has_field1?", fields["field1"].predicate_method_name)
+      end
+
+      def test_oneof_selection_field?
+        fields = fields_for_proto_message(<<~PROTO)
+          syntax = "proto3";
+
+          message MyMessage {
+            oneof my_oneof {
+              int32 field1 = 1;
+              string field2 = 2;
+            }
+            int32 field3 = 3;
+          }
+        PROTO
+
+        assert_predicate(fields["my_oneof"], :oneof_selection_field?, "my_oneof should be a oneof selection field")
+        refute_predicate(fields["field1"], :oneof_selection_field?, "field1 should not be a oneof selection field")
+        refute_predicate(fields["field2"], :oneof_selection_field?, "field2 should not be a oneof selection field")
+        refute_predicate(fields["field3"], :oneof_selection_field?, "field3 should not be a oneof selection field")
+      end
+
       private
 
       def fields_for_proto_message(proto_string)
@@ -130,7 +211,7 @@ module ProtoBoeuf
         syntax = unit.file.first.syntax
         message = unit.file.first.message_type.first
 
-        message.field.group_by(&:name).transform_values do |fields|
+        (message.field.to_a + message.oneof_decl.to_a).group_by(&:name).transform_values do |fields|
           CodeGen::Field.new(
             field: fields.first,
             message:,
