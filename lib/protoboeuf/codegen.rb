@@ -85,8 +85,8 @@ module ProtoBoeuf
       attr_reader :message, :fields, :oneof_selection_fields, :generate_types
 
       class << self
-        def result(message:, fields:, oneof_selection_fields:, generate_types:)
-          new(message:, fields:, oneof_selection_fields:, generate_types:).result
+        def result(...)
+          new(...).result
         end
       end
 
