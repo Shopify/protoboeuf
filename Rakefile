@@ -120,9 +120,8 @@ end
 # This is a file task to generate an rb file from benchmark.proto
 file BENCHMARK_PROTOBOEUF_PB => ["bench/fixtures/benchmark.proto"] + codegen_rb_files do |t|
   mkdir_p "bench/lib/protoboeuf"
-  codegen_rb_files.each { |f| require_relative f }
 
-  unit = ProtoBoeuf.parse_file(t.source)
+  unit = parse_proto_file(t.source)
   unit.file.each do |f|
     next if f.package == "proto_boeuf" || f.package.start_with?("proto_boeuf.")
 
