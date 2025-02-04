@@ -557,9 +557,25 @@ module ProtoBoeuf
 
         def to_h
           result = {}
-          result["type_url".to_sym] = @type_url
-          result["value".to_sym] = @value
+
+          result[:"type_url"] = @type_url
+          result[:"value"] = @value
+
           result
+        end
+
+        def as_json(options = {})
+          result = {}
+
+          result["typeUrl"] = @type_url
+          result["value"] = @value
+
+          result
+        end
+
+        def to_json(as_json_options = {})
+          require "json"
+          JSON.dump(as_json(as_json_options))
         end
       end
     end
