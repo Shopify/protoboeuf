@@ -237,7 +237,15 @@ module ProtoBoeuf
     end
 
     class MessageCompiler
-      attr_reader :generate_types, :requires
+      attr_reader :enum_field_types,
+        :fields,
+        :generate_types,
+        :message,
+        :oneof_fields,
+        :oneof_selection_fields,
+        :optional_fields,
+        :requires,
+        :syntax
 
       include TypeHelper
 
@@ -246,14 +254,6 @@ module ProtoBoeuf
           new(message, toplevel_enums, generate_types:, requires:, syntax:, options:).result
         end
       end
-
-      attr_reader :message,
-        :fields,
-        :oneof_fields,
-        :syntax,
-        :optional_fields,
-        :enum_field_types,
-        :oneof_selection_fields
 
       def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, options:)
         @message = message
