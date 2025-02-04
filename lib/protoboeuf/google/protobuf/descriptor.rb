@@ -620,6 +620,7 @@ module ProtoBoeuf
         # enum writers
         def edition=(v)
           @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000020
         end
 
         # BEGIN writers for optional fields
@@ -8330,6 +8331,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::ExtensionRangeOptions::VerificationState.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         # BEGIN writers for optional fields
@@ -9519,12 +9521,14 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Label.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000004
         end
         def type=(v)
           @type =
             ::ProtoBoeuf::Google::Protobuf::FieldDescriptorProto::Type.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000008
         end
 
         # BEGIN writers for optional fields
@@ -17083,6 +17087,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FileOptions::OptimizeMode.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000020
         end
 
         # BEGIN writers for optional fields
@@ -21598,6 +21603,7 @@ module ProtoBoeuf
           # enum writers
           def edition=(v)
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
 
           # BEGIN writers for optional fields
@@ -22237,14 +22243,17 @@ module ProtoBoeuf
           def edition_introduced=(v)
             @edition_introduced =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
           def edition_deprecated=(v)
             @edition_deprecated =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000002
           end
           def edition_removed=(v)
             @edition_removed =
               ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000008
           end
 
           # BEGIN writers for optional fields
@@ -23345,16 +23354,19 @@ module ProtoBoeuf
         def ctype=(v)
           @ctype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::CType.resolve(v) || v
+          @_bitmask |= 0x0000000000000001
         end
         def jstype=(v)
           @jstype =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::JSType.resolve(v) || v
+          @_bitmask |= 0x0000000000000004
         end
         def retention=(v)
           @retention =
             ::ProtoBoeuf::Google::Protobuf::FieldOptions::OptionRetention.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000100
         end
         def targets=(v)
           @targets =
@@ -29418,6 +29430,7 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::MethodOptions::IdempotencyLevel.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         # BEGIN writers for optional fields
@@ -32479,33 +32492,39 @@ module ProtoBoeuf
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::FieldPresence.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000001
         end
         def enum_type=(v)
           @enum_type =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::EnumType.resolve(v) || v
+          @_bitmask |= 0x0000000000000002
         end
         def repeated_field_encoding=(v)
           @repeated_field_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::RepeatedFieldEncoding.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000004
         end
         def utf8_validation=(v)
           @utf8_validation =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::Utf8Validation.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000008
         end
         def message_encoding=(v)
           @message_encoding =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::MessageEncoding.resolve(
               v
             ) || v
+          @_bitmask |= 0x0000000000000010
         end
         def json_format=(v)
           @json_format =
             ::ProtoBoeuf::Google::Protobuf::FeatureSet::JsonFormat.resolve(v) ||
               v
+          @_bitmask |= 0x0000000000000020
         end
 
         def initialize(
@@ -33827,6 +33846,7 @@ module ProtoBoeuf
           # enum writers
           def edition=(v)
             @edition = ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+            @_bitmask |= 0x0000000000000001
           end
 
           # BEGIN writers for optional fields
@@ -34705,10 +34725,12 @@ module ProtoBoeuf
         def minimum_edition=(v)
           @minimum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000001
         end
         def maximum_edition=(v)
           @maximum_edition =
             ::ProtoBoeuf::Google::Protobuf::Edition.resolve(v) || v
+          @_bitmask |= 0x0000000000000002
         end
 
         def initialize(defaults: [], minimum_edition: nil, maximum_edition: nil)
@@ -37432,6 +37454,7 @@ module ProtoBoeuf
               ::ProtoBoeuf::Google::Protobuf::GeneratedCodeInfo::Annotation::Semantic.resolve(
                 v
               ) || v
+            @_bitmask |= 0x0000000000000008
           end
 
           # BEGIN writers for optional fields

@@ -392,7 +392,7 @@ module ProtoBoeuf
       end
 
       def encode_bool(field, value_expr, tagged)
-        if optional_fields.include?(field)
+        if field.optional?
           <<~RUBY
             if has_#{field.name}?
               val = #{value_expr}
@@ -517,7 +517,7 @@ module ProtoBoeuf
         # Empty string is default value, so encodes nothing
         body = <<~RUBY
           val = #{value_expr}
-          if (len = val.bytesize) > 0 #{optional_fields.include?(field) ? " || has_#{field.name}?" : ""}
+          if (len = val.bytesize) > 0 #{field.optional? ? " || has_#{field.name}?" : ""}
             #{encode_tag_and_length(field, tagged, "len")}
         RUBY
 
@@ -624,7 +624,7 @@ module ProtoBoeuf
       def encode_uint64(field, value_expr, tagged)
         <<~RUBY
           val = #{value_expr}
-          if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+          if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{uint64_code("val")}
           end
@@ -638,7 +638,7 @@ module ProtoBoeuf
       def encode_int64(field, value_expr, tagged)
         <<~RUBY
           val = #{value_expr}
-          if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+          if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{encode_varint}
           end
@@ -672,7 +672,7 @@ module ProtoBoeuf
       def encode_sint64(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
 
           # Zigzag encoding:
@@ -695,7 +695,7 @@ module ProtoBoeuf
       def encode_double(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('E', buffer: buff)
         end
@@ -705,7 +705,7 @@ module ProtoBoeuf
       def encode_float(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('e', buffer: buff)
         end
@@ -715,7 +715,7 @@ module ProtoBoeuf
       def encode_fixed64(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('Q<', buffer: buff)
         end
@@ -725,7 +725,7 @@ module ProtoBoeuf
       def encode_sfixed64(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('q<', buffer: buff)
         end
@@ -735,7 +735,7 @@ module ProtoBoeuf
       def encode_fixed32(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('L<', buffer: buff)
         end
@@ -745,7 +745,7 @@ module ProtoBoeuf
       def encode_sfixed32(field, value_expr, tagged)
         <<-eocode
         val = #{value_expr}
-        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('l<', buffer: buff)
         end
@@ -866,8 +866,8 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map do |field|
-            writer = "def #{field.name}=(v); #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v;"
-            if @optional_fields.include?(fields)
+            writer = "def #{field.name}=(v); #{field.iv_name} = #{enum_name(field)}.resolve(v) || v;"
+            if field.optional?
               writer << "#{set_bitmask(field)}; "
             end
             writer << "end"
