@@ -475,7 +475,7 @@ module ProtoBoeuf
 
       def uint64_code(local)
         <<~RUBY
-          loop do 
+          loop do
             byte = #{local} & 0x7F
             #{local} >>= 7
             byte |= 0x80 if #{local} > 0
@@ -511,7 +511,7 @@ module ProtoBoeuf
 
       def encode_varint(dest = "buff")
         <<~RUBY
-          while val != 0
+          loop do
             byte = val & 0x7F
 
             val >>= 7
@@ -522,6 +522,7 @@ module ProtoBoeuf
 
             byte |= 0x80 if val != 0
             #{dest} << byte
+            break if val == 0
           end
         RUBY
       end

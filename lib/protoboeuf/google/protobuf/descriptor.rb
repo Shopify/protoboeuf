@@ -139,7 +139,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -150,6 +150,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -224,7 +225,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -235,6 +236,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -822,7 +824,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -833,6 +835,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -907,7 +910,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -918,6 +921,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -2820,11 +2824,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -2833,11 +2838,12 @@ module ProtoBoeuf
           val = @package
           if (len = val.bytesize) > 0 || has_package?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -2849,11 +2855,12 @@ module ProtoBoeuf
               val = item
               if (len = val.bytesize) > 0
                 buff << 0x1a
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -2875,7 +2882,7 @@ module ProtoBoeuf
             list.each do |item|
               val = item
               if val != 0
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -2886,6 +2893,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -2939,7 +2947,7 @@ module ProtoBoeuf
             list.each do |item|
               val = item
               if val != 0
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -2950,6 +2958,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -3324,11 +3333,12 @@ module ProtoBoeuf
           val = @syntax
           if (len = val.bytesize) > 0 || has_syntax?
             buff << 0x62
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -3338,7 +3348,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x70
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -3349,6 +3359,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -3552,7 +3563,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -3563,6 +3574,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -3637,7 +3649,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -3648,6 +3660,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -4120,7 +4133,7 @@ module ProtoBoeuf
             if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4131,6 +4144,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -4138,7 +4152,7 @@ module ProtoBoeuf
             if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4149,6 +4163,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -4364,7 +4379,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -4375,6 +4390,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -4449,7 +4465,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -4460,6 +4476,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -4803,7 +4820,7 @@ module ProtoBoeuf
             if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4814,6 +4831,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -4821,7 +4839,7 @@ module ProtoBoeuf
             if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -4832,6 +4850,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -5047,7 +5066,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -5058,6 +5077,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -5132,7 +5152,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -5143,6 +5163,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -6561,11 +6582,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -7038,11 +7060,12 @@ module ProtoBoeuf
               val = item
               if (len = val.bytesize) > 0
                 buff << 0x52
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -7281,7 +7304,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -7292,6 +7315,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -7366,7 +7390,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -7377,6 +7401,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -7971,7 +7996,7 @@ module ProtoBoeuf
             if has_number?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -7982,17 +8007,19 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @full_name
             if (len = val.bytesize) > 0 || has_full_name?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -8001,11 +8028,12 @@ module ProtoBoeuf
             val = @type
             if (len = val.bytesize) > 0 || has_type?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -8208,7 +8236,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -8219,6 +8247,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -8293,7 +8322,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -8304,6 +8333,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -9085,7 +9115,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -9096,6 +9126,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -9528,7 +9559,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -9539,6 +9570,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -9613,7 +9645,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -9624,6 +9656,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -11044,11 +11077,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11058,7 +11092,7 @@ module ProtoBoeuf
           if has_number?
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11069,6 +11103,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -11076,7 +11111,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11087,6 +11122,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -11094,7 +11130,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11105,17 +11141,19 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @type_name
           if (len = val.bytesize) > 0 || has_type_name?
             buff << 0x32
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11124,11 +11162,12 @@ module ProtoBoeuf
           val = @extendee
           if (len = val.bytesize) > 0 || has_extendee?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11137,11 +11176,12 @@ module ProtoBoeuf
           val = @default_value
           if (len = val.bytesize) > 0 || has_default_value?
             buff << 0x3a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11151,7 +11191,7 @@ module ProtoBoeuf
           if has_oneof_index?
             buff << 0x48
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -11162,17 +11202,19 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @json_name
           if (len = val.bytesize) > 0 || has_json_name?
             buff << 0x52
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -11384,7 +11426,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -11395,6 +11437,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -11469,7 +11512,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -11480,6 +11523,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -11813,11 +11857,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -12041,7 +12086,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -12052,6 +12097,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -12126,7 +12172,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -12137,6 +12183,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -12480,7 +12527,7 @@ module ProtoBoeuf
             if has_start?
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -12491,6 +12538,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -12498,7 +12546,7 @@ module ProtoBoeuf
             if has_end?
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -12509,6 +12557,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -12674,7 +12723,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -12685,6 +12734,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -12759,7 +12809,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -12770,6 +12820,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -13508,11 +13559,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -13690,11 +13742,12 @@ module ProtoBoeuf
               val = item
               if (len = val.bytesize) > 0
                 buff << 0x2a
-                while len != 0
+                loop do
                   byte = len & 0x7F
                   len >>= 7
                   byte |= 0x80 if len > 0
                   buff << byte
+                  break if len == 0
                 end
 
                 buff << (val.ascii_only? ? val : val.b)
@@ -13870,7 +13923,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -13881,6 +13934,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -13955,7 +14009,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -13966,6 +14020,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -14430,11 +14485,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -14444,7 +14500,7 @@ module ProtoBoeuf
           if has_number?
             buff << 0x10
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -14455,6 +14511,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -14653,7 +14710,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -14664,6 +14721,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -14738,7 +14796,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -14749,6 +14807,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -15218,11 +15277,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -15556,7 +15616,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -15567,6 +15627,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -15641,7 +15702,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -15652,6 +15713,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -16367,11 +16429,12 @@ module ProtoBoeuf
           val = @name
           if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -16380,11 +16443,12 @@ module ProtoBoeuf
           val = @input_type
           if (len = val.bytesize) > 0 || has_input_type?
             buff << 0x12
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -16393,11 +16457,12 @@ module ProtoBoeuf
           val = @output_type
           if (len = val.bytesize) > 0 || has_output_type?
             buff << 0x1a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -17010,7 +17075,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -17021,6 +17086,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -17095,7 +17161,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -17106,6 +17172,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -19358,11 +19425,12 @@ module ProtoBoeuf
           val = @java_package
           if (len = val.bytesize) > 0 || has_java_package?
             buff << 0x0a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19371,11 +19439,12 @@ module ProtoBoeuf
           val = @java_outer_classname
           if (len = val.bytesize) > 0 || has_java_outer_classname?
             buff << 0x42
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19420,7 +19489,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x48
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -19431,17 +19500,19 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
           val = @go_package
           if (len = val.bytesize) > 0 || has_go_package?
             buff << 0x5a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19511,11 +19582,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_objc_class_prefix?
             buff << 0xa2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19525,11 +19597,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_csharp_namespace?
             buff << 0xaa
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19539,11 +19612,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_swift_prefix?
             buff << 0xba
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19553,11 +19627,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_php_class_prefix?
             buff << 0xc2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19567,11 +19642,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_php_namespace?
             buff << 0xca
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19581,11 +19657,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_php_metadata_namespace?
             buff << 0xe2
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19595,11 +19672,12 @@ module ProtoBoeuf
           if (len = val.bytesize) > 0 || has_ruby_package?
             buff << 0xea
             buff << 0x02
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -19966,7 +20044,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -19977,6 +20055,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -20051,7 +20130,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -20062,6 +20141,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -21063,7 +21143,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -21074,6 +21154,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -21148,7 +21229,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -21159,6 +21240,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -21495,7 +21577,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -21506,17 +21588,19 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @value
             if (len = val.bytesize) > 0 || has_value?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -21714,7 +21798,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -21725,6 +21809,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -21799,7 +21884,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -21810,6 +21895,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -22408,7 +22494,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x08
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22419,6 +22505,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -22426,7 +22513,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x10
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22437,17 +22524,19 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
             val = @deprecation_warning
             if (len = val.bytesize) > 0 || has_deprecation_warning?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -22457,7 +22546,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x20
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22468,6 +22557,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -22922,7 +23012,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -22933,6 +23023,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -23007,7 +23098,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -23018,6 +23109,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -24562,7 +24654,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x08
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -24573,6 +24665,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -24591,7 +24684,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x30
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -24602,6 +24695,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -24666,7 +24760,7 @@ module ProtoBoeuf
             buff << 0x88
             buff << 0x01
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -24677,6 +24771,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -24688,7 +24783,7 @@ module ProtoBoeuf
                 buff << 0x98
                 buff << 0x01
 
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -24699,6 +24794,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   buff << byte
+                  break if val == 0
                 end
               end
             end
@@ -25061,7 +25157,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -25072,6 +25168,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -25146,7 +25243,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -25157,6 +25254,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -25798,7 +25896,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -25809,6 +25907,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -25883,7 +25982,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -25894,6 +25993,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -26774,7 +26874,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -26785,6 +26885,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -26859,7 +26960,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -26870,6 +26971,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -27802,7 +27904,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -27813,6 +27915,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -27887,7 +27990,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -27898,6 +28001,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -28622,7 +28726,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -28633,6 +28737,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -28707,7 +28812,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -28718,6 +28823,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -29275,7 +29381,7 @@ module ProtoBoeuf
             buff << 0x90
             buff << 0x02
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -29286,6 +29392,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -29522,7 +29629,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -29533,6 +29640,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -29607,7 +29715,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -29618,6 +29726,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -29887,11 +29996,12 @@ module ProtoBoeuf
             val = @name_part
             if (len = val.bytesize) > 0
               buff << 0x0a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -30151,7 +30261,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -30162,6 +30272,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -30236,7 +30347,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -30247,6 +30358,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -31208,11 +31320,12 @@ module ProtoBoeuf
           val = @identifier_value
           if (len = val.bytesize) > 0 || has_identifier_value?
             buff << 0x1a
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -31222,11 +31335,12 @@ module ProtoBoeuf
           if has_positive_int_value?
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
               val >>= 7
               byte |= 0x80 if val > 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -31234,7 +31348,7 @@ module ProtoBoeuf
           if has_negative_int_value?
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -31245,6 +31359,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -31259,11 +31374,12 @@ module ProtoBoeuf
           if ((bs = val.bytesize) > 0)
             buff << 0x3a
             len = bs
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff.concat(val.b)
@@ -31272,11 +31388,12 @@ module ProtoBoeuf
           val = @aggregate_value
           if (len = val.bytesize) > 0 || has_aggregate_value?
             buff << 0x42
-            while len != 0
+            loop do
               byte = len & 0x7F
               len >>= 7
               byte |= 0x80 if len > 0
               buff << byte
+              break if len == 0
             end
 
             buff << (val.ascii_only? ? val : val.b)
@@ -31626,7 +31743,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -31637,6 +31754,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -31711,7 +31829,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -31722,6 +31840,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -32589,7 +32708,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x08
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32600,6 +32719,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -32607,7 +32727,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x10
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32618,6 +32738,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -32625,7 +32746,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x18
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32636,6 +32757,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -32643,7 +32765,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32654,6 +32776,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -32661,7 +32784,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32672,6 +32795,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -32679,7 +32803,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x30
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -32690,6 +32814,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -32871,7 +32996,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -32882,6 +33007,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -32956,7 +33082,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -32967,6 +33093,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -33437,7 +33564,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -33448,6 +33575,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -33681,7 +33809,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -33692,6 +33820,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -33766,7 +33895,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -33777,6 +33906,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -34315,7 +34445,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x20
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -34326,6 +34456,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
 
@@ -34333,7 +34464,7 @@ module ProtoBoeuf
           if val != 0
             buff << 0x28
 
-            while val != 0
+            loop do
               byte = val & 0x7F
 
               val >>= 7
@@ -34344,6 +34475,7 @@ module ProtoBoeuf
 
               byte |= 0x80 if val != 0
               buff << byte
+              break if val == 0
             end
           end
           buff << @_unknown_fields if @_unknown_fields
@@ -34558,7 +34690,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -34569,6 +34701,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -34643,7 +34776,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -34654,6 +34787,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -35510,7 +35644,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -35521,6 +35655,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -35574,7 +35709,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -35585,6 +35720,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -35627,11 +35763,12 @@ module ProtoBoeuf
             val = @leading_comments
             if (len = val.bytesize) > 0 || has_leading_comments?
               buff << 0x1a
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -35640,11 +35777,12 @@ module ProtoBoeuf
             val = @trailing_comments
             if (len = val.bytesize) > 0 || has_trailing_comments?
               buff << 0x22
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -35656,11 +35794,12 @@ module ProtoBoeuf
                 val = item
                 if (len = val.bytesize) > 0
                   buff << 0x32
-                  while len != 0
+                  loop do
                     byte = len & 0x7F
                     len >>= 7
                     byte |= 0x80 if len > 0
                     buff << byte
+                    break if len == 0
                   end
 
                   buff << (val.ascii_only? ? val : val.b)
@@ -35764,7 +35903,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -35775,6 +35914,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -35849,7 +35989,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -35860,6 +36000,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
@@ -36391,7 +36532,7 @@ module ProtoBoeuf
 
                 unknown_bytes = +"".b
                 val = tag
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -36402,6 +36543,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 case wire_type
@@ -36476,7 +36618,7 @@ module ProtoBoeuf
                     end
 
                   val = value
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -36487,6 +36629,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     unknown_bytes << byte
+                    break if val == 0
                   end
 
                   unknown_bytes << buff.byteslice(index, value)
@@ -37287,7 +37430,7 @@ module ProtoBoeuf
               list.each do |item|
                 val = item
                 if val != 0
-                  while val != 0
+                  loop do
                     byte = val & 0x7F
 
                     val >>= 7
@@ -37298,6 +37441,7 @@ module ProtoBoeuf
 
                     byte |= 0x80 if val != 0
                     buff << byte
+                    break if val == 0
                   end
                 end
               end
@@ -37340,11 +37484,12 @@ module ProtoBoeuf
             val = @source_file
             if (len = val.bytesize) > 0 || has_source_file?
               buff << 0x12
-              while len != 0
+              loop do
                 byte = len & 0x7F
                 len >>= 7
                 byte |= 0x80 if len > 0
                 buff << byte
+                break if len == 0
               end
 
               buff << (val.ascii_only? ? val : val.b)
@@ -37354,7 +37499,7 @@ module ProtoBoeuf
             if has_begin?
               buff << 0x18
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -37365,6 +37510,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -37372,7 +37518,7 @@ module ProtoBoeuf
             if has_end?
               buff << 0x20
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -37383,6 +37529,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
 
@@ -37390,7 +37537,7 @@ module ProtoBoeuf
             if val != 0
               buff << 0x28
 
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -37401,6 +37548,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 buff << byte
+                break if val == 0
               end
             end
             buff << @_unknown_fields if @_unknown_fields
@@ -37498,7 +37646,7 @@ module ProtoBoeuf
 
               unknown_bytes = +"".b
               val = tag
-              while val != 0
+              loop do
                 byte = val & 0x7F
 
                 val >>= 7
@@ -37509,6 +37657,7 @@ module ProtoBoeuf
 
                 byte |= 0x80 if val != 0
                 unknown_bytes << byte
+                break if val == 0
               end
 
               case wire_type
@@ -37583,7 +37732,7 @@ module ProtoBoeuf
                   end
 
                 val = value
-                while val != 0
+                loop do
                   byte = val & 0x7F
 
                   val >>= 7
@@ -37594,6 +37743,7 @@ module ProtoBoeuf
 
                   byte |= 0x80 if val != 0
                   unknown_bytes << byte
+                  break if val == 0
                 end
 
                 unknown_bytes << buff.byteslice(index, value)
