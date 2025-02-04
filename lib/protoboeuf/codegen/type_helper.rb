@@ -70,9 +70,9 @@ module ProtoBoeuf
       end
 
       def convert_field_type(field)
-        converted_type = if map_field?(field)
-          map_type = self.map_type(field)
-          "T::Hash[#{convert_field_type(map_type.field[0])}, #{convert_field_type(map_type.field[1])}]"
+        converted_type = if field.map_field?
+          map_type = field.map_type
+          "T::Hash[#{convert_field_type(map_type.key)}, #{convert_field_type(map_type.value)}]"
         else
           case field.type
           when :TYPE_BOOL
@@ -87,7 +87,7 @@ module ProtoBoeuf
         convert_type(
           converted_type,
           optional: field.label == :TYPE_OPTIONAL,
-          array: field.label == :LABEL_REPEATED && !map_field?(field),
+          array: field.label == :LABEL_REPEATED && !field.map_field?,
         )
       end
 
