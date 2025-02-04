@@ -745,6 +745,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000010) == 0x0000000000000010
         end
 
+        def has_edition?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def decode_from(buff, index, len)
           @_bitmask = 0
 
@@ -3345,7 +3349,7 @@ module ProtoBoeuf
           end
 
           val = @edition
-          if val != 0
+          if has_edition?
             buff << 0x70
 
             loop do
@@ -8166,6 +8170,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
 
+        def has_verification?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
         def decode_from(buff, index, len)
           @_bitmask = 0
 
@@ -9112,7 +9120,7 @@ module ProtoBoeuf
           end
 
           val = @verification
-          if val != 0
+          if has_verification?
             buff << 0x18
 
             loop do
@@ -9452,6 +9460,14 @@ module ProtoBoeuf
 
         def has_number?
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
+        def has_label?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+        end
+
+        def has_type?
+          (@_bitmask & 0x0000000000000008) == 0x0000000000000008
         end
 
         def has_type_name?
@@ -11108,7 +11124,7 @@ module ProtoBoeuf
           end
 
           val = @label
-          if val != 0
+          if has_label?
             buff << 0x20
 
             loop do
@@ -11127,7 +11143,7 @@ module ProtoBoeuf
           end
 
           val = @type
-          if val != 0
+          if has_type?
             buff << 0x28
 
             loop do
@@ -16932,6 +16948,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000010) == 0x0000000000000010
         end
 
+        def has_optimize_for?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def has_go_package?
           (@_bitmask & 0x0000000000000040) == 0x0000000000000040
         end
@@ -19486,7 +19506,7 @@ module ProtoBoeuf
           end
 
           val = @optimize_for
-          if val != 0
+          if has_optimize_for?
             buff << 0x48
 
             loop do
@@ -21065,6 +21085,10 @@ module ProtoBoeuf
             self.class.encode(self)
           end
 
+          def has_edition?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+          end
+
           def has_value?
             (@_bitmask & 0x0000000000000002) == 0x0000000000000002
           end
@@ -21574,7 +21598,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition
-            if val != 0
+            if has_edition?
               buff << 0x18
 
               loop do
@@ -21718,8 +21742,20 @@ module ProtoBoeuf
             self.class.encode(self)
           end
 
+          def has_edition_introduced?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+          end
+
+          def has_edition_deprecated?
+            (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+          end
+
           def has_deprecation_warning?
             (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+          end
+
+          def has_edition_removed?
+            (@_bitmask & 0x0000000000000008) == 0x0000000000000008
           end
 
           def decode_from(buff, index, len)
@@ -22491,7 +22527,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition_introduced
-            if val != 0
+            if has_edition_introduced?
               buff << 0x08
 
               loop do
@@ -22510,7 +22546,7 @@ module ProtoBoeuf
             end
 
             val = @edition_deprecated
-            if val != 0
+            if has_edition_deprecated?
               buff << 0x10
 
               loop do
@@ -22543,7 +22579,7 @@ module ProtoBoeuf
             end
 
             val = @edition_removed
-            if val != 0
+            if has_edition_removed?
               buff << 0x20
 
               loop do
@@ -22900,8 +22936,16 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_ctype?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
         def has_packed?
           (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
+        def has_jstype?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
         end
 
         def has_lazy?
@@ -22922,6 +22966,10 @@ module ProtoBoeuf
 
         def has_debug_redact?
           (@_bitmask & 0x0000000000000080) == 0x0000000000000080
+        end
+
+        def has_retention?
+          (@_bitmask & 0x0000000000000100) == 0x0000000000000100
         end
 
         def has_features?
@@ -24651,7 +24699,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @ctype
-          if val != 0
+          if has_ctype?
             buff << 0x08
 
             loop do
@@ -24681,7 +24729,7 @@ module ProtoBoeuf
           end
 
           val = @jstype
-          if val != 0
+          if has_jstype?
             buff << 0x30
 
             loop do
@@ -24756,7 +24804,7 @@ module ProtoBoeuf
           end
 
           val = @retention
-          if val != 0
+          if has_retention?
             buff << 0x88
             buff << 0x01
 
@@ -28652,6 +28700,10 @@ module ProtoBoeuf
           (@_bitmask & 0x0000000000000001) == 0x0000000000000001
         end
 
+        def has_idempotency_level?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
         def has_features?
           (@_bitmask & 0x0000000000000004) == 0x0000000000000004
         end
@@ -29377,7 +29429,7 @@ module ProtoBoeuf
           end
 
           val = @idempotency_level
-          if val != 0
+          if has_idempotency_level?
             buff << 0x90
             buff << 0x02
 
@@ -31608,6 +31660,8 @@ module ProtoBoeuf
           message_encoding: nil,
           json_format: nil
         )
+          @_bitmask = 0
+
           if field_presence == nil
             @field_presence = 0
           else
@@ -31673,7 +31727,33 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_field_presence?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_enum_type?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
+        def has_repeated_field_encoding?
+          (@_bitmask & 0x0000000000000004) == 0x0000000000000004
+        end
+
+        def has_utf8_validation?
+          (@_bitmask & 0x0000000000000008) == 0x0000000000000008
+        end
+
+        def has_message_encoding?
+          (@_bitmask & 0x0000000000000010) == 0x0000000000000010
+        end
+
+        def has_json_format?
+          (@_bitmask & 0x0000000000000020) == 0x0000000000000020
+        end
+
         def decode_from(buff, index, len)
+          @_bitmask = 0
+
           @field_presence = 0
           @enum_type = 0
           @repeated_field_encoding = 0
@@ -32705,7 +32785,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @field_presence
-          if val != 0
+          if has_field_presence?
             buff << 0x08
 
             loop do
@@ -32724,7 +32804,7 @@ module ProtoBoeuf
           end
 
           val = @enum_type
-          if val != 0
+          if has_enum_type?
             buff << 0x10
 
             loop do
@@ -32743,7 +32823,7 @@ module ProtoBoeuf
           end
 
           val = @repeated_field_encoding
-          if val != 0
+          if has_repeated_field_encoding?
             buff << 0x18
 
             loop do
@@ -32762,7 +32842,7 @@ module ProtoBoeuf
           end
 
           val = @utf8_validation
-          if val != 0
+          if has_utf8_validation?
             buff << 0x20
 
             loop do
@@ -32781,7 +32861,7 @@ module ProtoBoeuf
           end
 
           val = @message_encoding
-          if val != 0
+          if has_message_encoding?
             buff << 0x28
 
             loop do
@@ -32800,7 +32880,7 @@ module ProtoBoeuf
           end
 
           val = @json_format
-          if val != 0
+          if has_json_format?
             buff << 0x30
 
             loop do
@@ -32911,6 +32991,10 @@ module ProtoBoeuf
 
           def to_proto(_options = {})
             self.class.encode(self)
+          end
+
+          def has_edition?
+            (@_bitmask & 0x0000000000000001) == 0x0000000000000001
           end
 
           def has_overridable_features?
@@ -33561,7 +33645,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @edition
-            if val != 0
+            if has_edition?
               buff << 0x18
 
               loop do
@@ -33715,6 +33799,8 @@ module ProtoBoeuf
         end
 
         def initialize(defaults: [], minimum_edition: nil, maximum_edition: nil)
+          @_bitmask = 0
+
           @defaults = defaults
 
           if minimum_edition == nil
@@ -33742,7 +33828,17 @@ module ProtoBoeuf
           self.class.encode(self)
         end
 
+        def has_minimum_edition?
+          (@_bitmask & 0x0000000000000001) == 0x0000000000000001
+        end
+
+        def has_maximum_edition?
+          (@_bitmask & 0x0000000000000002) == 0x0000000000000002
+        end
+
         def decode_from(buff, index, len)
+          @_bitmask = 0
+
           @defaults = []
           @minimum_edition = 0
           @maximum_edition = 0
@@ -34442,7 +34538,7 @@ module ProtoBoeuf
           end
 
           val = @minimum_edition
-          if val != 0
+          if has_minimum_edition?
             buff << 0x20
 
             loop do
@@ -34461,7 +34557,7 @@ module ProtoBoeuf
           end
 
           val = @maximum_edition
-          if val != 0
+          if has_maximum_edition?
             buff << 0x28
 
             loop do
@@ -36455,6 +36551,10 @@ module ProtoBoeuf
             (@_bitmask & 0x0000000000000004) == 0x0000000000000004
           end
 
+          def has_semantic?
+            (@_bitmask & 0x0000000000000008) == 0x0000000000000008
+          end
+
           def decode_from(buff, index, len)
             @_bitmask = 0
 
@@ -37534,7 +37634,7 @@ module ProtoBoeuf
             end
 
             val = @semantic
-            if val != 0
+            if has_semantic?
               buff << 0x28
 
               loop do

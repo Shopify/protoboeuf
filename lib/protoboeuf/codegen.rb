@@ -113,7 +113,6 @@ module ProtoBoeuf
           if optional_field?(field)
             if field.type == :TYPE_ENUM
               @enum_fields << field
-              @optional_fields << field
             end
             @optional_fields << field
             @optional_field_bit_lut[field.number] = optional_field_count
@@ -691,10 +690,11 @@ module ProtoBoeuf
       end
 
       def optional_readers
-        return "" if optional_fields.empty?
+        fields = optional_fields.reject { |field| field.type == :TYPE_ENUM }
+        return "" if fields.empty?
 
         "# optional field readers\n" +
-          optional_fields.map do |field|
+          fields.map do |field|
             "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
           end.join("\n") +
           "\n\n"
@@ -729,7 +729,12 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map do |field|
-            "def #{field.name}=(v); #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v; end"
+            writer = "def #{field.name}=(v); #{iv_name(field)} = #{enum_name(field)}.resolve(v) || v;"
+            if @optional_fields.include?(fields)
+              writer << "#{set_bitmask(field)}; "
+            end
+            writer << "end"
+            writer
           end.join("\n") + "\n\n"
       end
 
@@ -750,10 +755,11 @@ module ProtoBoeuf
       end
 
       def optional_writers
-        return "" if optional_fields.empty?
+        fields = optional_fields.reject { |field| field.type == :TYPE_ENUM }
+        return "" if fields.empty?
 
         "# BEGIN writers for optional fields\n" +
-          optional_fields.map { |field|
+          fields.map { |field|
             <<~RUBY
               #{type_signature(params: { v: convert_field_type(field) })}
               def #{field.name}=(v)
