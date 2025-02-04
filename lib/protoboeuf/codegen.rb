@@ -113,9 +113,9 @@ module ProtoBoeuf
           if optional_field?(field)
             if field.type == :TYPE_ENUM
               @enum_fields << field
-            else
               @optional_fields << field
             end
+            @optional_fields << field
             @optional_field_bit_lut[field.number] = optional_field_count
             optional_field_count += 1
           elsif field.has_oneof_index?
