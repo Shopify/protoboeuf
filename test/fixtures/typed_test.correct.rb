@@ -1453,7 +1453,7 @@ class Test1
     end
 
     val = @string_field
-    if ((len = val.bytesize) > 0)
+    if (len = val.bytesize) > 0 || has_string_field?
       buff << 0x12
       while len != 0
         byte = len & 0x7F
@@ -1571,7 +1571,7 @@ class Test1
       map.each do |key, value|
         buff = new_buffer = +""
         val = key
-        if ((len = val.bytesize) > 0)
+        if (len = val.bytesize) > 0
           buff << 0x0a
           while len != 0
             byte = len & 0x7F

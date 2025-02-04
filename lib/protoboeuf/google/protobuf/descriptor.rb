@@ -2818,7 +2818,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -2831,7 +2831,7 @@ module ProtoBoeuf
           end
 
           val = @package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_package?
             buff << 0x12
             while len != 0
               byte = len & 0x7F
@@ -2847,7 +2847,7 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x1a
                 while len != 0
                   byte = len & 0x7F
@@ -3322,7 +3322,7 @@ module ProtoBoeuf
           end
 
           val = @syntax
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_syntax?
             buff << 0x62
             while len != 0
               byte = len & 0x7F
@@ -4117,7 +4117,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
               while val != 0
@@ -4135,7 +4135,7 @@ module ProtoBoeuf
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
               while val != 0
@@ -4800,7 +4800,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
               while val != 0
@@ -4818,7 +4818,7 @@ module ProtoBoeuf
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
               while val != 0
@@ -6559,7 +6559,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -7036,7 +7036,7 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x52
                 while len != 0
                   byte = len & 0x7F
@@ -7968,7 +7968,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @number
-            if val != 0
+            if has_number?
               buff << 0x08
 
               while val != 0
@@ -7986,7 +7986,7 @@ module ProtoBoeuf
             end
 
             val = @full_name
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_full_name?
               buff << 0x12
               while len != 0
                 byte = len & 0x7F
@@ -7999,7 +7999,7 @@ module ProtoBoeuf
             end
 
             val = @type
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_type?
               buff << 0x1a
               while len != 0
                 byte = len & 0x7F
@@ -8011,26 +8011,26 @@ module ProtoBoeuf
               buff << (val.ascii_only? ? val : val.b)
             end
 
-            val = @reserved
-            if val == true
+            if has_reserved?
+              val = @reserved
               buff << 0x28
 
-              buff << 1
-            elsif val == false
-              # Default value, encode nothing
-            else
-              raise "bool values should be true or false"
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
             end
 
-            val = @repeated
-            if val == true
+            if has_repeated?
+              val = @repeated
               buff << 0x30
 
-              buff << 1
-            elsif val == false
-              # Default value, encode nothing
-            else
-              raise "bool values should be true or false"
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
             end
             buff << @_unknown_fields if @_unknown_fields
             buff
@@ -11042,7 +11042,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -11055,7 +11055,7 @@ module ProtoBoeuf
           end
 
           val = @number
-          if val != 0
+          if has_number?
             buff << 0x18
 
             while val != 0
@@ -11109,7 +11109,7 @@ module ProtoBoeuf
           end
 
           val = @type_name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_type_name?
             buff << 0x32
             while len != 0
               byte = len & 0x7F
@@ -11122,7 +11122,7 @@ module ProtoBoeuf
           end
 
           val = @extendee
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_extendee?
             buff << 0x12
             while len != 0
               byte = len & 0x7F
@@ -11135,7 +11135,7 @@ module ProtoBoeuf
           end
 
           val = @default_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_default_value?
             buff << 0x3a
             while len != 0
               byte = len & 0x7F
@@ -11148,7 +11148,7 @@ module ProtoBoeuf
           end
 
           val = @oneof_index
-          if val != 0
+          if has_oneof_index?
             buff << 0x48
 
             while val != 0
@@ -11166,7 +11166,7 @@ module ProtoBoeuf
           end
 
           val = @json_name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_json_name?
             buff << 0x52
             while len != 0
               byte = len & 0x7F
@@ -11226,16 +11226,16 @@ module ProtoBoeuf
             buff
           end
 
-          val = @proto3_optional
-          if val == true
+          if has_proto3_optional?
+            val = @proto3_optional
             buff << 0x88
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
           buff << @_unknown_fields if @_unknown_fields
           buff
@@ -11811,7 +11811,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -12477,7 +12477,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @start
-            if val != 0
+            if has_start?
               buff << 0x08
 
               while val != 0
@@ -12495,7 +12495,7 @@ module ProtoBoeuf
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x10
 
               while val != 0
@@ -13506,7 +13506,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -13688,7 +13688,7 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x2a
                 while len != 0
                   byte = len & 0x7F
@@ -14428,7 +14428,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -14441,7 +14441,7 @@ module ProtoBoeuf
           end
 
           val = @number
-          if val != 0
+          if has_number?
             buff << 0x10
 
             while val != 0
@@ -15216,7 +15216,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -16365,7 +16365,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @name
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_name?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -16378,7 +16378,7 @@ module ProtoBoeuf
           end
 
           val = @input_type
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_input_type?
             buff << 0x12
             while len != 0
               byte = len & 0x7F
@@ -16391,7 +16391,7 @@ module ProtoBoeuf
           end
 
           val = @output_type
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_output_type?
             buff << 0x1a
             while len != 0
               byte = len & 0x7F
@@ -16451,26 +16451,26 @@ module ProtoBoeuf
             buff
           end
 
-          val = @client_streaming
-          if val == true
+          if has_client_streaming?
+            val = @client_streaming
             buff << 0x28
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @server_streaming
-          if val == true
+          if has_server_streaming?
+            val = @server_streaming
             buff << 0x30
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
           buff << @_unknown_fields if @_unknown_fields
           buff
@@ -19356,7 +19356,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @java_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_java_package?
             buff << 0x0a
             while len != 0
               byte = len & 0x7F
@@ -19369,7 +19369,7 @@ module ProtoBoeuf
           end
 
           val = @java_outer_classname
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_java_outer_classname?
             buff << 0x42
             while len != 0
               byte = len & 0x7F
@@ -19381,39 +19381,39 @@ module ProtoBoeuf
             buff << (val.ascii_only? ? val : val.b)
           end
 
-          val = @java_multiple_files
-          if val == true
+          if has_java_multiple_files?
+            val = @java_multiple_files
             buff << 0x50
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_generate_equals_and_hash
-          if val == true
+          if has_java_generate_equals_and_hash?
+            val = @java_generate_equals_and_hash
             buff << 0xa0
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_string_check_utf8
-          if val == true
+          if has_java_string_check_utf8?
+            val = @java_string_check_utf8
             buff << 0xd8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @optimize_for
@@ -19435,7 +19435,7 @@ module ProtoBoeuf
           end
 
           val = @go_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_go_package?
             buff << 0x5a
             while len != 0
               byte = len & 0x7F
@@ -19447,68 +19447,68 @@ module ProtoBoeuf
             buff << (val.ascii_only? ? val : val.b)
           end
 
-          val = @cc_generic_services
-          if val == true
+          if has_cc_generic_services?
+            val = @cc_generic_services
             buff << 0x80
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @java_generic_services
-          if val == true
+          if has_java_generic_services?
+            val = @java_generic_services
             buff << 0x88
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @py_generic_services
-          if val == true
+          if has_py_generic_services?
+            val = @py_generic_services
             buff << 0x90
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0xb8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @cc_enable_arenas
-          if val == true
+          if has_cc_enable_arenas?
+            val = @cc_enable_arenas
             buff << 0xf8
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @objc_class_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_objc_class_prefix?
             buff << 0xa2
             buff << 0x02
             while len != 0
@@ -19522,7 +19522,7 @@ module ProtoBoeuf
           end
 
           val = @csharp_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_csharp_namespace?
             buff << 0xaa
             buff << 0x02
             while len != 0
@@ -19536,7 +19536,7 @@ module ProtoBoeuf
           end
 
           val = @swift_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_swift_prefix?
             buff << 0xba
             buff << 0x02
             while len != 0
@@ -19550,7 +19550,7 @@ module ProtoBoeuf
           end
 
           val = @php_class_prefix
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_class_prefix?
             buff << 0xc2
             buff << 0x02
             while len != 0
@@ -19564,7 +19564,7 @@ module ProtoBoeuf
           end
 
           val = @php_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_namespace?
             buff << 0xca
             buff << 0x02
             while len != 0
@@ -19578,7 +19578,7 @@ module ProtoBoeuf
           end
 
           val = @php_metadata_namespace
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_php_metadata_namespace?
             buff << 0xe2
             buff << 0x02
             while len != 0
@@ -19592,7 +19592,7 @@ module ProtoBoeuf
           end
 
           val = @ruby_package
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_ruby_package?
             buff << 0xea
             buff << 0x02
             while len != 0
@@ -20740,59 +20740,59 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @message_set_wire_format
-          if val == true
+          if has_message_set_wire_format?
+            val = @message_set_wire_format
             buff << 0x08
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @no_standard_descriptor_accessor
-          if val == true
+          if has_no_standard_descriptor_accessor?
+            val = @no_standard_descriptor_accessor
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @map_entry
-          if val == true
+          if has_map_entry?
+            val = @map_entry
             buff << 0x38
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated_legacy_json_field_conflicts
-          if val == true
+          if has_deprecated_legacy_json_field_conflicts?
+            val = @deprecated_legacy_json_field_conflicts
             buff << 0x58
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -21510,7 +21510,7 @@ module ProtoBoeuf
             end
 
             val = @value
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_value?
               buff << 0x12
               while len != 0
                 byte = len & 0x7F
@@ -22441,7 +22441,7 @@ module ProtoBoeuf
             end
 
             val = @deprecation_warning
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_deprecation_warning?
               buff << 0x1a
               while len != 0
                 byte = len & 0x7F
@@ -24576,15 +24576,15 @@ module ProtoBoeuf
             end
           end
 
-          val = @packed
-          if val == true
+          if has_packed?
+            val = @packed
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @jstype
@@ -24605,60 +24605,60 @@ module ProtoBoeuf
             end
           end
 
-          val = @lazy
-          if val == true
+          if has_lazy?
+            val = @lazy
             buff << 0x28
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @unverified_lazy
-          if val == true
+          if has_unverified_lazy?
+            val = @unverified_lazy
             buff << 0x78
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @weak
-          if val == true
+          if has_weak?
+            val = @weak
             buff << 0x50
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @debug_redact
-          if val == true
+          if has_debug_redact?
+            val = @debug_redact
             buff << 0x80
             buff << 0x01
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @retention
@@ -26438,37 +26438,37 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @allow_alias
-          if val == true
+          if has_allow_alias?
+            val = @allow_alias
             buff << 0x10
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
-          val = @deprecated_legacy_json_field_conflicts
-          if val == true
+          if has_deprecated_legacy_json_field_conflicts?
+            val = @deprecated_legacy_json_field_conflicts
             buff << 0x30
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -27475,15 +27475,15 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x08
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @features
@@ -27534,15 +27534,15 @@ module ProtoBoeuf
             buff
           end
 
-          val = @debug_redact
-          if val == true
+          if has_debug_redact?
+            val = @debug_redact
             buff << 0x18
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @feature_support
@@ -28356,16 +28356,16 @@ module ProtoBoeuf
             buff
           end
 
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x88
             buff << 0x02
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           list = @uninterpreted_option
@@ -29258,16 +29258,16 @@ module ProtoBoeuf
           end
         end
         def _encode(buff)
-          val = @deprecated
-          if val == true
+          if has_deprecated?
+            val = @deprecated
             buff << 0x88
             buff << 0x02
 
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
+            if val == true
+              buff << 1
+            elsif val == false
+              buff << 0
+            end
           end
 
           val = @idempotency_level
@@ -29885,7 +29885,7 @@ module ProtoBoeuf
           end
           def _encode(buff)
             val = @name_part
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0
               buff << 0x0a
               while len != 0
                 byte = len & 0x7F
@@ -31206,7 +31206,7 @@ module ProtoBoeuf
           end
 
           val = @identifier_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_identifier_value?
             buff << 0x1a
             while len != 0
               byte = len & 0x7F
@@ -31219,7 +31219,7 @@ module ProtoBoeuf
           end
 
           val = @positive_int_value
-          if val != 0
+          if has_positive_int_value?
             buff << 0x20
 
             while val != 0
@@ -31231,7 +31231,7 @@ module ProtoBoeuf
           end
 
           val = @negative_int_value
-          if val != 0
+          if has_negative_int_value?
             buff << 0x28
 
             while val != 0
@@ -31249,7 +31249,7 @@ module ProtoBoeuf
           end
 
           val = @double_value
-          if val != 0
+          if has_double_value?
             buff << 0x31
 
             [val].pack("E", buffer: buff)
@@ -31270,7 +31270,7 @@ module ProtoBoeuf
           end
 
           val = @aggregate_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0 || has_aggregate_value?
             buff << 0x42
             while len != 0
               byte = len & 0x7F
@@ -35625,7 +35625,7 @@ module ProtoBoeuf
             end
 
             val = @leading_comments
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_leading_comments?
               buff << 0x1a
               while len != 0
                 byte = len & 0x7F
@@ -35638,7 +35638,7 @@ module ProtoBoeuf
             end
 
             val = @trailing_comments
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_trailing_comments?
               buff << 0x22
               while len != 0
                 byte = len & 0x7F
@@ -35654,7 +35654,7 @@ module ProtoBoeuf
             if list.size > 0
               list.each do |item|
                 val = item
-                if ((len = val.bytesize) > 0)
+                if (len = val.bytesize) > 0
                   buff << 0x32
                   while len != 0
                     byte = len & 0x7F
@@ -37338,7 +37338,7 @@ module ProtoBoeuf
             end
 
             val = @source_file
-            if ((len = val.bytesize) > 0)
+            if (len = val.bytesize) > 0 || has_source_file?
               buff << 0x12
               while len != 0
                 byte = len & 0x7F
@@ -37351,7 +37351,7 @@ module ProtoBoeuf
             end
 
             val = @begin
-            if val != 0
+            if has_begin?
               buff << 0x18
 
               while val != 0
@@ -37369,7 +37369,7 @@ module ProtoBoeuf
             end
 
             val = @end
-            if val != 0
+            if has_end?
               buff << 0x20
 
               while val != 0

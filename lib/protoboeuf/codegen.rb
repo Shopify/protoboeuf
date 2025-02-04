@@ -256,18 +256,31 @@ module ProtoBoeuf
       end
 
       def encode_bool(field, value_expr, tagged)
-        # False/zero is the default value, so the false case encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if val == true
-            #{encode_tag_and_length(field, tagged)}
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
-          end
-        RUBY
+        if optional_fields.include?(field)
+          <<~RUBY
+            if has_#{field.name}?
+              val = #{value_expr}
+              #{encode_tag_and_length(field, tagged)}
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if val == true
+              #{encode_tag_and_length(field, tagged)}
+              buff << 1
+            elsif val == false
+              # Default value, encode nothing
+            else
+              raise "bool values should be true or false"
+            end
+          RUBY
+        end
       end
 
       def encode_map(field, value_expr, tagged)
@@ -366,23 +379,24 @@ module ProtoBoeuf
 
       def encode_string(field, value_expr, tagged)
         # Empty string is default value, so encodes nothing
-        if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
-          <<~RUBY
-            val = #{value_expr}
-            if((len = val.bytesize) > 0)
-              #{encode_tag_and_length(field, tagged, "len")}
+        body = <<~RUBY
+          val = #{value_expr}
+          if (len = val.bytesize) > 0 #{optional_fields.include?(field) ? " || has_#{field.name}?" : ""}
+            #{encode_tag_and_length(field, tagged, "len")}
+        RUBY
+
+        body << if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
+          <<~RUBYAPPEND
               buff.append_as_bytes(val)
             end
-          RUBY
+          RUBYAPPEND
         else
-          <<~RUBY
-            val = #{value_expr}
-            if((len = val.bytesize) > 0)
-              #{encode_tag_and_length(field, tagged, "len")}
+          <<~RUBYAPPEND
               buff << (val.ascii_only? ? val : val.b)
             end
-          RUBY
+          RUBYAPPEND
         end
+        body
       end
 
       def encode_bytes(field, value_expr, tagged)
@@ -471,10 +485,9 @@ module ProtoBoeuf
       end
 
       def encode_uint64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<~RUBY
           val = #{value_expr}
-          if val != 0
+          if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{uint64_code("val")}
           end
@@ -486,10 +499,9 @@ module ProtoBoeuf
       alias_method :encode_uint32, :encode_uint64
 
       def encode_int64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<~RUBY
           val = #{value_expr}
-          if val != 0
+          if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{encode_varint}
           end
@@ -520,10 +532,9 @@ module ProtoBoeuf
       alias_method :encode_enum, :encode_int32
 
       def encode_sint64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
 
           # Zigzag encoding:
@@ -544,10 +555,9 @@ module ProtoBoeuf
       alias_method :encode_sint32, :encode_sint64
 
       def encode_double(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('E', buffer: buff)
         end
@@ -555,10 +565,9 @@ module ProtoBoeuf
       end
 
       def encode_float(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('e', buffer: buff)
         end
@@ -566,10 +575,9 @@ module ProtoBoeuf
       end
 
       def encode_fixed64(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('Q<', buffer: buff)
         end
@@ -577,10 +585,9 @@ module ProtoBoeuf
       end
 
       def encode_sfixed64(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('q<', buffer: buff)
         end
@@ -588,10 +595,9 @@ module ProtoBoeuf
       end
 
       def encode_fixed32(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('L<', buffer: buff)
         end
@@ -599,10 +605,9 @@ module ProtoBoeuf
       end
 
       def encode_sfixed32(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{optional_fields.include?(field) ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('l<', buffer: buff)
         end

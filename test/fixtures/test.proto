@@ -21,6 +21,10 @@ message Test1 {
 message EmptyMessage {
 }
 
+message TestBool {
+  optional bool a = 1;
+}
+
 message TestSigned {
   optional sint32 a = 1;
 }

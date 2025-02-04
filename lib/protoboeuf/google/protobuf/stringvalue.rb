@@ -391,7 +391,7 @@ module ProtoBoeuf
         end
         def _encode(buff)
           val = @value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0
             buff << 0x0a
             while len != 0
               byte = len & 0x7F

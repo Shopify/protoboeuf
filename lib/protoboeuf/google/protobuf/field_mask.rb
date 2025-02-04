@@ -404,7 +404,7 @@ module ProtoBoeuf
           if list.size > 0
             list.each do |item|
               val = item
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x0a
                 while len != 0
                   byte = len & 0x7F

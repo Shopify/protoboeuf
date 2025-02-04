@@ -543,7 +543,7 @@ module ProtoBoeuf
             map.each do |key, value|
               buff = new_buffer = +""
               val = key
-              if ((len = val.bytesize) > 0)
+              if (len = val.bytesize) > 0
                 buff << 0x0a
                 while len != 0
                   byte = len & 0x7F
@@ -1660,7 +1660,7 @@ module ProtoBoeuf
           end
 
           val = @string_value
-          if ((len = val.bytesize) > 0)
+          if (len = val.bytesize) > 0
             buff << 0x1a
             while len != 0
               byte = len & 0x7F
