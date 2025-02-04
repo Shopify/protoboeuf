@@ -1635,12 +1635,53 @@ class Test1
   sig { returns(T::Hash[Symbol, T.untyped]) }
   def to_h
     result = {}
-    send("oneof_field").tap { |f| result[f.to_sym] = send(f) if f }
-    result["int_field".to_sym] = @int_field
-    result["string_field".to_sym] = @string_field
-    result["repeated_ints".to_sym] = @repeated_ints
-    result["map_field".to_sym] = @map_field
-    result["bytes_field".to_sym] = @bytes_field
+
+    resolved_oneof_field = self.oneof_field
+
+    result[:"int_field"] = @int_field
+    result[:"string_field"] = @string_field
+    result[:"enum_1"] = @enum_1 if resolved_oneof_field == :"enum_1"
+    result[:"enum_2"] = @enum_2 if resolved_oneof_field == :"enum_2"
+    result[:"repeated_ints"] = @repeated_ints
+    result[:"map_field"] = @map_field
+    result[:"bytes_field"] = @bytes_field
+
     result
+  end
+
+  sig do
+    params(options: T::Hash[T.untyped, T.untyped]).returns(
+      T::Hash[Symbol, T.untyped]
+    )
+  end
+  def as_json(options = {})
+    result = {}
+
+    resolved_oneof_field = self.oneof_field
+
+    result["intField"] = @int_field
+    result["stringField"] = @string_field if !options[:compact] ||
+      has_string_field?
+    result["enum1"] = @enum_1 if resolved_oneof_field == :"enum_1"
+    result["enum2"] = @enum_2 if resolved_oneof_field == :"enum_2"
+    tmp_repeated_ints = @repeated_ints
+
+    result["repeatedInts"] = tmp_repeated_ints if !options[:compact] ||
+      tmp_repeated_ints.any?
+
+    tmp_map_field = @map_field
+
+    result["mapField"] = tmp_map_field if !options[:compact] ||
+      tmp_map_field.any?
+
+    result["bytesField"] = @bytes_field
+
+    result
+  end
+
+  sig { params(as_json_options: T::Hash[T.untyped, T.untyped]).returns(String) }
+  def to_json(as_json_options = {})
+    require "json"
+    JSON.dump(as_json(as_json_options))
   end
 end
