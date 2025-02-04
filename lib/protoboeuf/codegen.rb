@@ -475,11 +475,12 @@ module ProtoBoeuf
 
       def uint64_code(local)
         <<~RUBY
-          while #{local} != 0
+          loop do 
             byte = #{local} & 0x7F
             #{local} >>= 7
             byte |= 0x80 if #{local} > 0
             buff << byte
+            break if #{local} == 0
           end
         RUBY
       end
