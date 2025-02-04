@@ -3,6 +3,10 @@
 require "rake/testtask"
 require "rake/clean"
 
+require "protoboeuf"
+
+include ProtoBoeuf::ProtocUtils
+
 require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
