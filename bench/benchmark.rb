@@ -9,20 +9,24 @@ require "benchmark/ips"
 Random.srand(42)
 
 # Recursively populate the type map
-def pop_type_map(type_map, obj)
+def pop_type_map(type_map, obj, prefix)
   obj.message_type&.each do |msg|
-    type_map[msg.name] = msg
-    next unless msg.nested_type
+    key = [prefix, msg.name].compact.join(".")
+    type_map[key] = msg
+    pop_type_map(type_map, msg, key)
+  end if obj.respond_to?(:message_type)
 
-    msg.nested_type.each do |sub_msg|
-      pop_type_map(type_map, sub_msg)
-    end
-  end
+  obj.nested_type&.each do |sub_msg|
+    key = [prefix, sub_msg.name].compact.join(".")
+    type_map[key] = sub_msg
+    pop_type_map(type_map, sub_msg, key)
+  end if obj.respond_to?(:nested_type)
 
   obj.enum_type&.each do |enum|
-    type_map[enum.name] = enum
-    pop_type_map(type_map, enum)
-  end
+    key = [prefix, enum.name].compact.join(".")
+    type_map[key] = enum
+    pop_type_map(type_map, enum, key)
+  end if obj.respond_to?(:enum_type)
 end
 
 # Generate a fake value for a field
@@ -42,7 +46,7 @@ def gen_fake_field_val(type_map, field)
   when :TYPE_DOUBLE, :TYPE_FLOAT
     rand * 100.0
   else
-    name = field.type_name.sub(/^\./, "").gsub(".", "::")
+    name = field.type_name.delete_prefix(".")
     gen_fake_data(type_map, name)
   end
 end
@@ -50,15 +54,24 @@ end
 # Given a message definition, generate fake data
 def gen_fake_msg(type_map, msg_def)
   # Get the message class, e.g. Upstream::ParkingLot
-  msg_class = Upstream.const_get(msg_def.name)
+  msg_class = Google::Protobuf::DescriptorPool.generated_pool.lookup("upstream.#{type_map.key(msg_def)}")&.msgclass ||
+    raise("message class not found for #{type_map.key(msg_def).inspect}")
   msg = msg_class.new
 
   # For each field of this message
   msg_def.field.each do |field|
     if field.label == :LABEL_REPEATED
-      arr = (0..20).map { gen_fake_field_val(type_map, field) }
       repeated_field = msg.send(field.name.to_s)
-      repeated_field.replace(arr)
+      if repeated_field.is_a?(Google::Protobuf::Map)
+        rand(0..5).times do
+          val = gen_fake_field_val(type_map, field)
+          repeated_field[val.key] = val.value
+        end
+      else
+        arr = (0..20).map { gen_fake_field_val(type_map, field) }
+        repeated_field = msg.send(field.name.to_s)
+        repeated_field.replace(arr)
+      end
     elsif field.proto3_optional
       # If optional, randomly set the field or not
       if rand < 0.5
@@ -83,7 +96,9 @@ end
 def gen_fake_data(type_map, type_name)
   # Find the definition for this type
   type_def = type_map[type_name]
-  raise "type not found #{type_name}" unless type_def
+  raise KeyError.new(
+    "type not found #{type_name}", receiver: type_map, key: type_name
+  ) unless type_def
 
   if type_def.instance_of?(ProtoBoeuf::Message)
     return gen_fake_msg(type_map, type_def)
@@ -95,25 +110,32 @@ def gen_fake_data(type_map, type_name)
 end
 
 # Generate a function to read all fields on every node type
-def gen_walk_fn(type_def)
-  out = "def walk_#{type_def.name}(node)\n"
-  out += "  return unless node\n"
+def gen_walk_fn(type_def, type_map)
+  map_entry = type_def.options&.[](:map_entry)
+  accessor = map_entry ? "" : "node."
+
+  out = "def walk_#{type_map.key(type_def).gsub(".", "_")}"
+  out += map_entry ? "(key, value)\n" : "(node)\n  return unless node\n"
 
   if type_def.instance_of?(ProtoBoeuf::Message)
     # For each field of this message
     type_def.field.each do |field|
       if field.label == :LABEL_REPEATED
-        if field.type == :TYPE_MESSAGE
-          name = field.type_name.sub(/^\./, "").gsub(".", "::")
-          out += "  node.#{field.name}.each { |v| walk_#{name}(v) }\n"
+        name = field.type_name.delete_prefix(".").gsub(".", "_")
+        out += if field.type == :TYPE_MESSAGE
+          if field.type_name.end_with?("Entry")
+            "  #{accessor}#{field.name}.each { |k, v| walk_#{name}(k, v) }\n"
+          else
+            "  #{accessor}#{field.name}.each { |v| walk_#{name}(v) }\n"
+          end
         else
-          out += "  node.#{field.name}.each { |v| walk_#{field.type}(v) }\n"
+          "  #{accessor}#{field.name}.each { |v| v }\n"
         end
       elsif field.type == :TYPE_MESSAGE
-        name = field.type_name.sub(/^\./, "").gsub(".", "::")
-        out += "  walk_#{name}(node.#{field.name})\n"
+        name = field.type_name.delete_prefix(".").gsub(".", "_")
+        out += "  walk_#{name}(#{accessor}#{field.name})\n"
       else
-        out += "  node.#{field.name}\n"
+        out += "  #{accessor}#{field.name}\n"
       end
     end
 
@@ -135,10 +157,10 @@ unit = ProtoBoeuf.parse_file("bench/fixtures/benchmark.proto")
 # NOTE: for the benchmark, we can guarantee that we don't have overlapping
 # type names, so we can keep a hash of name => definition
 type_map = {}
-pop_type_map(type_map, unit.file.first)
+pop_type_map(type_map, unit.file.first, nil)
 
 # Generate a sum functions for the root type
-type_map.each_value { |type_def| gen_walk_fn(type_def) }
+type_map.each_value { |type_def| gen_walk_fn(type_def, type_map) }
 
 # Generate some fake instances of the root message type
 fake_msgs = (0..10).map { gen_fake_data(type_map, "ParkingLot") }
