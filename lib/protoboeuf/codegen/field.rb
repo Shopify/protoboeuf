@@ -132,6 +132,18 @@ module ProtoBoeuf
         end
       end
 
+      def kwarg_name
+        name
+      end
+
+      def kwarg_read
+        if RUBY_KEYWORDS.include?(name)
+          "binding.local_variable_get(:#{name})"
+        else
+          name
+        end
+      end
+
       def predicate_method_name
         "has_#{name}?"
       end
