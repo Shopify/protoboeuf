@@ -774,7 +774,7 @@ module ProtoBoeuf
       end
 
       def readers
-        required_readers + enum_readers + optional_readers + oneof_readers
+        required_readers + enum_readers + optional_readers + oneof_readers + square_brackets_reader
       end
 
       def enum_readers
@@ -847,6 +847,15 @@ module ProtoBoeuf
               end,
             ].join("\n")
           end.join("\n") + "\n\n"
+      end
+
+      def square_brackets_reader
+        # TODO this is quite basic
+        return <<~RUBY
+          def [](attr_name)
+            send(attr_name)
+          end
+        RUBY
       end
 
       def writers
