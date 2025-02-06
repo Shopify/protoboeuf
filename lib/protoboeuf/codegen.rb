@@ -941,12 +941,12 @@ module ProtoBoeuf
         oneof = CodeGen::Field.new(message: msg, field: msg.oneof_decl[field.oneof_index], syntax:)
 
         <<~RUBY
-          if #{field.lvar_read} == nil
+          if #{field.kwarg_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
-            #{bounds_check(field, field.lvar_read)}
+            #{bounds_check(field, field.kwarg_read)}
             #{oneof.iv_name} = :#{field.name}
-            #{field.iv_name} = #{field.lvar_read}
+            #{field.iv_name} = #{field.kwarg_read}
           end
         RUBY
       end
@@ -965,14 +965,14 @@ module ProtoBoeuf
         set_field_to_var = if field.type == :TYPE_ENUM
           initialize_enum_field(field)
         else
-          "#{field.iv_name} = #{field.lvar_read}"
+          "#{field.iv_name} = #{field.kwarg_read}"
         end
 
         <<~RUBY
           if #{field.lvar_read} == nil
             #{field.iv_name} = #{default_for(field)}
           else
-            #{bounds_check(field, field.lvar_read).chomp}
+            #{bounds_check(field, field.kwarg_read).chomp}
             #{set_bitmask(field)}
             #{set_field_to_var}
           end
@@ -987,7 +987,7 @@ module ProtoBoeuf
       end
 
       def initialize_enum_field(field)
-        "#{field.iv_name} = #{enum_name(field)}.resolve(#{field.name}) || #{field.lvar_read}"
+        "#{field.iv_name} = #{enum_name(field)}.resolve(#{field.name}) || #{field.kwarg_read}"
       end
 
       def extra_api
@@ -1317,9 +1317,9 @@ module ProtoBoeuf
       def initialize_signature
         fields.flat_map do |f|
           if f.has_oneof_index? || f.optional?
-            "#{f.lvar_name}: nil"
+            "#{f.kwarg_name}: nil"
           else
-            "#{f.lvar_name}: #{default_for(f)}"
+            "#{f.kwarg_name}: #{default_for(f)}"
           end
         end.join(", ")
       end
