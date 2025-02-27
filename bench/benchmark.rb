@@ -29,6 +29,15 @@ def pop_type_map(type_map, obj)
   end
 end
 
+def capitalize_first_letter(str)
+  str[0].upcase + str[1..]
+end
+
+def type_map_name(field)
+  #capitalize_first_letter(field.type_name.sub(/^\./, "").gsub(".", "::"))
+  field.type_name.split(".").last
+end
+
 # Generate a fake value for a field
 def gen_fake_field_val(type_map, field)
   case field.type
@@ -47,7 +56,7 @@ def gen_fake_field_val(type_map, field)
     rand * 100.0
   else
     # ".upstream.Foo" => Upstream::Foo
-    name = field.type_name.sub(/^\./, "").gsub(".", "::").capitalize
+    name = type_map_name(field)
     gen_fake_data(type_map, name)
   end
 rescue => e
@@ -111,13 +120,13 @@ def gen_walk_fn(type_def)
     type_def.field.each do |field|
       if field.label == :LABEL_REPEATED
         if field.type == :TYPE_MESSAGE
-          name = field.type_name.sub(/^\./, "").gsub(".", "::")
+          name = type_map_name(field)
           out += "  node.#{field.name}.each { |v| walk_#{name}(v) }\n"
         else
           out += "  node.#{field.name}.each { |v| walk_#{field.type}(v) }\n"
         end
       elsif field.type == :TYPE_MESSAGE
-        name = field.type_name.sub(/^\./, "").gsub(".", "::")
+        name = type_map_name(field)
         out += "  walk_#{name}(node.#{field.name})\n"
       else
         out += "  node.#{field.name}\n"
@@ -143,6 +152,8 @@ unit = parse_proto_file("bench/fixtures/benchmark.proto")
 # type names, so we can keep a hash of name => definition
 type_map = {}
 pop_type_map(type_map, unit.file.first)
+
+require 'debug'; debugger
 
 # Generate a sum functions for the root type
 type_map.each_value { |type_def| gen_walk_fn(type_def) }
