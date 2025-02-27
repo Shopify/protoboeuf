@@ -123,9 +123,8 @@ file BENCHMARK_PROTOBOEUF_PB => ["bench/fixtures/benchmark.proto"] + codegen_rb_
 
   unit = parse_proto_file(t.source)
   unit.file.each do |f|
-    next if f.package == "proto_boeuf" || f.package.start_with?("proto_boeuf.")
-
-    f.package = "proto_boeuf.#{f.package}"
+    f.options ||= Google::Protobuf::FileOptions.new
+    f.options.ruby_package = "ProtoBoeuf"
   end
 
   gen = ProtoBoeuf::CodeGen.new(unit)

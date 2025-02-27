@@ -7,6 +7,7 @@ module ProtoBoeuf
   class CodeGen
     require "protoboeuf/codegen/type_helper"
     require "protoboeuf/codegen/field"
+    require "protoboeuf/codegen/resolved_modules"
 
     class EnumCompiler
       attr_reader :generate_types
@@ -245,17 +246,18 @@ module ProtoBoeuf
         :oneof_selection_fields,
         :optional_fields,
         :requires,
-        :syntax
+        :syntax,
+        :resolved_modules
 
       include TypeHelper
 
       class << self
-        def result(message, toplevel_enums, generate_types:, requires:, syntax:, options: {})
-          new(message, toplevel_enums, generate_types:, requires:, syntax:, options:).result
+        def result(message, toplevel_enums, generate_types:, requires:, syntax:, resolved_modules:, options: {})
+          new(message, toplevel_enums, generate_types:, requires:, syntax:, resolved_modules:, options:).result
         end
       end
 
-      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, options:)
+      def initialize(message, toplevel_enums, generate_types:, requires:, syntax:, resolved_modules:, options:)
         @message = message
         @optional_field_bit_lut = []
         @fields = @message.field.map do |field|
@@ -266,6 +268,7 @@ module ProtoBoeuf
         @generate_types = generate_types
         @has_submessage = false
         @syntax = syntax
+        @resolved_modules = resolved_modules
         @options = options
 
         @required_fields = []
@@ -769,7 +772,7 @@ module ProtoBoeuf
 
       def constants
         message.nested_type.reject { |x| x.options&.map_entry }.map do |x|
-          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:, options: @options).result
+          self.class.new(x, enum_field_types, generate_types:, requires:, syntax:, resolved_modules:, options: @options).result
         end.join("\n")
       end
 
@@ -793,9 +796,8 @@ module ProtoBoeuf
         class_name(field.type_name)
       end
 
-      # Translate ".package.name::NestedMessage" into "Package::Name::NestedMessage".
       def class_name(type)
-        translate_well_known(type).delete_prefix(".").split(/\.|::/).map do |part|
+        transformed = translate_well_known(type).delete_prefix(".").split(/\.|::/).map do |part|
           if part =~ /^[A-Z]/
             part
           else
@@ -806,6 +808,9 @@ module ProtoBoeuf
             end.join
           end
         end.join("::")
+
+        # Rely on the #modules passed to us by Codegen because they might have been overridden and this isn't always reflected in the type_name
+        resolved_modules.substitute(transformed)
       end
 
       def required_readers
@@ -1766,7 +1771,8 @@ module ProtoBoeuf
     def to_ruby(this_file = nil, options = {})
       requires = Set.new
       @ast.file.each do |file|
-        modules = resolve_modules(file)
+        resolved_modules = ResolvedModules.new(file:)
+
         head = "# encoding: ascii-8bit\n"
         head += "# rubocop:disable all\n"
         head += "# typed: false\n" if generate_types
@@ -1776,13 +1782,13 @@ module ProtoBoeuf
         toplevel_enums = file.enum_type.group_by(&:name)
         body = file.enum_type.map { |enum| EnumCompiler.result(enum, generate_types:, options:) }.join + "\n"
         body += file.message_type.map do |message|
-          MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax, options:)
+          MessageCompiler.result(message, toplevel_enums, generate_types:, requires:, syntax: file.syntax, resolved_modules:, options:)
         end.join
 
         head += requires.reject { |r| r == this_file }.map { |r| "require #{r.dump}" }.join("\n") + "\n\n"
-        head += modules.map { |m| "module #{m}\n" }.join
+        head += resolved_modules.ruby_modules.map { |m| "module #{m}\n" }.join
 
-        tail = "\n" + modules.map { "end" }.join("\n")
+        tail = "\n" + resolved_modules.ruby_modules.map { "end" }.join("\n")
 
         begin
           return SyntaxTree.format(head + body + tail)
@@ -1790,18 +1796,6 @@ module ProtoBoeuf
           $stderr.puts head + body + tail
           raise
         end
-      end
-    end
-
-    def resolve_modules(file)
-      ruby_package = file.options&.ruby_package
-
-      if ruby_package && !ruby_package.empty?
-        return ruby_package.split("::")
-      end
-
-      (file.package || "").split(".").filter_map do |m|
-        m.split("_").map(&:capitalize).join unless m.empty?
       end
     end
 

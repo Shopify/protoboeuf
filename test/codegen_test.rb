@@ -566,16 +566,29 @@ module ProtoBoeuf
 
     def test_modules_with_ruby_package
       unit = parse_proto_string(<<~PROTO)
+        syntax = "proto3";
+
         package example.proto;
 
         option ruby_package = "Example::Ruby::Package";
 
-        message Foo {}
+        enum Category {
+          UNKNOWN = 0;
+          FIRST = 1;
+          SECOND = 2;
+        }
+
+        message Foo {
+          Category category = 1;
+        }
       PROTO
 
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
-      assert(klass::Example::Ruby::Package::Foo.new)
+      message = klass::Example::Ruby::Package::Foo.new(category: 1);
+
+      assert(message)
+      assert_equal(:FIRST, message.category)
     end
 
     def test_type_name_to_class_name
@@ -587,9 +600,6 @@ module ProtoBoeuf
           required package_test.proto3.Test1 t = 1;
         }
       PROTO
-
-      # require "debug"
-      # debugger
 
       gen = CodeGen.new(unit)
       klass = Class.new { class_eval(gen.to_ruby) }
