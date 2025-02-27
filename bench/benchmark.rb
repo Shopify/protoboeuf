@@ -1,15 +1,19 @@
 # frozen_string_literal: true
 
-require "protoboeuf/parser"
+require "protoboeuf/protoc_utils"
 require "protoboeuf/benchmark_pb"
 require "upstream/benchmark_pb"
 require "benchmark/ips"
+
+include ProtoBoeuf::ProtocUtils
 
 # Ensure the dataset is random but always the same
 Random.srand(42)
 
 # Recursively populate the type map
 def pop_type_map(type_map, obj)
+  return unless [:message_type, :enum_type].all? { |m| obj.respond_to?(m) }
+
   obj.message_type&.each do |msg|
     type_map[msg.name] = msg
     next unless msg.nested_type
@@ -42,9 +46,12 @@ def gen_fake_field_val(type_map, field)
   when :TYPE_DOUBLE, :TYPE_FLOAT
     rand * 100.0
   else
-    name = field.type_name.sub(/^\./, "").gsub(".", "::")
+    # ".upstream.Foo" => Upstream::Foo
+    name = field.type_name.sub(/^\./, "").gsub(".", "::").capitalize
     gen_fake_data(type_map, name)
   end
+rescue => e
+  require 'debug'; debugger
 end
 
 # Given a message definition, generate fake data
@@ -85,9 +92,9 @@ def gen_fake_data(type_map, type_name)
   type_def = type_map[type_name]
   raise "type not found #{type_name}" unless type_def
 
-  if type_def.instance_of?(ProtoBoeuf::Message)
+  if type_def.instance_of?(Google::Protobuf::DescriptorProto)
     return gen_fake_msg(type_map, type_def)
-  elsif type_def.instance_of?(ProtoBoeuf::Enum)
+  elsif type_def.instance_of?(Google::Protobuf::EnumDescriptorProto)
     return gen_fake_enum(type_def)
   end
 
@@ -99,7 +106,7 @@ def gen_walk_fn(type_def)
   out = "def walk_#{type_def.name}(node)\n"
   out += "  return unless node\n"
 
-  if type_def.instance_of?(ProtoBoeuf::Message)
+  if type_def.instance_of?(Google::Protobuf::DescriptorProto)
     # For each field of this message
     type_def.field.each do |field|
       if field.label == :LABEL_REPEATED
@@ -117,7 +124,7 @@ def gen_walk_fn(type_def)
       end
     end
 
-  elsif type_def.instance_of?(ProtoBoeuf::Enum)
+  elsif type_def.instance_of?(Google::Protobuf::EnumDescriptorProto)
     # Do nothing
   end
 
@@ -130,7 +137,7 @@ def gen_walk_fn(type_def)
 end
 
 # Parse the proto file so we can generate fake data
-unit = ProtoBoeuf.parse_file("bench/fixtures/benchmark.proto")
+unit = parse_proto_file("bench/fixtures/benchmark.proto")
 
 # NOTE: for the benchmark, we can guarantee that we don't have overlapping
 # type names, so we can keep a hash of name => definition
