@@ -579,7 +579,7 @@ module ProtoBoeuf
     end
 
     def test_type_name_to_class_name
-      unit = parse_proto_string(<<~PROTO)
+      unit = parse_proto_string(<<~PROTO, File.expand_path("fixtures", __dir__))
         package example_foo.proto;
         import "package_test.proto";
 

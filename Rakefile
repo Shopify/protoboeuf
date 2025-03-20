@@ -3,6 +3,10 @@
 require "rake/testtask"
 require "rake/clean"
 
+require "protoboeuf"
+
+include ProtoBoeuf::ProtocUtils
+
 require "rubocop/rake_task"
 RuboCop::RakeTask.new
 
@@ -116,14 +120,15 @@ end
 # This is a file task to generate an rb file from benchmark.proto
 file BENCHMARK_PROTOBOEUF_PB => ["bench/fixtures/benchmark.proto"] + codegen_rb_files do |t|
   mkdir_p "bench/lib/protoboeuf"
-  codegen_rb_files.each { |f| require_relative f }
 
-  unit = ProtoBoeuf.parse_file(t.source)
-  unit.file.each do |f|
-    next if f.package == "proto_boeuf" || f.package.start_with?("proto_boeuf.")
-
-    f.package = "proto_boeuf.#{f.package}"
-  end
+  # Due to a bug in `ProtoBoeuf::CodeGen`, overriding the `package` or defining
+  # a `ruby_package` results in references to undefined constants.  To override
+  # the proto package for these benchmark fixutres we need to resort to string
+  # substitution for now.
+  # https://github.com/Shopify/protoboeuf/issues/189
+  unit = parse_proto_string(
+    File.binread(t.source).sub("package upstream;", "package proto_boeuf;"),
+  )
 
   gen = ProtoBoeuf::CodeGen.new(unit)
 
