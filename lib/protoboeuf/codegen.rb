@@ -1325,7 +1325,7 @@ module ProtoBoeuf
       end
 
       def tag_for_field(field, idx)
-        format("%#02x", (idx << 3 | CodeGen.wire_type(field)))
+        format("%#02x", idx << 3 | CodeGen.wire_type(field))
       end
 
       def decode_subtype(field, type, dest, operator)
