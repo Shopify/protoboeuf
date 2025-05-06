@@ -27,7 +27,7 @@ BENCHMARK_UPSTREAM_PB = "bench/lib/upstream/benchmark_pb.rb"
 BENCHMARK_PROTOBOEUF_PB = "bench/lib/protoboeuf/benchmark_pb.rb"
 
 well_known_types = Rake::FileList[
-  File.join(BASE_DIR, "lib/protoboeuf/google/**/*.proto")
+  File.join(BASE_DIR, "lib/protoboeuf/google/**/*.proto"),
 ]
 
 WELL_KNOWN_PB = well_known_types.pathmap("%X.rb")
