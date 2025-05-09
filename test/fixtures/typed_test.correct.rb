@@ -282,7 +282,7 @@ class Test1
 
         unknown_bytes = +"".b
         val = tag
-        while val != 0
+        loop do
           byte = val & 0x7F
 
           val >>= 7
@@ -293,6 +293,7 @@ class Test1
 
           byte |= 0x80 if val != 0
           unknown_bytes << byte
+          break if val == 0
         end
 
         case wire_type
@@ -361,7 +362,7 @@ class Test1
             end
 
           val = value
-          while val != 0
+          loop do
             byte = val & 0x7F
 
             val >>= 7
@@ -372,6 +373,7 @@ class Test1
 
             byte |= 0x80 if val != 0
             unknown_bytes << byte
+            break if val == 0
           end
 
           unknown_bytes << buff.byteslice(index, value)
@@ -1438,7 +1440,7 @@ class Test1
     if val != 0
       buff << 0x08
 
-      while val != 0
+      loop do
         byte = val & 0x7F
 
         val >>= 7
@@ -1449,17 +1451,19 @@ class Test1
 
         byte |= 0x80 if val != 0
         buff << byte
+        break if val == 0
       end
     end
 
     val = @string_field
-    if ((len = val.bytesize) > 0)
+    if (len = val.bytesize) > 0 || has_string_field?
       buff << 0x12
-      while len != 0
+      loop do
         byte = len & 0x7F
         len >>= 7
         byte |= 0x80 if len > 0
         buff << byte
+        break if len == 0
       end
 
       buff << (val.ascii_only? ? val : val.b)
@@ -1469,7 +1473,7 @@ class Test1
     if val != 0
       buff << 0x18
 
-      while val != 0
+      loop do
         byte = val & 0x7F
 
         val >>= 7
@@ -1480,6 +1484,7 @@ class Test1
 
         byte |= 0x80 if val != 0
         buff << byte
+        break if val == 0
       end
     end
 
@@ -1487,7 +1492,7 @@ class Test1
     if val != 0
       buff << 0x20
 
-      while val != 0
+      loop do
         byte = val & 0x7F
 
         val >>= 7
@@ -1498,6 +1503,7 @@ class Test1
 
         byte |= 0x80 if val != 0
         buff << byte
+        break if val == 0
       end
     end
 
@@ -1515,7 +1521,7 @@ class Test1
       list.each do |item|
         val = item
         if val != 0
-          while val != 0
+          loop do
             byte = val & 0x7F
 
             val >>= 7
@@ -1526,6 +1532,7 @@ class Test1
 
             byte |= 0x80 if val != 0
             buff << byte
+            break if val == 0
           end
         end
       end
@@ -1571,13 +1578,14 @@ class Test1
       map.each do |key, value|
         buff = new_buffer = +""
         val = key
-        if ((len = val.bytesize) > 0)
+        if (len = val.bytesize) > 0
           buff << 0x0a
-          while len != 0
+          loop do
             byte = len & 0x7F
             len >>= 7
             byte |= 0x80 if len > 0
             buff << byte
+            break if len == 0
           end
 
           buff << (val.ascii_only? ? val : val.b)
@@ -1587,7 +1595,7 @@ class Test1
         if val != 0
           buff << 0x10
 
-          while val != 0
+          loop do
             byte = val & 0x7F
 
             val >>= 7
@@ -1598,17 +1606,19 @@ class Test1
 
             byte |= 0x80 if val != 0
             buff << byte
+            break if val == 0
           end
         end
 
         buff = old_buff
         buff << 0x32
         len = new_buffer.bytesize
-        while len != 0
+        loop do
           byte = len & 0x7F
           len >>= 7
           byte |= 0x80 if len > 0
           buff << byte
+          break if len == 0
         end
 
         old_buff.concat(new_buffer)
@@ -1619,11 +1629,12 @@ class Test1
     if ((bs = val.bytesize) > 0)
       buff << 0x3a
       len = bs
-      while len != 0
+      loop do
         byte = len & 0x7F
         len >>= 7
         byte |= 0x80 if len > 0
         buff << byte
+        break if len == 0
       end
 
       buff.concat(val.b)

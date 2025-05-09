@@ -280,9 +280,8 @@ module ProtoBoeuf
           if field.optional?
             if field.type == :TYPE_ENUM
               @enum_fields << field
-            else
-              @optional_fields << field
             end
+            @optional_fields << field
             @optional_field_bit_lut[field.number] = optional_field_count
             optional_field_count += 1
           elsif field.has_oneof_index?
@@ -393,18 +392,31 @@ module ProtoBoeuf
       end
 
       def encode_bool(field, value_expr, tagged)
-        # False/zero is the default value, so the false case encodes nothing
-        <<~RUBY
-          val = #{value_expr}
-          if val == true
-            #{encode_tag_and_length(field, tagged)}
-            buff << 1
-          elsif val == false
-            # Default value, encode nothing
-          else
-            raise "bool values should be true or false"
-          end
-        RUBY
+        if field.optional?
+          <<~RUBY
+            if has_#{field.name}?
+              val = #{value_expr}
+              #{encode_tag_and_length(field, tagged)}
+              if val == true
+                buff << 1
+              elsif val == false
+                buff << 0
+              end
+            end
+          RUBY
+        else
+          <<~RUBY
+            val = #{value_expr}
+            if val == true
+              #{encode_tag_and_length(field, tagged)}
+              buff << 1
+            elsif val == false
+              # Default value, encode nothing
+            else
+              raise "bool values should be true or false"
+            end
+          RUBY
+        end
       end
 
       def encode_map(field, value_expr, tagged)
@@ -503,23 +515,24 @@ module ProtoBoeuf
 
       def encode_string(field, value_expr, tagged)
         # Empty string is default value, so encodes nothing
-        if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
-          <<~RUBY
-            val = #{value_expr}
-            if((len = val.bytesize) > 0)
-              #{encode_tag_and_length(field, tagged, "len")}
+        body = <<~RUBY
+          val = #{value_expr}
+          if (len = val.bytesize) > 0 #{field.optional? ? " || has_#{field.name}?" : ""}
+            #{encode_tag_and_length(field, tagged, "len")}
+        RUBY
+
+        body << if String.method_defined?(:append_as_bytes) && @options[:append_as_bytes] != false
+          <<~RUBYAPPEND
               buff.append_as_bytes(val)
             end
-          RUBY
+          RUBYAPPEND
         else
-          <<~RUBY
-            val = #{value_expr}
-            if((len = val.bytesize) > 0)
-              #{encode_tag_and_length(field, tagged, "len")}
+          <<~RUBYAPPEND
               buff << (val.ascii_only? ? val : val.b)
             end
-          RUBY
+          RUBYAPPEND
         end
+        body
       end
 
       def encode_bytes(field, value_expr, tagged)
@@ -598,20 +611,20 @@ module ProtoBoeuf
 
       def uint64_code(local)
         <<~RUBY
-          while #{local} != 0
+          loop do
             byte = #{local} & 0x7F
             #{local} >>= 7
             byte |= 0x80 if #{local} > 0
             buff << byte
+            break if #{local} == 0
           end
         RUBY
       end
 
       def encode_uint64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<~RUBY
           val = #{value_expr}
-          if val != 0
+          if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{uint64_code("val")}
           end
@@ -623,10 +636,9 @@ module ProtoBoeuf
       alias_method :encode_uint32, :encode_uint64
 
       def encode_int64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<~RUBY
           val = #{value_expr}
-          if val != 0
+          if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
             #{encode_tag_and_length(field, tagged)}
             #{encode_varint}
           end
@@ -635,7 +647,7 @@ module ProtoBoeuf
 
       def encode_varint(dest = "buff")
         <<~RUBY
-          while val != 0
+          loop do
             byte = val & 0x7F
 
             val >>= 7
@@ -646,6 +658,7 @@ module ProtoBoeuf
 
             byte |= 0x80 if val != 0
             #{dest} << byte
+            break if val == 0
           end
         RUBY
       end
@@ -657,10 +670,9 @@ module ProtoBoeuf
       alias_method :encode_enum, :encode_int32
 
       def encode_sint64(field, value_expr, tagged)
-        # Zero is the default value, so it encodes zero bytes
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
 
           # Zigzag encoding:
@@ -681,10 +693,9 @@ module ProtoBoeuf
       alias_method :encode_sint32, :encode_sint64
 
       def encode_double(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('E', buffer: buff)
         end
@@ -692,10 +703,9 @@ module ProtoBoeuf
       end
 
       def encode_float(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('e', buffer: buff)
         end
@@ -703,10 +713,9 @@ module ProtoBoeuf
       end
 
       def encode_fixed64(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('Q<', buffer: buff)
         end
@@ -714,10 +723,9 @@ module ProtoBoeuf
       end
 
       def encode_sfixed64(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('q<', buffer: buff)
         end
@@ -725,10 +733,9 @@ module ProtoBoeuf
       end
 
       def encode_fixed32(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('L<', buffer: buff)
         end
@@ -736,10 +743,9 @@ module ProtoBoeuf
       end
 
       def encode_sfixed32(field, value_expr, tagged)
-        # False/zero is the default value, so the zero case encodes nothing
         <<-eocode
         val = #{value_expr}
-        if val != 0
+        if #{field.optional? ? "has_#{field.name}?" : "val != 0"}
           #{encode_tag_and_length(field, tagged)}
           [val].pack('l<', buffer: buff)
         end
@@ -821,10 +827,11 @@ module ProtoBoeuf
       end
 
       def optional_readers
-        return "" if optional_fields.empty?
+        fields = optional_fields.reject { |field| field.type == :TYPE_ENUM }
+        return "" if fields.empty?
 
         "# optional field readers\n" +
-          optional_fields.map do |field|
+          fields.map do |field|
             "#{reader_type_signature(field)}\nattr_reader :#{field.name}\n"
           end.join("\n") +
           "\n\n"
@@ -859,7 +866,12 @@ module ProtoBoeuf
 
         "# enum writers\n" +
           fields.map do |field|
-            "def #{field.name}=(v); #{field.iv_name} = #{enum_name(field)}.resolve(v) || v; end"
+            writer = "def #{field.name}=(v); #{field.iv_name} = #{enum_name(field)}.resolve(v) || v;"
+            if field.optional?
+              writer << "#{set_bitmask(field)}; "
+            end
+            writer << "end"
+            writer
           end.join("\n") + "\n\n"
       end
 
@@ -880,10 +892,11 @@ module ProtoBoeuf
       end
 
       def optional_writers
-        return "" if optional_fields.empty?
+        fields = optional_fields.reject { |field| field.type == :TYPE_ENUM }
+        return "" if fields.empty?
 
         "# BEGIN writers for optional fields\n" +
-          optional_fields.map { |field|
+          fields.map { |field|
             <<~RUBY
               #{type_signature(params: { v: convert_field_type(field) })}
               def #{field.name}=(v)
