@@ -640,6 +640,33 @@ class MessageTest < ProtoBoeuf::Test
     assert_equal(expected, actual)
   end
 
+  def test_encode_bool_optional
+    code = parse_proto_string(<<~eoboeuf)
+      syntax = "proto3";
+
+      message TestBool {
+        optional bool a = 1;
+      }
+    eoboeuf
+
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
+
+    # Optional: Unset
+    actual = m::TestBool.encode(m::TestBool.new)
+    expected = ::TestBool.encode(::TestBool.new)
+    assert_equal(expected, actual)
+
+    # Optional: True
+    actual = m::TestBool.encode(m::TestBool.new(a: true))
+    expected = ::TestBool.encode(::TestBool.new(a: true))
+    assert_equal(expected, actual)
+
+    # Optional: False
+    actual = m::TestBool.encode(m::TestBool.new(a: false))
+    expected = ::TestBool.encode(::TestBool.new(a: false))
+    assert_equal(expected, actual)
+  end
+
   def test_encode_enum
     [0, 1, 2, 3, 4, 5, 0x7FFFFFFF].each do |s|
       actual = EnumEncoder.encode(EnumEncoder.new(value: s))
@@ -721,11 +748,38 @@ class MessageTest < ProtoBoeuf::Test
     m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
 
     ["", "hello world", "foobar", "nöel", "some emoji 🎉👍❤️ and some math ∮𝛅x"].each do |s|
-      actual = m::StringValue.encode(m::StringValue.new(value: s))
-      expected = ::Google::Protobuf::StringValue.encode(::Google::Protobuf::StringValue.new(value: s))
+      actual = m::StringValue.encode(m::StringValue.new(value: s.to_s))
+      expected = ::Google::Protobuf::StringValue.encode(::Google::Protobuf::StringValue.new(value: s.to_s))
       assert_equal(Encoding::BINARY, actual.encoding)
       assert_equal(expected, actual, "Failed during encoding of #{s.inspect}")
     end
+  end
+
+  def test_encode_optional_string
+    code = parse_proto_string(<<~eoboeuf)
+      syntax = "proto3";
+
+      message TestString {
+        optional string a = 1;
+      }
+    eoboeuf
+
+    m = Module.new { class_eval ::ProtoBoeuf::CodeGen.new(code).to_ruby }
+
+    # Optional: Unset
+    actual = m::TestString.encode(m::TestString.new)
+    expected = ::TestString.encode(::TestString.new)
+    assert_equal(expected, actual)
+    #
+    # # Optional: Set (Empty)
+    # actual = m::TestString.encode(m::TestString.new(a: ""))
+    # expected = ::TestString.encode(::TestString.new(a: ""))
+    # assert_equal(expected, actual)
+
+    # Optional: Set
+    actual = m::TestString.encode(m::TestString.new(a: "a"))
+    expected = ::TestString.encode(::TestString.new(a: "a"))
+    assert_equal(expected, actual)
   end
 
   def test_encode_submessage
